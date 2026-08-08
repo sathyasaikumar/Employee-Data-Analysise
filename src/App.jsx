@@ -7,10 +7,12 @@ import Dashboard from './components/Dashboard';
 import CustomChartBuilder from './components/CustomChartBuilder';
 import DataTable from './components/DataTable';
 import StatsOverview from './components/StatsOverview';
+import ComparisonView from './components/ComparisonView';
 import LoginModal from './components/LoginModal';
+import LoginPage from './components/LoginPage';
 import { SAMPLE_DATASETS } from './utils/sampleData';
 import { getStoredUser, logoutUser } from './utils/auth';
-import { LayoutDashboard, Sliders, Table as TableIcon, Calculator, Loader2 } from 'lucide-react';
+import { LayoutDashboard, Sliders, Table as TableIcon, Calculator, GitCompare, Loader2 } from 'lucide-react';
 
 export default function App() {
   const [totalRows, setTotalRows] = useState(0);
@@ -25,12 +27,14 @@ export default function App() {
   
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [activeLevel, setActiveLevel] = useState('all'); // 'all' | 'low' | 'medium' | 'high'
   const [isLoading, setIsLoading] = useState(false);
   const [progressInfo, setProgressInfo] = useState({ text: '', rowCount: 0 });
 
-  // User Auth State
+  // User Auth & Full Page View State
   const [currentUser, setCurrentUser] = useState(null);
   const [isLoginOpen, setIsLoginOpen] = useState(false);
+  const [isGuestMode, setIsGuestMode] = useState(false);
 
   // Theme State ('dark' | 'light')
   const [theme, setTheme] = useState(() => {
@@ -48,7 +52,6 @@ export default function App() {
 
   const workerRef = useRef(null);
 
-
   const [filters, setFilters] = useState({
     search: '',
     categorical: {},
@@ -60,9 +63,6 @@ export default function App() {
     const saved = getStoredUser();
     if (saved) {
       setCurrentUser(saved);
-    } else {
-      // Open login modal automatically if unauthenticated
-      setIsLoginOpen(true);
     }
   }, []);
 
@@ -208,6 +208,41 @@ export default function App() {
     }
   };
 
+  const handleLevelSelect = (level) => {
+    setActiveLevel(level);
+    const newNumericFilters = { ...filters.numeric };
+
+    const numericCols = headers.filter(c => schema[c] === 'numeric' && stats[c]);
+
+    numericCols.forEach(col => {
+      const minVal = stats[col].min;
+      const maxVal = stats[col].max;
+      const span = maxVal - minVal;
+
+      if (level === 'low') {
+        newNumericFilters[col] = [minVal, Math.round(minVal + span * 0.33)];
+      } else if (level === 'medium') {
+        newNumericFilters[col] = [Math.round(minVal + span * 0.33), Math.round(minVal + span * 0.67)];
+      } else if (level === 'high') {
+        newNumericFilters[col] = [Math.round(minVal + span * 0.67), maxVal];
+      } else {
+        newNumericFilters[col] = [minVal, maxVal];
+      }
+    });
+
+    const newF = { ...filters, numeric: newNumericFilters };
+    setFilters(newF);
+
+    if (workerRef.current) {
+      workerRef.current.postMessage({
+        action: 'FILTER',
+        filters: newF,
+        page: 1,
+        pageSize: 10
+      });
+    }
+  };
+
   const handleExportCSV = () => {
     alert(`Exporting ${filteredCount.toLocaleString()} records...`);
   };
@@ -215,10 +250,30 @@ export default function App() {
   const handleLogout = () => {
     logoutUser();
     setCurrentUser(null);
+    setIsGuestMode(false);
     setIsLoginOpen(true);
   };
 
   const hasData = totalRows > 0;
+
+  // Render Full Page Login Page when unauthenticated or requested
+  if ((!currentUser && !isGuestMode) || isLoginOpen) {
+    return (
+      <LoginPage 
+        onLoginSuccess={(user) => {
+          setCurrentUser(user);
+          setIsLoginOpen(false);
+          setIsGuestMode(false);
+        }}
+        onGuestAccess={() => {
+          setIsGuestMode(true);
+          setIsLoginOpen(false);
+        }}
+        theme={theme}
+        onToggleTheme={handleToggleTheme}
+      />
+    );
+  }
 
   return (
     <div className="app-container">
@@ -271,6 +326,8 @@ export default function App() {
                 healthScore={healthScore}
                 stats={stats}
                 schema={schema}
+                activeLevel={activeLevel}
+                onLevelSelect={handleLevelSelect}
               />
 
               <div className="nav-tabs">
@@ -298,6 +355,12 @@ export default function App() {
                 >
                   <Calculator size={16} /> Statistical Profiling
                 </button>
+                <button 
+                  className={`tab-btn ${activeTab === 'comparison' ? 'active' : ''}`}
+                  onClick={() => setActiveTab('comparison')}
+                >
+                  <GitCompare size={16} /> Comparison Analysis
+                </button>
               </div>
 
               {activeTab === 'dashboard' && (
@@ -318,7 +381,6 @@ export default function App() {
                 />
               )}
 
-
               {activeTab === 'table' && (
                 <DataTable 
                   pageData={pageData}
@@ -337,20 +399,19 @@ export default function App() {
                   schema={schema}
                 />
               )}
+
+              {activeTab === 'comparison' && (
+                <ComparisonView 
+                  data={pageData}
+                  headers={headers}
+                  schema={schema}
+                  theme={theme}
+                />
+              )}
             </>
           )}
         </div>
       </div>
-
-      {/* Authentication Modal */}
-      <LoginModal 
-        isOpen={isLoginOpen}
-        onClose={() => setIsLoginOpen(false)}
-        onLoginSuccess={(user) => {
-          setCurrentUser(user);
-          setIsLoginOpen(false);
-        }}
-      />
     </div>
   );
 }

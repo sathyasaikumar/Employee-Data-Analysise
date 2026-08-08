@@ -262,6 +262,92 @@ export const loginWithPhone = async (countryCode, phone, otp) => {
   return user;
 };
 
+// Social & OAuth SSO Provider Authentication Handlers
+
+export const loginWithGoogle = async (customData) => {
+  // Simulate Google OAuth 2.0 handshake
+  await new Promise(resolve => setTimeout(resolve, 400));
+  const email = customData?.email || 'alex.google@corporate.com';
+  const name = customData?.name || (email.includes('@') ? email.split('@')[0].replace('.', ' ').replace(/\b\w/g, c => c.toUpperCase()) : 'Google User');
+  const initials = name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() || 'G';
+
+  const user = {
+    id: `usr_google_${Date.now()}`,
+    name: name,
+    email: email,
+    role: customData?.role || 'Senior Data Lead',
+    avatar: initials,
+    loginType: 'google',
+    provider: 'Google Workspace OAuth',
+    loginTime: new Date().toISOString()
+  };
+  setStoredUser(user);
+  return user;
+};
+
+export const loginWithMicrosoft = async (customData) => {
+  // Simulate Microsoft Azure AD OAuth handshake
+  await new Promise(resolve => setTimeout(resolve, 400));
+  const email = customData?.email || 'sarah.microsoft@corporate.com';
+  const name = customData?.name || (email.includes('@') ? email.split('@')[0].replace('.', ' ').replace(/\b\w/g, c => c.toUpperCase()) : 'Microsoft User');
+  const initials = name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() || 'MS';
+
+  const user = {
+    id: `usr_ms_${Date.now()}`,
+    name: name,
+    email: email,
+    role: customData?.role || 'Department Director',
+    avatar: initials,
+    loginType: 'microsoft',
+    provider: 'Microsoft 365 Azure AD',
+    loginTime: new Date().toISOString()
+  };
+  setStoredUser(user);
+  return user;
+};
+
+export const loginWithGitHub = async (customData) => {
+  // Simulate GitHub OAuth handshake
+  await new Promise(resolve => setTimeout(resolve, 400));
+  const email = customData?.email || 'david.dev@github.com';
+  const name = customData?.name || (email.includes('@') ? email.split('@')[0].replace('.', ' ').replace(/\b\w/g, c => c.toUpperCase()) : 'GitHub User');
+  const initials = name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() || 'GH';
+
+  const user = {
+    id: `usr_github_${Date.now()}`,
+    name: name,
+    email: email,
+    role: customData?.role || 'Software Engineer',
+    avatar: initials,
+    loginType: 'github',
+    provider: 'GitHub Enterprise OAuth',
+    loginTime: new Date().toISOString()
+  };
+  setStoredUser(user);
+  return user;
+};
+
+export const loginWithSSO = async (customData) => {
+  // Simulate Enterprise SAML Okta SSO handshake
+  await new Promise(resolve => setTimeout(resolve, 400));
+  const email = customData?.email || 'sso.executive@enterprise.org';
+  const name = customData?.name || (email.includes('@') ? email.split('@')[0].replace('.', ' ').replace(/\b\w/g, c => c.toUpperCase()) : 'SAML SSO User');
+  const initials = name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() || 'SSO';
+
+  const user = {
+    id: `usr_sso_${Date.now()}`,
+    name: name,
+    email: email,
+    role: customData?.role || 'Executive Specialist',
+    avatar: initials,
+    loginType: 'sso',
+    provider: 'Okta Enterprise SAML 2.0',
+    loginTime: new Date().toISOString()
+  };
+  setStoredUser(user);
+  return user;
+};
+
 export const getStoredUser = () => {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);

@@ -1,6 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Mail, Phone, Lock, KeyRound, X, CheckCircle, AlertCircle, Sparkles, Shield, ArrowRight, RefreshCw, User, Briefcase, UserPlus, LogIn } from 'lucide-react';
-import { loginWithEmail, loginWithPhone, registerWithEmail, registerWithPhone, DEMO_ACCOUNTS } from '../utils/auth';
+import { 
+  loginWithEmail, loginWithPhone, registerWithEmail, 
+  registerWithPhone, loginWithGoogle, loginWithMicrosoft, 
+  loginWithGitHub, loginWithSSO, DEMO_ACCOUNTS 
+} from '../utils/auth';
 
 const COUNTRY_CODES = [
   { code: '+1', flag: '🇺🇸', name: 'USA / Canada' },
@@ -466,38 +470,6 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
             </p>
           )}
         </div>
-
-        {/* Quick-Fill Demo Accounts (Shown in Login mode) */}
-        {authMode === 'login' && (
-          <div className="auth-demo-section">
-            <div className="auth-demo-header">
-              <Sparkles size={14} className="text-amber" />
-              <span>Quick Testing Demo Accounts:</span>
-            </div>
-
-            <div className="auth-demo-chips">
-              <button
-                type="button"
-                className="auth-demo-chip"
-                onClick={handleFillDemoEmail}
-                title="Click to fill demo email credentials"
-              >
-                <Mail size={13} />
-                <span>Email: admin@corporate.com</span>
-              </button>
-
-              <button
-                type="button"
-                className="auth-demo-chip"
-                onClick={handleFillDemoPhone}
-                title="Click to fill demo phone credentials"
-              >
-                <Phone size={13} />
-                <span>Phone: +1 9876543210</span>
-              </button>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

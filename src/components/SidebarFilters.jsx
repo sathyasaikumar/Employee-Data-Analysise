@@ -84,16 +84,76 @@ export default function SidebarFilters({
         );
       })}
 
-      {/* Numeric Range Filters */}
+      {/* Numeric Range Filters with Level Presets */}
       {numericHeaders.map(header => {
         const stat = stats[header];
         if (!stat) return null;
 
         const currentRange = filters.numeric?.[header] || [stat.min, stat.max];
+        const span = stat.max - stat.min;
+
+        // Calculate thresholds
+        const lowMax = Math.round(stat.min + span * 0.33);
+        const medMax = Math.round(stat.min + span * 0.67);
+
+        // Helper to check active level
+        const isLow = currentRange[0] === stat.min && currentRange[1] === lowMax;
+        const isMed = currentRange[0] === lowMax && currentRange[1] === medMax;
+        const isHigh = currentRange[0] === medMax && currentRange[1] === stat.max;
+        const isAll = currentRange[0] === stat.min && currentRange[1] === stat.max;
+
+        const setRange = (minVal, maxVal) => {
+          onFilterChange('numeric', {
+            ...filters.numeric,
+            [header]: [minVal, maxVal]
+          });
+        };
 
         return (
           <div className="filter-group" key={header}>
-            <label className="filter-label">{header} Range</label>
+            <div className="filter-label-row">
+              <label className="filter-label">{header} Range</label>
+            </div>
+
+            {/* Quick Level Presets (Low, Medium, High) */}
+            <div className="level-presets-flex">
+              <button
+                type="button"
+                className={`level-btn level-low ${isLow ? 'active' : ''}`}
+                onClick={() => setRange(stat.min, lowMax)}
+                title={`Filter Low Range (${stat.min} - ${lowMax})`}
+              >
+                Low
+              </button>
+
+              <button
+                type="button"
+                className={`level-btn level-med ${isMed ? 'active' : ''}`}
+                onClick={() => setRange(lowMax, medMax)}
+                title={`Filter Medium Range (${lowMax} - ${medMax})`}
+              >
+                Medium
+              </button>
+
+              <button
+                type="button"
+                className={`level-btn level-high ${isHigh ? 'active' : ''}`}
+                onClick={() => setRange(medMax, stat.max)}
+                title={`Filter High Range (${medMax} - ${stat.max})`}
+              >
+                High
+              </button>
+
+              <button
+                type="button"
+                className={`level-btn level-all ${isAll ? 'active' : ''}`}
+                onClick={() => setRange(stat.min, stat.max)}
+                title="Reset to full range"
+              >
+                All
+              </button>
+            </div>
+
             <div className="range-inputs">
               <input 
                 type="number"
@@ -103,10 +163,7 @@ export default function SidebarFilters({
                 max={stat.max}
                 onChange={(e) => {
                   const val = Number(e.target.value);
-                  onFilterChange('numeric', {
-                    ...filters.numeric,
-                    [header]: [val, currentRange[1]]
-                  });
+                  setRange(val, currentRange[1]);
                 }}
               />
               <span style={{ color: 'var(--text-muted)' }}>-</span>
@@ -118,10 +175,7 @@ export default function SidebarFilters({
                 max={stat.max}
                 onChange={(e) => {
                   const val = Number(e.target.value);
-                  onFilterChange('numeric', {
-                    ...filters.numeric,
-                    [header]: [currentRange[0], val]
-                  });
+                  setRange(currentRange[0], val);
                 }}
               />
             </div>

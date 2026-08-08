@@ -1,7 +1,15 @@
 import React from 'react';
 import { Database, Filter, Activity, DollarSign, TrendingUp, ShieldCheck } from 'lucide-react';
 
-export default function KPICards({ totalRows = 0, filteredRows = 0, healthScore = 100, stats = {}, schema = {} }) {
+export default function KPICards({ 
+  totalRows = 0, 
+  filteredRows = 0, 
+  healthScore = 100, 
+  stats = {}, 
+  schema = {},
+  activeLevel = 'all',
+  onLevelSelect
+}) {
   // Identify primary numeric column for highlighted metric (e.g. Salary or Revenue)
   const numericHeaders = Object.keys(schema || {}).filter(h => schema[h] === 'numeric');
   const primaryNumeric = numericHeaders.find(h => h.toLowerCase().includes('salary') || h.toLowerCase().includes('revenue')) || numericHeaders[0];
@@ -31,7 +39,7 @@ export default function KPICards({ totalRows = 0, filteredRows = 0, healthScore 
         </div>
       </div>
 
-      <div className="kpi-card kpi-cyan">
+      <div className="kpi-card kpi-cyan kpi-card-with-vertical">
         <div className="kpi-info">
           <span className="kpi-label">Filtered Overview</span>
           <span className="kpi-value">{safeFiltered.toLocaleString()}</span>
@@ -39,8 +47,41 @@ export default function KPICards({ totalRows = 0, filteredRows = 0, healthScore 
             <Filter size={12} /> {activePercentage}% Active Selection
           </span>
         </div>
-        <div className="kpi-icon-box">
-          <Filter size={24} className="text-cyan-400" />
+
+        {/* Sleek Vertical Level Stack */}
+        <div className="kpi-vertical-level-stack" title="Select Filter Level">
+          <button 
+            type="button" 
+            className={`kpi-v-pill low ${activeLevel === 'low' ? 'active' : ''}`}
+            onClick={() => onLevelSelect && onLevelSelect('low')}
+            title="Filter Low Level (Bottom 33%)"
+          >
+            LOW
+          </button>
+          <button 
+            type="button" 
+            className={`kpi-v-pill medium ${activeLevel === 'medium' ? 'active' : ''}`}
+            onClick={() => onLevelSelect && onLevelSelect('medium')}
+            title="Filter Medium Level (Middle 34%)"
+          >
+            MED
+          </button>
+          <button 
+            type="button" 
+            className={`kpi-v-pill high ${activeLevel === 'high' ? 'active' : ''}`}
+            onClick={() => onLevelSelect && onLevelSelect('high')}
+            title="Filter High Level (Top 33%)"
+          >
+            HIGH
+          </button>
+          <button 
+            type="button" 
+            className={`kpi-v-pill all ${activeLevel === 'all' ? 'active' : ''}`}
+            onClick={() => onLevelSelect && onLevelSelect('all')}
+            title="Reset to All Records"
+          >
+            ALL
+          </button>
         </div>
       </div>
 
