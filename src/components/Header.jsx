@@ -13,6 +13,7 @@ export default function Header({
   onExportCSV,
   currentUser,
   onOpenLogin,
+  onOpenProfile,
   onLogout,
   theme = 'dark',
   onToggleTheme
@@ -154,26 +155,35 @@ export default function Header({
         {/* User Authentication & Profile Control */}
         <div className="user-auth-wrapper">
           {currentUser ? (
-            <div className="user-profile-badge">
+            <div className="user-profile-badge" title="Click to View Personal Profile & Login Activity System">
               <div 
-                className="user-avatar"
-                onClick={() => setShowProfileMenu(!showProfileMenu)}
-                title="View user details"
+                className="user-avatar-trigger"
+                onClick={() => {
+                  if (onOpenProfile) onOpenProfile();
+                  closeMobileMenu();
+                }}
               >
-                {currentUser.avatar || 'US'}
-              </div>
+                <div className="user-avatar">
+                  {currentUser.photo ? (
+                    <img src={currentUser.photo} alt={currentUser.name} className="header-user-avatar-img" />
+                  ) : (
+                    currentUser.avatar || 'US'
+                  )}
+                </div>
 
-              <div className="user-info">
-                <span className="user-name">{currentUser.name}</span>
-                <span className="user-role-badge">
-                  <ShieldCheck size={12} className="inline mr-1 text-emerald" />
-                  {currentUser.role || 'Authorized User'}
-                </span>
+                <div className="user-info">
+                  <span className="user-name">{currentUser.name}</span>
+                  <span className="user-role-badge">
+                    <ShieldCheck size={12} className="inline mr-1 text-emerald" />
+                    {currentUser.role || 'Authorized User'}
+                  </span>
+                </div>
               </div>
 
               <button 
                 className="logout-btn"
-                onClick={() => {
+                onClick={(e) => {
+                  e.stopPropagation();
                   onLogout();
                   closeMobileMenu();
                 }}

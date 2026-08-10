@@ -10,8 +10,10 @@ import StatsOverview from './components/StatsOverview';
 import ComparisonView from './components/ComparisonView';
 import LoginModal from './components/LoginModal';
 import LoginPage from './components/LoginPage';
+import UserProfileModal from './components/UserProfileModal';
 import { SAMPLE_DATASETS } from './utils/sampleData';
 import { getStoredUser, logoutUser } from './utils/auth';
+import { startSession, endActiveSession } from './utils/activityTracker';
 import { convertFileToCsvContent } from './utils/fileConverter';
 import { LayoutDashboard, Sliders, Table as TableIcon, Calculator, GitCompare, Loader2, Filter } from 'lucide-react';
 
@@ -39,10 +41,11 @@ export default function App() {
   // Mobile Filter Drawer state
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
 
-  // User Auth & Full Page View State
+  // User Auth & Profile Modal State
   const [currentUser, setCurrentUser] = useState(null);
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isGuestMode, setIsGuestMode] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
 
   // Theme State ('dark' | 'light')
   const [theme, setTheme] = useState(() => {
@@ -67,10 +70,11 @@ export default function App() {
   });
 
   useEffect(() => {
-    // Check initial user authentication session
+    // Check initial user authentication session and record active session
     const saved = getStoredUser();
     if (saved) {
       setCurrentUser(saved);
+      startSession(saved);
     }
   }, []);
 
@@ -218,7 +222,7 @@ export default function App() {
     const initialNumericFilters = {};
     headers.forEach(c => {
       if (schema[c] === 'numeric' && stats[c]) {
-        initialNumericFilters[c] = [stats[c].min, stats[c].max];
+        initialNumericFilters[col] = [stats[col].min, stats[col].max];
       }
     });
 
@@ -295,9 +299,13 @@ export default function App() {
   };
 
   const handleLogout = () => {
+    if (currentUser) {
+      endActiveSession(currentUser.id || currentUser.email || currentUser.phone);
+    }
     logoutUser();
     setCurrentUser(null);
     setIsGuestMode(false);
+    setIsProfileOpen(false);
     setIsLoginOpen(true);
   };
 
@@ -309,6 +317,7 @@ export default function App() {
       <LoginPage 
         onLoginSuccess={(user) => {
           setCurrentUser(user);
+          startSession(user);
           setIsLoginOpen(false);
           setIsGuestMode(false);
         }}
@@ -339,9 +348,18 @@ export default function App() {
         onExportCSV={handleExportCSV}
         currentUser={currentUser}
         onOpenLogin={() => setIsLoginOpen(true)}
+        onOpenProfile={() => setIsProfileOpen(true)}
         onLogout={handleLogout}
         theme={theme}
         onToggleTheme={handleToggleTheme}
+      />
+
+      <UserProfileModal 
+        currentUser={currentUser}
+        isOpen={isProfileOpen}
+        onClose={() => setIsProfileOpen(false)}
+        onLogout={handleLogout}
+        onUpdateUser={(updatedUser) => setCurrentUser(updatedUser)}
       />
 
       <div className="main-layout">

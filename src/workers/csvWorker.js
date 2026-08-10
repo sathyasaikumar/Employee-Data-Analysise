@@ -39,23 +39,31 @@ function parseLargeCSV(input) {
     skipEmptyLines: true,
     dynamicTyping: true,
     worker: false,
-    chunkSize: 1024 * 1024 * 4, // 4MB chunks
-    step: function (results, parser) {
-      if (results.data) {
+    chunkSize: 1024 * 1024 * 8, // 8MB chunks for maximum speed
+    fastMode: false,
+    chunk: function (results, parser) {
+      if (results.data && results.data.length > 0) {
         if (headers.length === 0 && results.meta && results.meta.fields) {
           headers = results.meta.fields;
         }
-        masterData.push(results.data);
-        rowCount++;
 
-        if (rowCount % 25000 === 0) {
-          self.postMessage({
-            type: 'PROGRESS',
-            rowCount,
-            bytesProcessed: parser.streamer ? parser.streamer._start : 0,
-            fileSize
-          });
+        const chunkRows = results.data;
+        const chunkLen = chunkRows.length;
+        for (let i = 0; i < chunkLen; i++) {
+          const row = chunkRows[i];
+          if (row) {
+            masterData.push(row);
+            rowCount++;
+          }
         }
+
+        self.postMessage({
+          type: 'PROGRESS',
+          rowCount,
+          bytesProcessed: parser.streamer ? parser.streamer._start : 0,
+          fileSize,
+          status: `Parsed ${rowCount.toLocaleString()} rows...`
+        });
       }
     },
     complete: function () {
@@ -444,7 +452,9 @@ function computeSummaryStatsFast(data, headers, schema) {
           if (num > max) max = num;
           sum += num;
           count++;
-          numSample.push(num);
+          if (numSample.length < 5000) {
+            numSample.push(num);
+          }
         } else {
           missingCount += step;
         }
