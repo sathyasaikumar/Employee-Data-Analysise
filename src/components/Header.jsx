@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { BarChart3, Upload, Download, Layers, LogIn, LogOut, ShieldCheck, Sun, Moon, ArrowLeft } from 'lucide-react';
+import { BarChart3, Upload, Download, Layers, LogIn, LogOut, ShieldCheck, Sun, Moon, ArrowLeft, Menu, X } from 'lucide-react';
 
 export default function Header({ 
   hasData, 
@@ -18,26 +18,46 @@ export default function Header({
   onToggleTheme
 }) {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const toggleMobileMenu = () => {
+    setIsMobileMenuOpen(prev => !prev);
+  };
+
+  const closeMobileMenu = () => {
+    setIsMobileMenuOpen(false);
+  };
 
   return (
     <header className="app-header">
       <div className="brand-section">
-        <div className="brand-icon-wrapper">
-          <BarChart3 className="w-6 h-6 text-white" size={24} />
+        <img src="/logo.png" alt="Sathya Logo" className="brand-gold-logo" />
+        <div className="brand-text-container">
+          <h1 className="brand-title">Corporate Access & Intelligence</h1>
+          <p className="brand-subtitle">Enterprise Workforce & Data Analytics</p>
         </div>
-        <div>
-          <h1 className="brand-title">Corporate Access & Intelligence System</h1>
-          <p className="brand-subtitle">Enterprise Workforce & Data Analytics Platform</p>
-        </div>
+
+        {/* Mobile Hamburger Toggle Button */}
+        <button 
+          type="button"
+          className="mobile-menu-toggle-btn"
+          onClick={toggleMobileMenu}
+          aria-label="Toggle Navigation Menu"
+        >
+          {isMobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
+        </button>
       </div>
 
-      <div className="header-actions">
+      <div className={`header-actions ${isMobileMenuOpen ? 'mobile-open' : ''}`}>
         {/* ONE unique Back button on the left side when in upload mode */}
         {(isUploadMode || !hasData) && hasPreviousDataset && (
           <button 
             type="button"
             className="btn btn-secondary btn-back-unique"
-            onClick={onBackToDashboard}
+            onClick={() => {
+              onBackToDashboard();
+              closeMobileMenu();
+            }}
             title="Return back to your active dataset and dashboard"
           >
             <ArrowLeft size={16} />
@@ -50,7 +70,10 @@ export default function Header({
             {/* 1. FIRST POSITION ON LEFT: New File Button */}
             <button 
               className="btn btn-primary btn-new-file-highlight" 
-              onClick={onResetData} 
+              onClick={() => {
+                onResetData();
+                closeMobileMenu();
+              }} 
               title="Upload a New CSV File or Reset Dataset"
             >
               <Upload size={16} />
@@ -60,7 +83,10 @@ export default function Header({
             {/* 2. NEXT TO NEW FILE: Export CSV Button */}
             <button 
               className="btn btn-secondary btn-export-csv" 
-              onClick={onExportCSV} 
+              onClick={() => {
+                onExportCSV();
+                closeMobileMenu();
+              }} 
               title="Export Filtered CSV Dataset"
             >
               <Download size={16} />
@@ -77,7 +103,10 @@ export default function Header({
             <select 
               className="sample-select" 
               onChange={(e) => {
-                if (e.target.value) onLoadSample(e.target.value);
+                if (e.target.value) {
+                  onLoadSample(e.target.value);
+                  closeMobileMenu();
+                }
               }}
               defaultValue=""
             >
@@ -89,7 +118,13 @@ export default function Header({
         )}
 
         {!hasData && !isUploadMode && !hasPreviousDataset && (
-          <button className="btn btn-primary btn-new-file-highlight" onClick={onUploadClick}>
+          <button 
+            className="btn btn-primary btn-new-file-highlight" 
+            onClick={() => {
+              onUploadClick();
+              closeMobileMenu();
+            }}
+          >
             <Upload size={16} />
             <span>Upload CSV File</span>
           </button>
@@ -98,7 +133,9 @@ export default function Header({
         {/* Theme Mode Switcher */}
         <button 
           className="btn btn-secondary theme-toggle-btn"
-          onClick={onToggleTheme}
+          onClick={() => {
+            onToggleTheme();
+          }}
           title={`Switch to ${theme === 'dark' ? 'Light' : 'Dark'} Mode`}
         >
           {theme === 'dark' ? (
@@ -136,7 +173,10 @@ export default function Header({
 
               <button 
                 className="logout-btn"
-                onClick={onLogout}
+                onClick={() => {
+                  onLogout();
+                  closeMobileMenu();
+                }}
                 title="Logout of current session"
               >
                 <LogOut size={16} />
@@ -144,7 +184,13 @@ export default function Header({
               </button>
             </div>
           ) : (
-            <button className="btn btn-primary login-trigger-btn" onClick={onOpenLogin}>
+            <button 
+              className="btn btn-primary login-trigger-btn" 
+              onClick={() => {
+                onOpenLogin();
+                closeMobileMenu();
+              }}
+            >
               <LogIn size={16} /> Log In
             </button>
           )}
@@ -153,3 +199,4 @@ export default function Header({
     </header>
   );
 }
+

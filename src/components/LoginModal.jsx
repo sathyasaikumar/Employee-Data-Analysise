@@ -177,12 +177,13 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
 
   return (
     <div className="auth-modal-backdrop" onClick={onClose}>
-      <div className="auth-modal-card" onClick={(e) => e.stopPropagation()}>
+      <div className="auth-modal-card unique-model-card" onClick={(e) => e.stopPropagation()}>
         {/* Header */}
         <div className="auth-modal-header">
-          <div className="auth-brand-badge">
-            <Shield size={18} className="text-accent-blue" />
-            <span>Corporate Security</span>
+          <div className="unique-sathya-badge">
+            <img src="/logo.png" alt="Sathya Logo" className="unique-sathya-logo-img" />
+            <span className="unique-badge-text">SATHYA ENTERPRISE SECURITY</span>
+            <span className="unique-pulse-dot" title="Active Security Node"></span>
           </div>
           <button className="auth-close-btn" onClick={onClose} aria-label="Close modal">
             <X size={20} />

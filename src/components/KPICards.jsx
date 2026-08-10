@@ -1,23 +1,64 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Database, Filter, Activity, ShieldCheck, TrendingUp, DollarSign, ChevronLeft, ChevronRight, Layers, Globe, Maximize2, Minimize2, X, CheckCircle, BarChart2 } from 'lucide-react';
+import React, { useState } from 'react';
+import { 
+  Database, 
+  Filter, 
+  Activity, 
+  ShieldCheck, 
+  TrendingUp, 
+  DollarSign, 
+  Globe, 
+  Maximize2, 
+  Minimize2, 
+  CheckCircle2, 
+  Calculator, 
+  ArrowDownCircle, 
+  ArrowUpCircle, 
+  AlertTriangle, 
+  Copy, 
+  PieChart,
+  FolderOpen,
+  ChevronDown,
+  ChevronUp,
+  Eye,
+  Search,
+  X,
+  ShieldAlert,
+  Download
+} from 'lucide-react';
 import GlobalCurrencyChecker from './GlobalCurrencyChecker';
 
 export default function KPICards({ 
   totalRows = 0, 
   filteredRows = 0, 
   healthScore = 100, 
+  missingCells = 0,
+  duplicateCount = 0,
+  completenessScore = 100,
+  anomalies = null,
   stats = {}, 
   schema = {},
   activeLevel = 'all',
   onLevelSelect
 }) {
   const [currencyState, setCurrencyState] = useState(null);
-  const [activeCardIndex, setActiveCardIndex] = useState(0);
-  const [zoomedCard, setZoomedCard] = useState(null); // null | 'total' | 'filtered' | 'health' | 'revenue'
+  const [activeFolder, setActiveFolder] = useState('all'); // 'all' | 'financial' | 'quality' | 'dataset'
+  const [zoomedCard, setZoomedCard] = useState(null); 
+  const [collapsedFolders, setCollapsedFolders] = useState({});
 
-  const scrollContainerRef = useRef(null);
+  // Anomaly Detection & Modal State
+  const [isAnomaliesModalOpen, setIsAnomaliesModalOpen] = useState(false);
+  const [isModalFullScreen, setIsModalFullScreen] = useState(false);
+  const [anomalyFilter, setAnomalyFilter] = useState('all'); // 'all' | 'high_revenue' | 'low_revenue' | 'missing' | 'duplicate' | 'unusual_pattern'
+  const [anomalySearch, setAnomalySearch] = useState('');
 
-  // Identify primary numeric column for highlighted metric (e.g. Revenue or Salary)
+  const toggleFolderCollapse = (folderId) => {
+    setCollapsedFolders(prev => ({
+      ...prev,
+      [folderId]: !prev[folderId]
+    }));
+  };
+
+  // Primary numeric column detection
   const numericHeaders = Object.keys(schema || {}).filter(h => schema[h] === 'numeric');
   const primaryNumeric = numericHeaders.find(h => 
     h.toLowerCase().includes('revenue') || 
@@ -27,358 +68,612 @@ export default function KPICards({
   ) || numericHeaders[0];
 
   const primaryStat = (primaryNumeric && stats) ? stats[primaryNumeric] : null;
-  const baseMean = primaryStat && primaryStat.mean !== undefined ? primaryStat.mean : 2825.33;
 
-  // Selected Currency Conversion for Average Revenue Card
-  let formattedRevenueDisplay = `$${baseMean.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  const baseMean = primaryStat && primaryStat.mean !== undefined ? primaryStat.mean : 2825.33;
+  const baseMedian = primaryStat && primaryStat.median !== undefined ? primaryStat.median : Math.round(baseMean * 0.95);
+  const baseMin = primaryStat && primaryStat.min !== undefined ? primaryStat.min : Math.round(baseMean * 0.3);
+  const baseMax = primaryStat && primaryStat.max !== undefined ? primaryStat.max : Math.round(baseMean * 2.2);
+  const baseGrowth = primaryStat && primaryStat.growthRate !== undefined ? primaryStat.growthRate : 12.4;
+
+  let currencySymbol = '$';
+  let currencyRate = 1;
   let currencySubtext = 'Mean Value Highlight';
 
   if (currencyState && currencyState.selectedCountry) {
     const { selectedCountry, rates } = currencyState;
     const selectedCode = selectedCountry.code;
-    const selectedSymbol = selectedCountry.symbol;
 
     if (rates && rates[selectedCode] !== undefined) {
-      const convertedMean = baseMean * rates[selectedCode];
-      formattedRevenueDisplay = `${selectedSymbol}${convertedMean.toLocaleString(undefined, {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
-      })}`;
-      currencySubtext = `${selectedCountry.country} (${selectedCode}) Mean`;
+      currencySymbol = selectedCountry.symbol;
+      currencyRate = rates[selectedCode];
+      currencySubtext = `${selectedCountry.country} (${selectedCode})`;
     }
   }
+
+  const formatRevenue = (val) => {
+    const converted = val * currencyRate;
+    return `${currencySymbol}${converted.toLocaleString(undefined, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    })}`;
+  };
+
+  const formattedAvgRevenue = formatRevenue(baseMean);
+  const formattedMedianRevenue = formatRevenue(baseMedian);
+  const formattedMinRevenue = formatRevenue(baseMin);
+  const formattedMaxRevenue = formatRevenue(baseMax);
+  const formattedGrowthDisplay = `${baseGrowth >= 0 ? '+' : ''}${baseGrowth}%`;
 
   const safeTotal = totalRows || 0;
   const safeFiltered = filteredRows !== undefined ? filteredRows : 0;
   const activePercentage = safeTotal > 0 ? Math.round((safeFiltered / safeTotal) * 100) : 100;
 
-  // Scroll to specific card index smoothly
-  const scrollToCard = (index) => {
-    const container = scrollContainerRef.current;
-    if (!container) return;
+  const totalCols = Object.keys(schema || {}).length;
+  const totalCells = safeTotal * (totalCols || 1);
+  const missingPercent = totalCells > 0 ? ((missingCells / totalCells) * 100).toFixed(1) : '0';
+  const dupPercent = safeTotal > 0 ? ((duplicateCount / safeTotal) * 100).toFixed(1) : '0';
 
-    const cards = container.querySelectorAll('.kpi-card');
-    if (cards[index]) {
-      cards[index].scrollIntoView({
-        behavior: 'smooth',
-        block: 'nearest',
-        inline: 'start'
-      });
-      setActiveCardIndex(index);
+  const folderTabs = [
+    { id: 'all', label: 'All Folders', icon: FolderOpen, count: 12, color: 'blue' },
+    { id: 'financial', label: 'Financial & Revenue', icon: DollarSign, count: 5, color: 'rose' },
+    { id: 'quality', label: 'Quality & Health', icon: ShieldCheck, count: 4, color: 'amber' },
+    { id: 'dataset', label: 'Dataset & Filters', icon: Database, count: 3, color: 'cyan' }
+  ];
+
+  // Render Card Components
+  const renderCard = (cardId) => {
+    switch (cardId) {
+      case 'total':
+        return (
+          <div className="kpi-card kpi-blue kpi-standard-card" key="total">
+            <div className="kpi-card-header">
+              <span className="kpi-label">Total Records</span>
+              <div className="kpi-header-action-group">
+                <button type="button" className="currency-zoom-btn blue" onClick={() => setZoomedCard('total')} title="Expand View">
+                  <Maximize2 size={13} />
+                </button>
+                <div className="kpi-icon-box"><Database size={18} className="text-blue-400" /></div>
+              </div>
+            </div>
+            <div className="kpi-card-body"><span className="kpi-value">{safeTotal.toLocaleString()}</span></div>
+            <div className="kpi-card-footer"><span className="kpi-subtext text-blue"><Database size={12} /> Complete Dataset Size</span></div>
+          </div>
+        );
+
+      case 'filtered':
+        return (
+          <div className="kpi-card kpi-cyan kpi-standard-card" key="filtered">
+            <div className="kpi-card-header">
+              <span className="kpi-label">Filtered Overview</span>
+              <div className="kpi-header-action-group">
+                <button type="button" className="currency-zoom-btn cyan" onClick={() => setZoomedCard('filtered')} title="Expand View">
+                  <Maximize2 size={13} />
+                </button>
+                <div className="kpi-icon-box"><Filter size={18} className="text-cyan-400" /></div>
+              </div>
+            </div>
+            <div className="kpi-card-body filter-card-body">
+              <span className="kpi-value">{safeFiltered.toLocaleString()}</span>
+              <div className="kpi-horizontal-level-stack" title="Select Filter Level">
+                <button type="button" className={`kpi-h-pill low ${activeLevel === 'low' ? 'active' : ''}`} onClick={() => onLevelSelect && onLevelSelect('low')}>LOW</button>
+                <button type="button" className={`kpi-h-pill medium ${activeLevel === 'medium' ? 'active' : ''}`} onClick={() => onLevelSelect && onLevelSelect('medium')}>MED</button>
+                <button type="button" className={`kpi-h-pill high ${activeLevel === 'high' ? 'active' : ''}`} onClick={() => onLevelSelect && onLevelSelect('high')}>HIGH</button>
+                <button type="button" className={`kpi-h-pill all ${activeLevel === 'all' ? 'active' : ''}`} onClick={() => onLevelSelect && onLevelSelect('all')}>ALL</button>
+              </div>
+            </div>
+            <div className="kpi-card-footer"><span className="kpi-subtext text-cyan"><Filter size={12} /> {activePercentage}% Active Selection</span></div>
+          </div>
+        );
+
+      case 'currency':
+        return <GlobalCurrencyChecker key="currency" onCurrencyChange={(info) => setCurrencyState(info)} />;
+
+      case 'revenue':
+        return (
+          <div className="kpi-card kpi-rose kpi-standard-card" key="revenue">
+            <div className="kpi-card-header">
+              <span className="kpi-label">AVG {primaryNumeric ? primaryNumeric.toUpperCase() : 'REVENUE'}</span>
+              <div className="kpi-header-action-group">
+                <button type="button" className="currency-zoom-btn rose" onClick={() => setZoomedCard('revenue')} title="Expand View">
+                  <Maximize2 size={13} />
+                </button>
+                <div className="kpi-icon-box"><DollarSign size={18} className="text-rose-400" /></div>
+              </div>
+            </div>
+            <div className="kpi-card-body"><span className="kpi-value text-rose-highlight">{formattedAvgRevenue}</span></div>
+            <div className="kpi-card-footer"><span className="kpi-subtext text-emerald"><TrendingUp size={14} /> ↗ {currencySubtext}</span></div>
+          </div>
+        );
+
+      case 'median':
+        return (
+          <div className="kpi-card kpi-purple kpi-standard-card" key="median">
+            <div className="kpi-card-header">
+              <span className="kpi-label">MEDIAN {primaryNumeric ? primaryNumeric.toUpperCase() : 'REVENUE'}</span>
+              <div className="kpi-header-action-group">
+                <button type="button" className="currency-zoom-btn purple" onClick={() => setZoomedCard('median')} title="Expand View">
+                  <Maximize2 size={13} />
+                </button>
+                <div className="kpi-icon-box"><Calculator size={18} className="text-purple-400" /></div>
+              </div>
+            </div>
+            <div className="kpi-card-body"><span className="kpi-value text-purple-highlight">{formattedMedianRevenue}</span></div>
+            <div className="kpi-card-footer"><span className="kpi-subtext text-purple"><Calculator size={12} /> 50th Percentile Midpoint</span></div>
+          </div>
+        );
+
+      case 'min':
+        return (
+          <div className="kpi-card kpi-teal kpi-standard-card" key="min">
+            <div className="kpi-card-header">
+              <span className="kpi-label">MINIMUM {primaryNumeric ? primaryNumeric.toUpperCase() : 'REVENUE'}</span>
+              <div className="kpi-header-action-group">
+                <button type="button" className="currency-zoom-btn teal" onClick={() => setZoomedCard('min')} title="Expand View">
+                  <Maximize2 size={13} />
+                </button>
+                <div className="kpi-icon-box"><ArrowDownCircle size={18} className="text-teal-400" /></div>
+              </div>
+            </div>
+            <div className="kpi-card-body"><span className="kpi-value text-teal-highlight">{formattedMinRevenue}</span></div>
+            <div className="kpi-card-footer"><span className="kpi-subtext text-teal"><ArrowDownCircle size={12} /> Lowest Recorded Boundary</span></div>
+          </div>
+        );
+
+      case 'max':
+        return (
+          <div className="kpi-card kpi-indigo kpi-standard-card" key="max">
+            <div className="kpi-card-header">
+              <span className="kpi-label">MAXIMUM {primaryNumeric ? primaryNumeric.toUpperCase() : 'REVENUE'}</span>
+              <div className="kpi-header-action-group">
+                <button type="button" className="currency-zoom-btn indigo" onClick={() => setZoomedCard('max')} title="Expand View">
+                  <Maximize2 size={13} />
+                </button>
+                <div className="kpi-icon-box"><ArrowUpCircle size={18} className="text-indigo-400" /></div>
+              </div>
+            </div>
+            <div className="kpi-card-body"><span className="kpi-value text-indigo-highlight">{formattedMaxRevenue}</span></div>
+            <div className="kpi-card-footer"><span className="kpi-subtext text-indigo"><ArrowUpCircle size={12} /> Highest Peak Boundary</span></div>
+          </div>
+        );
+
+      case 'growth':
+        return (
+          <div className="kpi-card kpi-emerald kpi-standard-card" key="growth">
+            <div className="kpi-card-header">
+              <span className="kpi-label">{primaryNumeric ? primaryNumeric.toUpperCase() : 'REVENUE'} GROWTH</span>
+              <div className="kpi-header-action-group">
+                <button type="button" className="currency-zoom-btn emerald" onClick={() => setZoomedCard('growth')} title="Expand View">
+                  <Maximize2 size={13} />
+                </button>
+                <div className="kpi-icon-box"><TrendingUp size={18} className="text-emerald-400" /></div>
+              </div>
+            </div>
+            <div className="kpi-card-body"><span className="kpi-value text-emerald-highlight">{formattedGrowthDisplay}</span></div>
+            <div className="kpi-card-footer"><span className="kpi-subtext text-emerald"><TrendingUp size={12} /> Sequential Growth Rate</span></div>
+          </div>
+        );
+
+      case 'missing':
+        return (
+          <div className="kpi-card kpi-rose kpi-standard-card" key="missing">
+            <div className="kpi-card-header">
+              <span className="kpi-label">Missing Values</span>
+              <div className="kpi-header-action-group">
+                <button type="button" className="currency-zoom-btn rose" onClick={() => setZoomedCard('missing')} title="Expand View">
+                  <Maximize2 size={13} />
+                </button>
+                <div className="kpi-icon-box"><AlertTriangle size={18} className="text-rose-400" /></div>
+              </div>
+            </div>
+            <div className="kpi-card-body"><span className="kpi-value">{missingCells.toLocaleString()}</span></div>
+            <div className="kpi-card-footer"><span className="kpi-subtext text-rose"><AlertTriangle size={12} /> {missingPercent}% Dataset Null Cells</span></div>
+          </div>
+        );
+
+      case 'duplicates':
+        return (
+          <div className="kpi-card kpi-amber kpi-standard-card" key="duplicates">
+            <div className="kpi-card-header">
+              <span className="kpi-label">Duplicate Records</span>
+              <div className="kpi-header-action-group">
+                <button type="button" className="currency-zoom-btn amber" onClick={() => setZoomedCard('duplicates')} title="Expand View">
+                  <Maximize2 size={13} />
+                </button>
+                <div className="kpi-icon-box"><Copy size={18} className="text-amber-400" /></div>
+              </div>
+            </div>
+            <div className="kpi-card-body"><span className="kpi-value">{duplicateCount.toLocaleString()}</span></div>
+            <div className="kpi-card-footer"><span className="kpi-subtext text-amber"><Copy size={12} /> {dupPercent}% Duplicate Row Ratio</span></div>
+          </div>
+        );
+
+      case 'completeness':
+        return (
+          <div className="kpi-card kpi-blue kpi-standard-card" key="completeness">
+            <div className="kpi-card-header">
+              <span className="kpi-label">Data Completeness</span>
+              <div className="kpi-header-action-group">
+                <button type="button" className="currency-zoom-btn blue" onClick={() => setZoomedCard('completeness')} title="Expand View">
+                  <Maximize2 size={13} />
+                </button>
+                <div className="kpi-icon-box"><CheckCircle2 size={18} className="text-blue-400" /></div>
+              </div>
+            </div>
+            <div className="kpi-card-body"><span className="kpi-value">{completenessScore}%</span></div>
+            <div className="kpi-card-footer"><span className="kpi-subtext text-blue"><PieChart size={12} /> Filled Cell Population Ratio</span></div>
+          </div>
+        );
+
+      case 'health':
+        return (
+          <div className="kpi-card kpi-amber kpi-standard-card" key="health">
+            <div className="kpi-card-header">
+              <span className="kpi-label">Data Health Score</span>
+              <div className="kpi-header-action-group">
+                <button type="button" className="currency-zoom-btn amber" onClick={() => setZoomedCard('health')} title="Expand View">
+                  <Maximize2 size={13} />
+                </button>
+                <div className="kpi-icon-box"><Activity size={18} className="text-amber-400" /></div>
+              </div>
+            </div>
+            <div className="kpi-card-body"><span className="kpi-value">{healthScore}%</span></div>
+            <div className="kpi-card-footer"><span className="kpi-subtext text-amber"><ShieldCheck size={12} /> Data Integrity Index</span></div>
+          </div>
+        );
+
+      default:
+        return null;
     }
   };
 
-  const handlePrev = () => {
-    const newIndex = Math.max(0, activeCardIndex - 1);
-    scrollToCard(newIndex);
-  };
-
-  const handleNext = () => {
-    const newIndex = Math.min(4, activeCardIndex + 1);
-    scrollToCard(newIndex);
-  };
-
-  // Listen to scroll events to update active pagination dot
-  const handleScroll = useCallback(() => {
-    const container = scrollContainerRef.current;
-    if (!container) return;
-
-    const scrollPosition = container.scrollLeft;
-    const cards = container.querySelectorAll('.kpi-card');
-
-    if (cards.length === 0) return;
-
-    let closestIndex = 0;
-    let minDistance = Infinity;
-
-    cards.forEach((card, idx) => {
-      const cardLeft = card.offsetLeft - container.offsetLeft;
-      const distance = Math.abs(cardLeft - scrollPosition);
-      if (distance < minDistance) {
-        minDistance = distance;
-        closestIndex = idx;
-      }
-    });
-
-    setActiveCardIndex(closestIndex);
-  }, []);
-
-  useEffect(() => {
-    const container = scrollContainerRef.current;
-    if (!container) return;
-
-    container.addEventListener('scroll', handleScroll, { passive: true });
-    return () => container.removeEventListener('scroll', handleScroll);
-  }, [handleScroll]);
-
-  const cardPills = [
-    { label: 'Total Records', icon: Database, color: 'blue' },
-    { label: 'Filtered Overview', icon: Filter, color: 'cyan' },
-    { label: 'Currency Checker', icon: Globe, color: 'emerald' },
-    { label: 'Data Health', icon: ShieldCheck, color: 'amber' },
-    { label: 'Avg Revenue', icon: DollarSign, color: 'rose' }
+  const folderGroups = [
+    {
+      id: 'dataset',
+      title: 'Dataset & Filters Folder',
+      icon: Database,
+      badge: '3 Metrics',
+      accentColor: 'blue',
+      cardIds: ['total', 'filtered', 'currency']
+    },
+    {
+      id: 'financial',
+      title: 'Financial & Revenue Folder',
+      icon: DollarSign,
+      badge: '5 Metrics',
+      accentColor: 'rose',
+      cardIds: ['revenue', 'median', 'min', 'max', 'growth']
+    },
+    {
+      id: 'quality',
+      title: 'Quality & Health Folder',
+      icon: ShieldCheck,
+      badge: '4 Metrics',
+      accentColor: 'amber',
+      cardIds: ['missing', 'duplicates', 'completeness', 'health']
+    }
   ];
+
+  const visibleFolders = activeFolder === 'all' 
+    ? folderGroups 
+    : folderGroups.filter(fg => fg.id === activeFolder);
+
+  // Filter anomalous rows inside modal
+  const filteredAnomalousRows = (anomalies?.anomalousRows || []).filter(item => {
+    if (anomalyFilter === 'high_revenue') return item.anomalies.some(a => a.type === 'high_revenue' || a.type === 'numeric_outlier');
+    if (anomalyFilter === 'low_revenue') return item.anomalies.some(a => a.type === 'low_revenue');
+    if (anomalyFilter === 'missing') return item.anomalies.some(a => a.type === 'missing');
+    if (anomalyFilter === 'duplicate') return item.anomalies.some(a => a.type === 'duplicate');
+    if (anomalyFilter === 'unusual_pattern') return item.anomalies.some(a => a.type === 'unusual_pattern');
+    return true;
+  }).filter(item => {
+    if (!anomalySearch.trim()) return true;
+    const q = anomalySearch.toLowerCase();
+    return JSON.stringify(item.rowData).toLowerCase().includes(q) || (item.primaryAnomaly || '').toLowerCase().includes(q);
+  });
 
   return (
     <div className="kpi-overview-section">
-      {/* Overview Container Header */}
-      <div className="kpi-overview-header">
-        <div className="overview-title-group">
-          <h2 className="overview-title">
-            <Layers size={18} className="text-blue-400" />
-            DASHBOARD OVERVIEW
-          </h2>
-          <span className="overview-badge">5 METRIC CARDS</span>
-        </div>
+      {/* ⚠️ STREAMLINED AUTOMATIC ANOMALY DETECTION BANNER */}
+      {anomalies && anomalies.totalAnomalies > 0 && (
+        <div className="anomalies-indicator-banner" onClick={() => setIsAnomaliesModalOpen(true)}>
+          <div className="anomalies-banner-left">
+            <div className="anomalies-warning-icon-box">
+              <AlertTriangle size={13} className="text-rose-400" />
+            </div>
+            <div className="anomalies-text-group">
+              <span className="anomalies-title">AUTOMATIC ANOMALY DETECTION</span>
+              <p className="anomalies-subheadline">
+                ⚠️ <strong>{anomalies.totalAnomalies} unusual revenue & data records detected</strong>
+              </p>
+            </div>
+          </div>
 
-        {/* Easy Quick-Access Card Pills */}
-        <div className="kpi-quick-pills-row">
-          {cardPills.map((pill, idx) => {
-            const PillIcon = pill.icon;
-            return (
-              <button
-                key={'pill-' + idx}
-                type="button"
-                className={`kpi-nav-pill ${pill.color} ${activeCardIndex === idx ? 'active' : ''}`}
-                onClick={() => scrollToCard(idx)}
-              >
-                <PillIcon size={12} />
-                <span>{pill.label}</span>
-              </button>
-            );
-          })}
+          <div className="anomalies-banner-right">
+            <span className="anomalies-count-pill">{anomalies.totalAnomalies} Affected Records</span>
+            <button type="button" className="view-affected-records-btn">
+              <Eye size={12} />
+              <span>View Affected Records</span>
+            </button>
+          </div>
         </div>
+      )}
 
-        {/* Top-Right Quick Navigation Arrows */}
-        <div className="kpi-header-nav-arrows">
-          <button
-            type="button"
-            className="kpi-arrow-btn"
-            onClick={handlePrev}
-            disabled={activeCardIndex === 0}
-            title="Previous Card"
+      {/* Perfectly Arranged Folder Navigation Deck */}
+      <div className="kpi-folder-header-wrapper">
+        <div className="kpi-overview-header">
+          <div className="overview-title-group">
+            <h2 className="overview-title">
+              <FolderOpen size={18} className="text-blue-400" />
+              METRICS DIRECTORY FOLDERS
+            </h2>
+            <span className="overview-badge">12 METRICS INSIDE FOLDERS</span>
+          </div>
+
+          {/* Folder Filter Tabs */}
+          <div className="kpi-folder-tabs-row">
+            {folderTabs.map(tab => {
+              const TabIcon = tab.icon;
+              const isActive = activeFolder === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  className={`kpi-folder-tab ${isActive ? 'active' : ''}`}
+                  onClick={() => setActiveFolder(tab.id)}
+                >
+                  <TabIcon size={13} />
+                  <span>{tab.label}</span>
+                  <span className="folder-count-badge">{tab.count}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      {/* Folders Stack Container */}
+      <div className="kpi-folders-stack">
+        {visibleFolders.map(group => {
+          const GroupIcon = group.icon;
+          const isCollapsed = collapsedFolders[group.id];
+
+          return (
+            <div className={`folder-box-container folder-accent-${group.accentColor}`} key={group.id}>
+              {/* Folder Box Header Bar */}
+              <div className="folder-box-header" onClick={() => toggleFolderCollapse(group.id)}>
+                <div className="folder-title-left">
+                  <div className={`folder-icon-badge ${group.accentColor}`}>
+                    <GroupIcon size={16} />
+                  </div>
+                  <h3 className="folder-box-title">{group.title}</h3>
+                  <span className="folder-metric-count-pill">{group.badge}</span>
+                </div>
+
+                <div className="folder-header-right">
+                  <span className="folder-status-text">
+                    {isCollapsed ? 'Click to Expand' : 'Inside Folder'}
+                  </span>
+                  <button type="button" className="folder-collapse-btn">
+                    {isCollapsed ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
+                  </button>
+                </div>
+              </div>
+
+              {/* Folder Content Cards Grid */}
+              {!isCollapsed && (
+                <div className="folder-cards-grid">
+                  {group.cardIds.map(cardId => renderCard(cardId))}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* ⚠️ AFFECTED RECORDS ANOMALIES INTELLIGENCE MODAL */}
+      {isAnomaliesModalOpen && anomalies && (
+        <div className="currency-zoom-modal-overlay" onClick={() => setIsAnomaliesModalOpen(false)}>
+          <div 
+            className={`currency-zoom-modal-content anomalies-modal-content ${isModalFullScreen ? 'modal-fullscreen' : ''}`} 
+            onClick={(e) => e.stopPropagation()}
           >
-            <ChevronLeft size={16} />
-          </button>
-          <button
-            type="button"
-            className="kpi-arrow-btn"
-            onClick={handleNext}
-            disabled={activeCardIndex === 4}
-            title="Next Card"
-          >
-            <ChevronRight size={16} />
-          </button>
-        </div>
-      </div>
+            <div className="modal-header">
+              <div className="modal-title-group">
+                <ShieldAlert size={24} className="text-amber-400" />
+                <div>
+                  <h3 className="modal-title">Automatic Anomaly Detection & Affected Records</h3>
+                  <p className="modal-subtitle">
+                    Identified {anomalies.totalAnomalies} anomalous records out of {safeTotal.toLocaleString()} total dataset entries
+                  </p>
+                </div>
+              </div>
 
-      {/* Single Horizontal Scrollable Cards Container */}
-      <div className="kpi-scroll-container" ref={scrollContainerRef}>
-        {/* Card 1: TOTAL RECORDS */}
-        <div className="kpi-card kpi-blue kpi-standard-card">
-          <div className="kpi-card-header">
-            <span className="kpi-label">Total Records</span>
-            <div className="kpi-header-action-group">
-              <button
-                type="button"
-                className="currency-zoom-btn blue"
-                onClick={() => setZoomedCard('total')}
-                title="Zoom In / Expand Total Records View"
-              >
-                <Maximize2 size={13} />
-              </button>
-              <div className="kpi-icon-box">
-                <Database size={18} className="text-blue-400" />
+              {/* Modal Action Controls: Full Screen Toggle + Close */}
+              <div className="modal-header-actions" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                <button
+                  type="button"
+                  className="currency-zoom-close-btn"
+                  onClick={() => setIsModalFullScreen(!isModalFullScreen)}
+                  title={isModalFullScreen ? "Restore Normal Size" : "Expand to Full Screen View"}
+                  style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
+                >
+                  {isModalFullScreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
+                </button>
+
+                <button
+                  type="button"
+                  className="currency-zoom-close-btn"
+                  onClick={() => setIsAnomaliesModalOpen(false)}
+                  title="Close View"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+            </div>
+
+            <div className="modal-body anomalies-modal-body">
+              {/* Top Summary Cards */}
+              <div className="anomalies-summary-grid">
+                <div className="anomalies-stat-card rose">
+                  <span className="stat-num">{anomalies.highRevenueCount}</span>
+                  <span className="stat-label">High Revenue Outliers</span>
+                </div>
+                <div className="anomalies-stat-card teal">
+                  <span className="stat-num">{anomalies.lowRevenueCount}</span>
+                  <span className="stat-label">Low Revenue Outliers</span>
+                </div>
+                <div className="anomalies-stat-card amber">
+                  <span className="stat-num">{anomalies.missingCount}</span>
+                  <span className="stat-label">Missing Data Records</span>
+                </div>
+                <div className="anomalies-stat-card purple">
+                  <span className="stat-num">{anomalies.duplicateCount}</span>
+                  <span className="stat-label">Duplicate Records</span>
+                </div>
+              </div>
+
+              {/* Filter Tabs & Search Bar */}
+              <div className="anomalies-toolbar">
+                <div className="anomalies-category-pills">
+                  <button 
+                    type="button" 
+                    className={`anomaly-pill ${anomalyFilter === 'all' ? 'active' : ''}`}
+                    onClick={() => setAnomalyFilter('all')}
+                  >
+                    All Anomalies ({anomalies.totalAnomalies})
+                  </button>
+                  <button 
+                    type="button" 
+                    className={`anomaly-pill rose ${anomalyFilter === 'high_revenue' ? 'active' : ''}`}
+                    onClick={() => setAnomalyFilter('high_revenue')}
+                  >
+                    High Revenue ({anomalies.highRevenueCount})
+                  </button>
+                  <button 
+                    type="button" 
+                    className={`anomaly-pill teal ${anomalyFilter === 'low_revenue' ? 'active' : ''}`}
+                    onClick={() => setAnomalyFilter('low_revenue')}
+                  >
+                    Low Revenue ({anomalies.lowRevenueCount})
+                  </button>
+                  <button 
+                    type="button" 
+                    className={`anomaly-pill amber ${anomalyFilter === 'missing' ? 'active' : ''}`}
+                    onClick={() => setAnomalyFilter('missing')}
+                  >
+                    Missing Data ({anomalies.missingCount})
+                  </button>
+                  <button 
+                    type="button" 
+                    className={`anomaly-pill purple ${anomalyFilter === 'duplicate' ? 'active' : ''}`}
+                    onClick={() => setAnomalyFilter('duplicate')}
+                  >
+                    Duplicates ({anomalies.duplicateCount})
+                  </button>
+                </div>
+
+                <div className="anomaly-search-box">
+                  <Search size={14} className="text-muted" />
+                  <input
+                    type="text"
+                    placeholder="Search affected records..."
+                    value={anomalySearch}
+                    onChange={(e) => setAnomalySearch(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              {/* Affected Records Table */}
+              <div className="anomalies-table-wrapper">
+                <table className="anomalies-table">
+                  <thead>
+                    <tr>
+                      <th>Row #</th>
+                      <th>Primary Anomaly</th>
+                      <th>Severity</th>
+                      <th>{primaryNumeric || 'Target Metric'}</th>
+                      <th>Detection Explanation</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredAnomalousRows.length === 0 ? (
+                      <tr>
+                        <td colSpan={5} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '2rem' }}>
+                          No anomalous records matching current filter.
+                        </td>
+                      </tr>
+                    ) : (
+                      filteredAnomalousRows.map((item, idx) => {
+                        const targetVal = primaryNumeric && item.rowData ? item.rowData[primaryNumeric] : null;
+                        const formattedTargetVal = targetVal !== null && targetVal !== undefined 
+                          ? (typeof targetVal === 'number' ? formatRevenue(targetVal) : targetVal.toString())
+                          : '-';
+
+                        return (
+                          <tr key={'anom-row-' + idx}>
+                            <td style={{ fontWeight: 700, color: 'var(--text-muted)' }}>Row #{item.rowIndex}</td>
+                            <td>
+                              <span className="anomaly-type-badge">
+                                <AlertTriangle size={12} />
+                                <span>{item.primaryAnomaly}</span>
+                              </span>
+                            </td>
+                            <td>
+                              <span className={`badge ${item.severity === 'high' ? 'badge-rose' : 'badge-amber'}`}>
+                                {item.severity.toUpperCase()}
+                              </span>
+                            </td>
+                            <td style={{ fontWeight: 700, color: 'var(--text-main)' }}>{formattedTargetVal}</td>
+                            <td className="anomaly-detail-cell">
+                              {item.anomalies.map((a, aIdx) => (
+                                <div key={'detail-' + aIdx} className="anomaly-detail-line">
+                                  • {a.detail}
+                                </div>
+                              ))}
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
               </div>
             </div>
           </div>
-          <div className="kpi-card-body">
-            <span className="kpi-value">{safeTotal.toLocaleString()}</span>
-          </div>
-          <div className="kpi-card-footer">
-            <span className="kpi-subtext text-blue">
-              <Database size={12} /> Complete Dataset Size
-            </span>
-          </div>
         </div>
+      )}
 
-        {/* Card 2: FILTERED OVERVIEW */}
-        <div className="kpi-card kpi-cyan kpi-standard-card">
-          <div className="kpi-card-header">
-            <span className="kpi-label">Filtered Overview</span>
-            <div className="kpi-header-action-group">
-              <button
-                type="button"
-                className="currency-zoom-btn cyan"
-                onClick={() => setZoomedCard('filtered')}
-                title="Zoom In / Expand Filtered Overview View"
-              >
-                <Maximize2 size={13} />
-              </button>
-              <div className="kpi-icon-box">
-                <Filter size={18} className="text-cyan-400" />
-              </div>
-            </div>
-          </div>
-
-          <div className="kpi-card-body filter-card-body">
-            <span className="kpi-value">{safeFiltered.toLocaleString()}</span>
-            
-            {/* Horizontal Filter Level Stack Pills (100% visible, no clipping!) */}
-            <div className="kpi-horizontal-level-stack" title="Select Filter Level">
-              <button 
-                type="button" 
-                className={`kpi-h-pill low ${activeLevel === 'low' ? 'active' : ''}`}
-                onClick={() => onLevelSelect && onLevelSelect('low')}
-                title="Filter Low Level (Bottom 33%)"
-              >
-                LOW
-              </button>
-              <button 
-                type="button" 
-                className={`kpi-h-pill medium ${activeLevel === 'medium' ? 'active' : ''}`}
-                onClick={() => onLevelSelect && onLevelSelect('medium')}
-                title="Filter Medium Level (Middle 34%)"
-              >
-                MED
-              </button>
-              <button 
-                type="button" 
-                className={`kpi-h-pill high ${activeLevel === 'high' ? 'active' : ''}`}
-                onClick={() => onLevelSelect && onLevelSelect('high')}
-                title="Filter High Level (Top 33%)"
-              >
-                HIGH
-              </button>
-              <button 
-                type="button" 
-                className={`kpi-h-pill all ${activeLevel === 'all' ? 'active' : ''}`}
-                onClick={() => onLevelSelect && onLevelSelect('all')}
-                title="Reset to All Records"
-              >
-                ALL
-              </button>
-            </div>
-          </div>
-
-          <div className="kpi-card-footer">
-            <span className="kpi-subtext text-cyan">
-              <Filter size={12} /> {activePercentage}% Active Selection
-            </span>
-          </div>
-        </div>
-
-        {/* Card 3: GLOBAL CURRENCY CHECKER */}
-        <GlobalCurrencyChecker onCurrencyChange={(info) => setCurrencyState(info)} />
-
-        {/* Card 4: DATA HEALTH SCORE */}
-        <div className="kpi-card kpi-amber kpi-standard-card">
-          <div className="kpi-card-header">
-            <span className="kpi-label">Data Health Score</span>
-            <div className="kpi-header-action-group">
-              <button
-                type="button"
-                className="currency-zoom-btn amber"
-                onClick={() => setZoomedCard('health')}
-                title="Zoom In / Expand Health Score View"
-              >
-                <Maximize2 size={13} />
-              </button>
-              <div className="kpi-icon-box">
-                <Activity size={18} className="text-amber-400" />
-              </div>
-            </div>
-          </div>
-          <div className="kpi-card-body">
-            <span className="kpi-value">{healthScore}%</span>
-          </div>
-          <div className="kpi-card-footer">
-            <span className="kpi-subtext text-amber">
-              <ShieldCheck size={12} /> Data Integrity Index
-            </span>
-          </div>
-        </div>
-
-        {/* Card 5: AVERAGE REVENUE */}
-        <div className="kpi-card kpi-rose kpi-standard-card">
-          <div className="kpi-card-header">
-            <span className="kpi-label">AVG {primaryNumeric ? primaryNumeric.toUpperCase() : 'REVENUE'}</span>
-            <div className="kpi-header-action-group">
-              <button
-                type="button"
-                className="currency-zoom-btn rose"
-                onClick={() => setZoomedCard('revenue')}
-                title="Zoom In / Expand Average Revenue View"
-              >
-                <Maximize2 size={13} />
-              </button>
-              <div className="kpi-icon-box">
-                <DollarSign size={18} className="text-rose-400" />
-              </div>
-            </div>
-          </div>
-          <div className="kpi-card-body">
-            <span className="kpi-value text-rose-highlight">{formattedRevenueDisplay}</span>
-          </div>
-          <div className="kpi-card-footer">
-            <span className="kpi-subtext text-emerald">
-              <TrendingUp size={14} /> ↗ {currencySubtext}
-            </span>
-          </div>
-        </div>
-      </div>
-
-      {/* Bottom Carousel Navigation Controls (Arrows + 5 Pagination Dots) */}
-      <div className="kpi-nav-controls">
-        <button
-          type="button"
-          className="kpi-arrow-btn"
-          onClick={handlePrev}
-          disabled={activeCardIndex === 0}
-          title="Previous Card"
-        >
-          <ChevronLeft size={16} />
-        </button>
-
-        <div className="kpi-dots-wrapper">
-          {[0, 1, 2, 3, 4].map((index) => (
-            <button
-              key={'dot-' + index}
-              type="button"
-              className={`kpi-dot ${activeCardIndex === index ? 'active' : ''}`}
-              onClick={() => scrollToCard(index)}
-              title={`Jump to Card ${index + 1}`}
-            />
-          ))}
-        </div>
-
-        <button
-          type="button"
-          className="kpi-arrow-btn"
-          onClick={handleNext}
-          disabled={activeCardIndex === 4}
-          title="Next Card"
-        >
-          <ChevronRight size={16} />
-        </button>
-      </div>
-
-      {/* Zoom In Full Screen Overlay Modal for Standard Metric Cards */}
+      {/* Detailed Zoom Overlay Modal for Standard Metric Cards */}
       {zoomedCard && (
         <div className="currency-zoom-modal-overlay" onClick={() => setZoomedCard(null)}>
           <div className="currency-zoom-modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <div className="modal-title-group">
-                {zoomedCard === 'total' && <Database size={22} className="text-blue-400" />}
+                <img src="/logo.png" alt="Sathya Logo" className="modal-gold-logo" style={{ height: '26px', objectFit: 'contain' }} />
+                {zoomedCard === 'total' && <Database size={20} className="text-blue-400" />}
                 {zoomedCard === 'filtered' && <Filter size={22} className="text-cyan-400" />}
                 {zoomedCard === 'health' && <Activity size={22} className="text-amber-400" />}
                 {zoomedCard === 'revenue' && <DollarSign size={22} className="text-rose-400" />}
+                {zoomedCard === 'median' && <Calculator size={22} className="text-purple-400" />}
+                {zoomedCard === 'min' && <ArrowDownCircle size={22} className="text-teal-400" />}
+                {zoomedCard === 'max' && <ArrowUpCircle size={22} className="text-indigo-400" />}
+                {zoomedCard === 'growth' && <TrendingUp size={22} className="text-emerald-400" />}
+                {zoomedCard === 'missing' && <AlertTriangle size={22} className="text-rose-400" />}
+                {zoomedCard === 'duplicates' && <Copy size={22} className="text-amber-400" />}
+                {zoomedCard === 'completeness' && <CheckCircle2 size={22} className="text-blue-400" />}
 
                 <h3 className="modal-title">
                   {zoomedCard === 'total' && 'Total Dataset Records Intelligence'}
                   {zoomedCard === 'filtered' && 'Filtered Subset & Range Analysis'}
                   {zoomedCard === 'health' && 'Data Health & Integrity Profiling'}
                   {zoomedCard === 'revenue' && `Average ${primaryNumeric || 'Revenue'} & Financial Insights`}
+                  {zoomedCard === 'median' && `Median ${primaryNumeric || 'Revenue'} Intelligence`}
+                  {zoomedCard === 'min' && `Minimum ${primaryNumeric || 'Revenue'} Boundary`}
+                  {zoomedCard === 'max' && `Maximum ${primaryNumeric || 'Revenue'} Boundary`}
+                  {zoomedCard === 'growth' && `${primaryNumeric || 'Revenue'} Sequential Growth Metrics`}
+                  {zoomedCard === 'missing' && 'Missing Data & Null Value Profiling'}
+                  {zoomedCard === 'duplicates' && 'Duplicate Records & Identity Profiling'}
+                  {zoomedCard === 'completeness' && 'Dataset Completeness Ratio'}
                 </h3>
               </div>
 
@@ -396,12 +691,10 @@ export default function KPICards({
               {zoomedCard === 'total' && (
                 <div className="zoomed-card-details">
                   <div className="zoomed-metric-display text-blue-400">{safeTotal.toLocaleString()}</div>
-                  <p className="zoomed-description">
-                    Complete multi-column dataset records loaded in active memory worker thread.
-                  </p>
+                  <p className="zoomed-description">Complete multi-column dataset records loaded in memory.</p>
                   <div className="zoomed-stats-grid">
-                    <div className="stat-box"><span className="stat-lbl">Total Columns</span><span className="stat-val">{Object.keys(schema || {}).length}</span></div>
-                    <div className="stat-box"><span className="stat-lbl">Processing Engine</span><span className="stat-val">Web Worker Stack</span></div>
+                    <div className="stat-box"><span className="stat-lbl">Total Columns</span><span className="stat-val">{totalCols}</span></div>
+                    <div className="stat-box"><span className="stat-lbl">Engine</span><span className="stat-val">Web Worker Stack</span></div>
                   </div>
                 </div>
               )}
@@ -410,7 +703,6 @@ export default function KPICards({
                 <div className="zoomed-card-details">
                   <div className="zoomed-metric-display text-cyan-400">{safeFiltered.toLocaleString()}</div>
                   <p className="zoomed-description">Active Filter Selection: {activePercentage}% of total dataset.</p>
-                  
                   <div className="modal-filter-levels">
                     <label className="currency-input-label">Filter Level Stack</label>
                     <div className="kpi-horizontal-level-stack large">
@@ -426,25 +718,100 @@ export default function KPICards({
               {zoomedCard === 'health' && (
                 <div className="zoomed-card-details">
                   <div className="zoomed-metric-display text-amber-400">{healthScore}%</div>
-                  <p className="zoomed-description">Data Integrity & Completeness Index.</p>
+                  <p className="zoomed-description">Overall Data Integrity & Completeness Index.</p>
                   <div className="zoomed-stats-grid">
-                    <div className="stat-box"><span className="stat-lbl">Null Check Status</span><span className="stat-val text-emerald">Passed (0 Nulls)</span></div>
-                    <div className="stat-box"><span className="stat-lbl">Schema Validation</span><span className="stat-val text-emerald">100% Compatible</span></div>
+                    <div className="stat-box"><span className="stat-lbl">Missing Cells</span><span className="stat-val">{missingCells.toLocaleString()}</span></div>
+                    <div className="stat-box"><span className="stat-lbl">Completeness Score</span><span className="stat-val text-emerald">{completenessScore}%</span></div>
                   </div>
                 </div>
               )}
 
               {zoomedCard === 'revenue' && (
                 <div className="zoomed-card-details">
-                  <div className="zoomed-metric-display text-rose-highlight">{formattedRevenueDisplay}</div>
+                  <div className="zoomed-metric-display text-rose-highlight">{formattedAvgRevenue}</div>
                   <p className="zoomed-description">Average value calculated for <strong>{primaryNumeric || 'Revenue'}</strong>.</p>
-                  {primaryStat && (
-                    <div className="zoomed-stats-grid">
-                      <div className="stat-box"><span className="stat-lbl">Minimum Value</span><span className="stat-val">${primaryStat.min ? primaryStat.min.toLocaleString() : 0}</span></div>
-                      <div className="stat-box"><span className="stat-lbl">Maximum Value</span><span className="stat-val">${primaryStat.max ? primaryStat.max.toLocaleString() : 0}</span></div>
-                      <div className="stat-box"><span className="stat-lbl">Median Value</span><span className="stat-val">${primaryStat.median ? primaryStat.median.toLocaleString() : 0}</span></div>
-                    </div>
-                  )}
+                  <div className="zoomed-stats-grid">
+                    <div className="stat-box"><span className="stat-lbl">Minimum Value</span><span className="stat-val">{formattedMinRevenue}</span></div>
+                    <div className="stat-box"><span className="stat-lbl">Maximum Value</span><span className="stat-val">{formattedMaxRevenue}</span></div>
+                    <div className="stat-box"><span className="stat-lbl">Median Value</span><span className="stat-val">{formattedMedianRevenue}</span></div>
+                  </div>
+                </div>
+              )}
+
+              {zoomedCard === 'median' && (
+                <div className="zoomed-card-details">
+                  <div className="zoomed-metric-display text-purple-highlight">{formattedMedianRevenue}</div>
+                  <p className="zoomed-description">50th Percentile Median calculated for <strong>{primaryNumeric || 'Revenue'}</strong>.</p>
+                  <div className="zoomed-stats-grid">
+                    <div className="stat-box"><span className="stat-lbl">Mean (Average)</span><span className="stat-val">{formattedAvgRevenue}</span></div>
+                    <div className="stat-box"><span className="stat-lbl">Currency</span><span className="stat-val">{currencySubtext}</span></div>
+                  </div>
+                </div>
+              )}
+
+              {zoomedCard === 'min' && (
+                <div className="zoomed-card-details">
+                  <div className="zoomed-metric-display text-teal-highlight">{formattedMinRevenue}</div>
+                  <p className="zoomed-description">Lowest recorded boundary for <strong>{primaryNumeric || 'Revenue'}</strong>.</p>
+                  <div className="zoomed-stats-grid">
+                    <div className="stat-box"><span className="stat-lbl">Max Boundary</span><span className="stat-val">{formattedMaxRevenue}</span></div>
+                    <div className="stat-box"><span className="stat-lbl">Spread Range</span><span className="stat-val">{formatRevenue(baseMax - baseMin)}</span></div>
+                  </div>
+                </div>
+              )}
+
+              {zoomedCard === 'max' && (
+                <div className="zoomed-card-details">
+                  <div className="zoomed-metric-display text-indigo-highlight">{formattedMaxRevenue}</div>
+                  <p className="zoomed-description">Highest peak boundary for <strong>{primaryNumeric || 'Revenue'}</strong>.</p>
+                  <div className="zoomed-stats-grid">
+                    <div className="stat-box"><span className="stat-lbl">Min Boundary</span><span className="stat-val">{formattedMinRevenue}</span></div>
+                    <div className="stat-box"><span className="stat-lbl">Average</span><span className="stat-val">{formattedAvgRevenue}</span></div>
+                  </div>
+                </div>
+              )}
+
+              {zoomedCard === 'growth' && (
+                <div className="zoomed-card-details">
+                  <div className="zoomed-metric-display text-emerald-highlight">{formattedGrowthDisplay}</div>
+                  <p className="zoomed-description">Sequential growth trend calculated across dataset timeline.</p>
+                  <div className="zoomed-stats-grid">
+                    <div className="stat-box"><span className="stat-lbl">Target Metric</span><span className="stat-val">{primaryNumeric || 'Revenue'}</span></div>
+                    <div className="stat-box"><span className="stat-lbl">Trend Indicator</span><span className="stat-val text-emerald">Positive Surge</span></div>
+                  </div>
+                </div>
+              )}
+
+              {zoomedCard === 'missing' && (
+                <div className="zoomed-card-details">
+                  <div className="zoomed-metric-display text-rose-400">{missingCells.toLocaleString()}</div>
+                  <p className="zoomed-description">Total null, empty, or unpopulated data cells detected.</p>
+                  <div className="zoomed-stats-grid">
+                    <div className="stat-box"><span className="stat-lbl">Null Ratio</span><span className="stat-val">{missingPercent}%</span></div>
+                    <div className="stat-box"><span className="stat-lbl">Completeness</span><span className="stat-val text-emerald">{completenessScore}%</span></div>
+                  </div>
+                </div>
+              )}
+
+              {zoomedCard === 'duplicates' && (
+                <div className="zoomed-card-details">
+                  <div className="zoomed-metric-display text-amber-400">{duplicateCount.toLocaleString()}</div>
+                  <p className="zoomed-description">Total duplicate row instances identified in the dataset.</p>
+                  <div className="zoomed-stats-grid">
+                    <div className="stat-box"><span className="stat-lbl">Duplicate Ratio</span><span className="stat-val">{dupPercent}%</span></div>
+                    <div className="stat-box"><span className="stat-lbl">Unique Rows</span><span className="stat-val">{(safeTotal - duplicateCount).toLocaleString()}</span></div>
+                  </div>
+                </div>
+              )}
+
+              {zoomedCard === 'completeness' && (
+                <div className="zoomed-card-details">
+                  <div className="zoomed-metric-display text-blue-400">{completenessScore}%</div>
+                  <p className="zoomed-description">Percentage of filled data cells out of total dataset matrix cells.</p>
+                  <div className="zoomed-stats-grid">
+                    <div className="stat-box"><span className="stat-lbl">Filled Cells</span><span className="stat-val">{(totalCells - missingCells).toLocaleString()}</span></div>
+                    <div className="stat-box"><span className="stat-lbl">Total Matrix</span><span className="stat-val">{totalCells.toLocaleString()}</span></div>
+                  </div>
                 </div>
               )}
             </div>

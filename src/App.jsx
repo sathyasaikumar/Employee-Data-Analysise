@@ -13,7 +13,7 @@ import LoginPage from './components/LoginPage';
 import { SAMPLE_DATASETS } from './utils/sampleData';
 import { getStoredUser, logoutUser } from './utils/auth';
 import { convertFileToCsvContent } from './utils/fileConverter';
-import { LayoutDashboard, Sliders, Table as TableIcon, Calculator, GitCompare, Loader2 } from 'lucide-react';
+import { LayoutDashboard, Sliders, Table as TableIcon, Calculator, GitCompare, Loader2, Filter } from 'lucide-react';
 
 export default function App() {
   const [totalRows, setTotalRows] = useState(0);
@@ -22,6 +22,10 @@ export default function App() {
   const [schema, setSchema] = useState({});
   const [stats, setStats] = useState({});
   const [healthScore, setHealthScore] = useState(100);
+  const [missingCells, setMissingCells] = useState(0);
+  const [duplicateCount, setDuplicateCount] = useState(0);
+  const [completenessScore, setCompletenessScore] = useState(100);
+  const [anomaliesData, setAnomaliesData] = useState(null);
   const [datasetName, setDatasetName] = useState('');
   const [dashboardMetrics, setDashboardMetrics] = useState(null);
   const [pageData, setPageData] = useState([]);
@@ -31,6 +35,9 @@ export default function App() {
   const [activeLevel, setActiveLevel] = useState('all'); // 'all' | 'low' | 'medium' | 'high'
   const [isLoading, setIsLoading] = useState(false);
   const [progressInfo, setProgressInfo] = useState({ text: '', rowCount: 0 });
+
+  // Mobile Filter Drawer state
+  const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
 
   // User Auth & Full Page View State
   const [currentUser, setCurrentUser] = useState(null);
@@ -103,12 +110,17 @@ export default function App() {
           rowCount: rowCount || 0
         });
       } else if (type === 'COMPLETE') {
+        const { missingCells: mCells, duplicateCount: dCount, completenessScore: cScore, anomalies } = e.data;
         setTotalRows(totalRows);
         setFilteredCount(filteredCount);
         setHeaders(headers);
         setSchema(schema);
         setStats(stats);
         setHealthScore(healthScore);
+        setMissingCells(mCells || 0);
+        setDuplicateCount(dCount || 0);
+        setCompletenessScore(cScore !== undefined ? cScore : 100);
+        setAnomaliesData(anomalies || null);
         setDashboardMetrics(dashboardMetrics);
         setPageData(pageData);
         setDatasetName(name);
@@ -334,17 +346,43 @@ export default function App() {
 
       <div className="main-layout">
         {hasData && !isUploadMode && !isLoading && (
-          <SidebarFilters 
-            headers={headers}
-            schema={schema}
-            stats={stats}
-            filters={filters}
-            onFilterChange={handleFilterChange}
-            onResetFilters={handleResetFilters}
-          />
+          <>
+            {isMobileFilterOpen && (
+              <div 
+                className="sidebar-backdrop" 
+                onClick={() => setIsMobileFilterOpen(false)} 
+                title="Close Filter Drawer"
+              />
+            )}
+            <SidebarFilters 
+              headers={headers}
+              schema={schema}
+              stats={stats}
+              filters={filters}
+              onFilterChange={handleFilterChange}
+              onResetFilters={handleResetFilters}
+              isMobileOpen={isMobileFilterOpen}
+              onCloseMobile={() => setIsMobileFilterOpen(false)}
+            />
+          </>
         )}
 
         <div className="content-area">
+          {hasData && !isUploadMode && !isLoading && (
+            <div className="mobile-filter-bar">
+              <button 
+                type="button" 
+                className="mobile-filter-trigger-btn"
+                onClick={() => setIsMobileFilterOpen(true)}
+              >
+                <Filter size={16} />
+                <span>Filter Options</span>
+                {filteredCount !== totalRows && (
+                  <span className="mobile-filter-count-badge">Filtered</span>
+                )}
+              </button>
+            </div>
+          )}
           {isLoading ? (
             <div className="dropzone-container" style={{ cursor: 'default' }}>
               <div className="upload-icon-circle" style={{ animation: 'spin 1.5s linear infinite' }}>
@@ -374,6 +412,10 @@ export default function App() {
                 totalRows={totalRows}
                 filteredRows={filteredCount}
                 healthScore={healthScore}
+                missingCells={missingCells}
+                duplicateCount={duplicateCount}
+                completenessScore={completenessScore}
+                anomalies={anomaliesData}
                 stats={stats}
                 schema={schema}
                 activeLevel={activeLevel}

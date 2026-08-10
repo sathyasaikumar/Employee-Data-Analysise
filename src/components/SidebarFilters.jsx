@@ -1,5 +1,5 @@
 import React from 'react';
-import { Filter, RotateCcw, Search, CheckSquare } from 'lucide-react';
+import { Filter, RotateCcw, Search, CheckSquare, X } from 'lucide-react';
 
 export default function SidebarFilters({ 
   headers, 
@@ -7,26 +7,40 @@ export default function SidebarFilters({
   stats, 
   filters, 
   onFilterChange, 
-  onResetFilters 
+  onResetFilters,
+  isMobileOpen,
+  onCloseMobile
 }) {
   const categoricalHeaders = headers.filter(h => schema[h] === 'categorical');
   const numericHeaders = headers.filter(h => schema[h] === 'numeric');
 
   return (
-    <aside className="sidebar">
+    <aside className={`sidebar ${isMobileOpen ? 'mobile-open' : ''}`}>
       <div className="sidebar-header">
         <div className="sidebar-title">
           <Filter size={18} className="text-blue-400" />
           <span>Interactive Filters</span>
         </div>
-        <button 
-          className="btn btn-outline" 
-          style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem' }} 
-          onClick={onResetFilters}
-          title="Reset all filters"
-        >
-          <RotateCcw size={12} /> Reset
-        </button>
+        <div className="sidebar-header-actions">
+          <button 
+            className="btn btn-outline" 
+            style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem' }} 
+            onClick={onResetFilters}
+            title="Reset all filters"
+          >
+            <RotateCcw size={12} /> Reset
+          </button>
+          {onCloseMobile && (
+            <button
+              className="btn btn-secondary mobile-filter-close-btn"
+              onClick={onCloseMobile}
+              title="Close filter drawer"
+              aria-label="Close filters"
+            >
+              <X size={16} />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Global Search */}

@@ -75,6 +75,7 @@ export default function OAuthPromptModal({ isOpen, provider, loginFn, onClose, o
         {/* Header */}
         <div className="oauth-prompt-header">
           <div className="oauth-prompt-brand">
+            <img src="/logo.png" alt="Sathya Logo" className="modal-gold-logo" style={{ height: '24px', objectFit: 'contain' }} />
             <div className="oauth-provider-badge">
               {provider === 'Google' && (
                 <svg width="20" height="20" viewBox="0 0 24 24">

@@ -1,0 +1,397 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { Globe, ArrowRightLeft, Search, RefreshCw, AlertTriangle, ChevronDown, Check, Clock, Maximize2, Minimize2, X } from 'lucide-react';
+import { WORLD_CURRENCIES, getCurrencyByCode, searchCurrencies } from '../utils/currencyData';
+
+export default function GlobalCurrencyChecker({ onCurrencyChange }) {
+  // Primary selected country/currency
+  const [selectedCountry, setSelectedCountry] = useState(WORLD_CURRENCIES[0]); // Default India (INR)
+  const [fromCurrency, setFromCurrency] = useState(WORLD_CURRENCIES[0]); // INR
+  const [toCurrency, setToCurrency] = useState(WORLD_CURRENCIES[1]); // USD
+  const [amount, setAmount] = useState('100');
+
+  // Rates & API State
+  const [rates, setRates] = useState({});
+  const [lastUpdated, setLastUpdated] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  // Zoom In / Zoom Out Modal State
+  const [isZoomedIn, setIsZoomedIn] = useState(false);
+
+  // Searchable Country Dropdown State
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const dropdownRef = useRef(null);
+  const searchInputRef = useRef(null);
+
+  // Close dropdown on click outside
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsDropdownOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Focus search input when dropdown opens
+  useEffect(() => {
+    if (isDropdownOpen && searchInputRef.current) {
+      searchInputRef.current.focus();
+    }
+  }, [isDropdownOpen]);
+
+  // Fetch Exchange Rates when fromCurrency changes
+  const fetchExchangeRates = async (baseCode = fromCurrency.code) => {
+    setIsLoading(true);
+    setError(null);
+
+    const apiUrls = [
+      `https://open.er-api.com/v6/latest/${baseCode}`,
+      `https://api.exchangerate-api.com/v4/latest/${baseCode}`,
+      `https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/${baseCode.toLowerCase()}.json`
+    ];
+
+    let fetchedSuccess = false;
+
+    for (const url of apiUrls) {
+      try {
+        const response = await fetch(url);
+        if (!response.ok) continue;
+
+        const data = await response.json();
+        let extractedRates = null;
+        let updateTime = new Date();
+
+        if (data.rates) {
+          extractedRates = data.rates;
+          if (data.time_last_update_utc) {
+            updateTime = new Date(data.time_last_update_utc);
+          }
+        } else if (data[baseCode.toLowerCase()]) {
+          extractedRates = data[baseCode.toLowerCase()];
+        }
+
+        if (extractedRates && Object.keys(extractedRates).length > 0) {
+          setRates(extractedRates);
+          setLastUpdated(updateTime);
+          fetchedSuccess = true;
+          break;
+        }
+      } catch (err) {
+        console.warn(`Failed fetching exchange rate from ${url}:`, err);
+      }
+    }
+
+    if (!fetchedSuccess) {
+      setError('Exchange rate offline');
+    }
+    setIsLoading(false);
+  };
+
+  useEffect(() => {
+    fetchExchangeRates(fromCurrency.code);
+  }, [fromCurrency.code]);
+
+  useEffect(() => {
+    if (onCurrencyChange) {
+      onCurrencyChange({
+        selectedCountry,
+        fromCurrency,
+        toCurrency,
+        rate: rates[toCurrency.code] || null,
+        rates
+      });
+    }
+  }, [selectedCountry, fromCurrency, toCurrency, rates, onCurrencyChange]);
+
+  // When user selects a Country from dropdown
+  const handleSelectCountry = (countryObj) => {
+    setSelectedCountry(countryObj);
+    setFromCurrency(countryObj);
+    setIsDropdownOpen(false);
+    setSearchQuery('');
+  };
+
+  // Swap From & To Currency
+  const handleSwap = () => {
+    const prevFrom = fromCurrency;
+    const prevTo = toCurrency;
+    setFromCurrency(prevTo);
+    setToCurrency(prevFrom);
+    setSelectedCountry(prevTo);
+  };
+
+  // Calculate Exchange Rate & Converted Value
+  const rate = rates[toCurrency.code] !== undefined ? rates[toCurrency.code] : null;
+  const numericAmount = parseFloat(amount) || 0;
+  const convertedValue = rate !== null ? (numericAmount * rate) : null;
+
+  const filteredCountries = searchCurrencies(searchQuery);
+
+  const formattedLastUpdated = lastUpdated
+    ? lastUpdated.toLocaleString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      })
+    : null;
+
+  // Render Core Form Controls (reused in both compact card and zoomed-in modal)
+  const renderFormControls = (isModal = false) => (
+    <>
+      {/* Select Country Searchable Dropdown */}
+      <div className="country-select-wrapper" ref={dropdownRef}>
+        <label className="currency-input-label">Select Country</label>
+        <button
+          type="button"
+          className="country-dropdown-btn"
+          onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+        >
+          <span className="country-dropdown-flag">{selectedCountry.flag}</span>
+          <span className="country-dropdown-text">
+            <strong>{selectedCountry.country}</strong> — {selectedCountry.code} ({selectedCountry.symbol})
+          </span>
+          <ChevronDown size={14} className={`chevron-icon ${isDropdownOpen ? 'open' : ''}`} />
+        </button>
+
+        {isDropdownOpen && (
+          <div className="country-dropdown-menu">
+            <div className="country-search-box">
+              <Search size={13} className="search-icon" />
+              <input
+                ref={searchInputRef}
+                type="text"
+                className="country-search-input"
+                placeholder="Search country or currency..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+            <div className="country-options-list">
+              {filteredCountries.length > 0 ? (
+                filteredCountries.map((c) => (
+                  <div
+                    key={c.code + c.country}
+                    className={`country-option-item ${selectedCountry.code === c.code && selectedCountry.country === c.country ? 'selected' : ''}`}
+                    onClick={() => handleSelectCountry(c)}
+                  >
+                    <span className="option-flag">{c.flag}</span>
+                    <div className="option-details">
+                      <span className="option-country">{c.country}</span>
+                      <span className="option-currency">{c.name} ({c.symbol})</span>
+                    </div>
+                    <span className="option-code">{c.code}</span>
+                    {selectedCountry.code === c.code && selectedCountry.country === c.country && (
+                      <Check size={13} className="check-icon" />
+                    )}
+                  </div>
+                ))
+              ) : (
+                <div className="no-countries-found">No match found</div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Amount & Currency Conversion Controls */}
+      <div className={`currency-controls-grid ${isModal ? 'modal-grid' : ''}`}>
+        <div className="currency-field-group amount-group">
+          <label className="currency-input-label">Amount</label>
+          <div className="input-with-symbol">
+            <span className="currency-symbol-tag">{fromCurrency.symbol}</span>
+            <input
+              type="number"
+              min="0"
+              step="any"
+              className="currency-number-input"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              placeholder="100"
+            />
+          </div>
+        </div>
+
+        <div className="currency-field-group">
+          <label className="currency-input-label">From</label>
+          <select
+            className="currency-select-input"
+            value={fromCurrency.code}
+            onChange={(e) => {
+              const selected = getCurrencyByCode(e.target.value);
+              setFromCurrency(selected);
+              setSelectedCountry(selected);
+            }}
+          >
+            {WORLD_CURRENCIES.map((c) => (
+              <option key={'from-' + c.code} value={c.code}>
+                {c.flag} {c.code} - {c.country}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <button
+          type="button"
+          className="currency-swap-btn"
+          onClick={handleSwap}
+          title="Swap Currencies"
+        >
+          <ArrowRightLeft size={14} />
+        </button>
+
+        <div className="currency-field-group">
+          <label className="currency-input-label">To</label>
+          <select
+            className="currency-select-input"
+            value={toCurrency.code}
+            onChange={(e) => setToCurrency(getCurrencyByCode(e.target.value))}
+          >
+            {WORLD_CURRENCIES.map((c) => (
+              <option key={'to-' + c.code} value={c.code}>
+                {c.flag} {c.code} - {c.country}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      {/* Live Conversion Result Display Box */}
+      <div className="currency-result-section">
+        {isLoading ? (
+          <div className="currency-loading-state">
+            <RefreshCw size={16} className="animate-spin text-emerald-400" />
+            <span>Fetching live exchange rate...</span>
+          </div>
+        ) : error ? (
+          <div className="currency-error-banner">
+            <AlertTriangle size={14} />
+            <span>{error}</span>
+            <button
+              type="button"
+              className="retry-btn"
+              onClick={() => fetchExchangeRates(fromCurrency.code)}
+            >
+              Retry
+            </button>
+          </div>
+        ) : (
+          <div className="currency-display-card">
+            <div className="main-converted-output">
+              <span className={`converted-value ${isModal ? 'large-val' : ''}`}>
+                {toCurrency.symbol}
+                {convertedValue !== null
+                  ? convertedValue.toLocaleString(undefined, {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 4
+                    })
+                  : '0.00'}
+              </span>
+              <span className="converted-code">{toCurrency.code}</span>
+            </div>
+
+            <div className="rate-details-row">
+              <span className="rate-pair-info">
+                Exchange Rate: <strong>1 {fromCurrency.code}</strong> ={' '}
+                <strong>
+                  {rate !== null
+                    ? rate < 0.0001
+                      ? rate.toExponential(4)
+                      : rate.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 6 })
+                    : '—'}{' '}
+                  {toCurrency.code}
+                </strong>
+              </span>
+
+              {formattedLastUpdated && (
+                <span className="last-updated-badge" title="Timestamp of latest update">
+                  <Clock size={11} /> Updated: {formattedLastUpdated}
+                </span>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Footer Summary */}
+      <div className="currency-summary-footer">
+        <span className="summary-pill">{selectedCountry.flag} {selectedCountry.country}</span>
+        <span className="summary-separator">•</span>
+        <span className="summary-pill">{selectedCountry.name}</span>
+        <span className="summary-separator">•</span>
+        <span className="summary-pill">{selectedCountry.code} ({selectedCountry.symbol})</span>
+      </div>
+    </>
+  );
+
+  return (
+    <>
+      {/* Standard Compact Card View */}
+      <div className="kpi-card kpi-emerald kpi-currency-card">
+        <div className="kpi-card-header">
+          <div className="currency-title-badge">
+            <span className="kpi-label">GLOBAL CURRENCY CHECKER</span>
+            <div className="live-pill">
+              <span className="live-dot"></span> LIVE
+            </div>
+          </div>
+
+          <div className="kpi-header-action-group">
+            {/* Zoom In Button (Icon Only) */}
+            <button
+              type="button"
+              className="currency-zoom-btn"
+              onClick={() => setIsZoomedIn(true)}
+              title="Zoom In / Expand View"
+            >
+              <Maximize2 size={14} />
+            </button>
+
+            <div className="kpi-icon-box">
+              <Globe size={18} className="text-emerald-400" />
+            </div>
+          </div>
+        </div>
+
+        <div className="currency-card-scroll-body">
+          {renderFormControls(false)}
+        </div>
+      </div>
+
+      {/* Zoomed-In Full Screen Overlay Modal */}
+      {isZoomedIn && (
+        <div className="currency-zoom-modal-overlay" onClick={() => setIsZoomedIn(false)}>
+          <div className="currency-zoom-modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <div className="modal-title-group">
+                <img src="/logo.png" alt="Sathya Logo" className="modal-gold-logo" style={{ height: '26px', objectFit: 'contain' }} />
+                <Globe size={20} className="text-emerald-400" />
+                <h3 className="modal-title">Global Currency Intelligence & Converter</h3>
+                <span className="live-pill">
+                  <span className="live-dot"></span> LIVE EXCHANGE RATES
+                </span>
+              </div>
+
+              {/* Zoom Out / Close Button (Icon Only) */}
+              <button
+                type="button"
+                className="currency-zoom-close-btn"
+                onClick={() => setIsZoomedIn(false)}
+                title="Zoom Out / Close View"
+              >
+                <Minimize2 size={16} />
+              </button>
+            </div>
+
+            <div className="modal-body">
+              {renderFormControls(true)}
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}

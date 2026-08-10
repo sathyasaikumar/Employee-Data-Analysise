@@ -201,9 +201,7 @@ export default function LoginPage({ onLoginSuccess, onGuestAccess, theme = 'dark
       {/* Top Navbar */}
       <header className="full-login-navbar">
         <div className="full-login-brand">
-          <div className="brand-icon-wrapper">
-            <BarChart3 size={24} className="text-white" />
-          </div>
+          <img src="/logo.png" alt="Sathya Logo" className="brand-gold-logo" />
           <div>
             <h1 className="brand-title">Corporate Access & Intelligence</h1>
             <p className="brand-subtitle">Enterprise Data System</p>
@@ -322,12 +320,13 @@ export default function LoginPage({ onLoginSuccess, onGuestAccess, theme = 'dark
 
         {/* Right Side: High-Tech Login Card */}
         <section className="full-login-card-container">
-          <div className="auth-modal-card full-page-card">
+          <div className="auth-modal-card full-page-card unique-model-card">
             {/* Header */}
             <div className="auth-modal-header">
-              <div className="auth-brand-badge">
-                <Shield size={18} className="text-accent-blue" />
-                <span>Corporate Security</span>
+              <div className="unique-sathya-badge">
+                <img src="/logo.png" alt="Sathya Logo" className="unique-sathya-logo-img" />
+                <span className="unique-badge-text">SATHYA ENTERPRISE SECURITY</span>
+                <span className="unique-pulse-dot" title="Active Security Node"></span>
               </div>
             </div>
 
