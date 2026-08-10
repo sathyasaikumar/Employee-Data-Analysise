@@ -12,6 +12,7 @@ import LoginModal from './components/LoginModal';
 import LoginPage from './components/LoginPage';
 import { SAMPLE_DATASETS } from './utils/sampleData';
 import { getStoredUser, logoutUser } from './utils/auth';
+import { convertFileToCsvContent } from './utils/fileConverter';
 import { LayoutDashboard, Sliders, Table as TableIcon, Calculator, GitCompare, Loader2 } from 'lucide-react';
 
 export default function App() {
@@ -78,6 +79,9 @@ export default function App() {
     handleLoadSample('workforce');
   }, []);
 
+  // Upload mode & navigation state
+  const [isUploadMode, setIsUploadMode] = useState(false);
+
   const processWithWorker = (payload, name) => {
     setIsLoading(true);
     setError(null);
@@ -123,12 +127,27 @@ export default function App() {
         });
 
         setIsLoading(false);
+        setIsUploadMode(false);
       } else if (type === 'FILTER_RESULT') {
         setFilteredCount(e.data.filteredCount);
         setDashboardMetrics(e.data.dashboardMetrics);
         setPageData(e.data.pageData);
       } else if (type === 'PAGE_RESULT') {
         setPageData(e.data.pageData);
+      } else if (type === 'EXPORT_RESULT') {
+        const { csvString } = e.data;
+        const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        const cleanName = (datasetName || 'Dataset').replace(/[^a-zA-Z0-9_-]/g, '_');
+        const timestamp = new Date().toISOString().split('T')[0];
+        link.setAttribute('download', `${cleanName}_Export_${timestamp}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        setIsLoading(false);
       } else if (type === 'ERROR') {
         setError(message || 'Failed to parse CSV file.');
         setIsLoading(false);
@@ -143,8 +162,20 @@ export default function App() {
     worker.postMessage({ action: 'PARSE', ...payload });
   };
 
-  const handleFileSelect = (file) => {
-    processWithWorker({ file }, file.name);
+  const handleFileSelect = async (file) => {
+    try {
+      setIsLoading(true);
+      setProgressInfo({ text: `Reading & converting ${file.name}...`, rowCount: 0 });
+      const converted = await convertFileToCsvContent(file);
+      if (converted.csvContent) {
+        processWithWorker({ rawCsv: converted.csvContent }, converted.datasetName);
+      } else {
+        processWithWorker({ file: converted.file }, converted.datasetName);
+      }
+    } catch (err) {
+      setError(`Failed to read file ${file.name}: ${err.message}`);
+      setIsLoading(false);
+    }
   };
 
   const handleLoadSample = (sampleKey) => {
@@ -244,7 +275,11 @@ export default function App() {
   };
 
   const handleExportCSV = () => {
-    alert(`Exporting ${filteredCount.toLocaleString()} records...`);
+    if (workerRef.current) {
+      setIsLoading(true);
+      setProgressInfo({ text: 'Generating CSV file for instant download...', rowCount: filteredCount });
+      workerRef.current.postMessage({ action: 'EXPORT_CSV' });
+    }
   };
 
   const handleLogout = () => {
@@ -279,10 +314,16 @@ export default function App() {
     <div className="app-container">
       <Header 
         hasData={hasData && !isLoading}
+        hasPreviousDataset={hasData}
+        isUploadMode={isUploadMode}
         datasetName={datasetName}
-        onUploadClick={() => setTotalRows(0)}
-        onLoadSample={handleLoadSample}
-        onResetData={() => setTotalRows(0)}
+        onUploadClick={() => setIsUploadMode(true)}
+        onLoadSample={(sampleKey) => {
+          setIsUploadMode(false);
+          handleLoadSample(sampleKey);
+        }}
+        onResetData={() => setIsUploadMode(true)}
+        onBackToDashboard={() => setIsUploadMode(false)}
         onExportCSV={handleExportCSV}
         currentUser={currentUser}
         onOpenLogin={() => setIsLoginOpen(true)}
@@ -292,7 +333,7 @@ export default function App() {
       />
 
       <div className="main-layout">
-        {hasData && !isLoading && (
+        {hasData && !isUploadMode && !isLoading && (
           <SidebarFilters 
             headers={headers}
             schema={schema}
@@ -312,11 +353,20 @@ export default function App() {
               <h2 className="dropzone-title">Processing Dataset...</h2>
               <p className="dropzone-subtitle">{progressInfo.text}</p>
             </div>
-          ) : !hasData ? (
+          ) : (!hasData || isUploadMode) ? (
             <FileUpload 
-              onFileSelect={handleFileSelect}
-              onLoadSample={handleLoadSample}
+              onFileSelect={(file) => {
+                setIsUploadMode(false);
+                handleFileSelect(file);
+              }}
+              onLoadSample={(sampleKey) => {
+                setIsUploadMode(false);
+                handleLoadSample(sampleKey);
+              }}
               error={error}
+              hasPreviousDataset={hasData}
+              previousDatasetName={datasetName}
+              onBackToDashboard={() => setIsUploadMode(false)}
             />
           ) : (
             <>

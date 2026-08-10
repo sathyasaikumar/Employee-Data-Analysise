@@ -1,8 +1,11 @@
 import React, { useRef, useState } from 'react';
-import { UploadCloud, FileSpreadsheet, Sparkles, AlertCircle } from 'lucide-react';
-import { SAMPLE_DATASETS } from '../utils/sampleData';
+import { UploadCloud, FileSpreadsheet, Sparkles, AlertCircle, FileText, Table, FileCode, File } from 'lucide-react';
 
-export default function FileUpload({ onFileSelect, onLoadSample, error }) {
+export default function FileUpload({ 
+  onFileSelect, 
+  onLoadSample, 
+  error
+}) {
   const fileInputRef = useRef(null);
   const [isDragActive, setIsDragActive] = useState(false);
 
@@ -43,7 +46,7 @@ export default function FileUpload({ onFileSelect, onLoadSample, error }) {
           type="file" 
           ref={fileInputRef} 
           onChange={handleFileInputChange} 
-          accept=".csv" 
+          accept=".csv,.xlsx,.xls,.json,.pdf,.tsv,.txt" 
           style={{ display: 'none' }} 
         />
 
@@ -51,21 +54,29 @@ export default function FileUpload({ onFileSelect, onLoadSample, error }) {
           <UploadCloud size={36} />
         </div>
 
-        <h2 className="dropzone-title">Upload your CSV Data File</h2>
+        <h2 className="dropzone-title">Upload Data File (CSV, Excel, JSON, PDF)</h2>
         <p className="dropzone-subtitle">
-          Drag and drop your spreadsheet here, or click to browse files from your local computer.
-          Real-time client-side processing with statistical profiling & charts.
+          Drag and drop your spreadsheet or document here, or click to browse files.
+          Supports <strong>CSV</strong>, <strong>Excel (.xlsx / .xls)</strong>, <strong>JSON</strong>, <strong>PDF</strong>, and <strong>TSV</strong> files.
         </p>
 
         <button 
-          className="btn btn-primary"
+          className="btn btn-primary btn-select-file"
           onClick={(e) => {
             e.stopPropagation();
             fileInputRef.current?.click();
           }}
         >
-          <FileSpreadsheet size={18} /> Select CSV File
+          <FileSpreadsheet size={18} /> Select File (CSV, Excel, JSON, PDF)
         </button>
+
+        {/* Multi-Format Support Badges */}
+        <div className="supported-formats-row">
+          <span className="format-tag csv"><Table size={12} /> CSV / TSV</span>
+          <span className="format-tag excel"><FileSpreadsheet size={12} /> Excel (.xlsx, .xls)</span>
+          <span className="format-tag json"><FileCode size={12} /> JSON</span>
+          <span className="format-tag pdf"><FileText size={12} /> PDF Report</span>
+        </div>
 
         {error && (
           <div style={{ marginTop: '1rem', color: 'var(--accent-rose)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -73,7 +84,7 @@ export default function FileUpload({ onFileSelect, onLoadSample, error }) {
           </div>
         )}
 
-        <div style={{ marginTop: '2.5rem', borderTop: '1px solid var(--border-color)', pt: '1.5rem', width: '100%', maxWidth: '560px' }}>
+        <div style={{ marginTop: '2rem', borderTop: '1px solid var(--border-color)', paddingTop: '1.25rem', width: '100%', maxWidth: '560px' }}>
           <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.75rem', fontWeight: 600 }}>
             <Sparkles size={14} className="inline mr-1 text-amber-400" /> Or explore instant demo datasets:
           </p>

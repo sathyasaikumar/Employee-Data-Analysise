@@ -22,6 +22,8 @@ self.onmessage = function (e) {
     applyFiltersAndAggregate(filters, page || 1, pageSize || 10, sortColumn, sortDirection);
   } else if (action === 'GET_PAGE') {
     getPageData(page || 1, pageSize || 10, sortColumn, sortDirection);
+  } else if (action === 'EXPORT_CSV') {
+    exportFilteredCSV();
   }
 };
 
@@ -500,5 +502,27 @@ function computeSummaryStatsFast(data, headers, schema) {
   });
 
   return stats;
+}
+
+/**
+ * Generate CSV string for export
+ */
+function exportFilteredCSV() {
+  const exportData = currentFilteredIndices || masterData || [];
+  if (exportData.length === 0) {
+    self.postMessage({ type: 'ERROR', message: 'No records available to export.' });
+    return;
+  }
+
+  const csvString = Papa.unparse({
+    fields: headers,
+    data: exportData
+  });
+
+  self.postMessage({
+    type: 'EXPORT_RESULT',
+    csvString,
+    recordCount: exportData.length
+  });
 }
 

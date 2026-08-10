@@ -1,12 +1,15 @@
 import React, { useState } from 'react';
-import { BarChart3, Upload, Download, RefreshCw, Layers, LogIn, LogOut, User, Mail, Phone, ShieldCheck, Sun, Moon } from 'lucide-react';
+import { BarChart3, Upload, Download, Layers, LogIn, LogOut, ShieldCheck, Sun, Moon, ArrowLeft } from 'lucide-react';
 
 export default function Header({ 
   hasData, 
+  hasPreviousDataset,
+  isUploadMode,
   datasetName, 
   onUploadClick, 
   onLoadSample, 
   onResetData, 
+  onBackToDashboard,
   onExportCSV,
   currentUser,
   onOpenLogin,
@@ -29,12 +32,48 @@ export default function Header({
       </div>
 
       <div className="header-actions">
-        {hasData && (
+        {/* ONE unique Back button on the left side when in upload mode */}
+        {(isUploadMode || !hasData) && hasPreviousDataset && (
+          <button 
+            type="button"
+            className="btn btn-secondary btn-back-unique"
+            onClick={onBackToDashboard}
+            title="Return back to your active dataset and dashboard"
+          >
+            <ArrowLeft size={16} />
+            <span>Back</span>
+          </button>
+        )}
+
+        {hasData && !isUploadMode && (
           <>
-            <span className="badge badge-blue">
-              <Layers size={12} className="mr-1 inline" /> {datasetName || 'Loaded Dataset'}
+            {/* 1. FIRST POSITION ON LEFT: New File Button */}
+            <button 
+              className="btn btn-primary btn-new-file-highlight" 
+              onClick={onResetData} 
+              title="Upload a New CSV File or Reset Dataset"
+            >
+              <Upload size={16} />
+              <span>New File</span>
+            </button>
+
+            {/* 2. NEXT TO NEW FILE: Export CSV Button */}
+            <button 
+              className="btn btn-secondary btn-export-csv" 
+              onClick={onExportCSV} 
+              title="Export Filtered CSV Dataset"
+            >
+              <Download size={16} />
+              <span>Export CSV</span>
+            </button>
+
+            {/* 3. Loaded Dataset Badge */}
+            <span className="badge badge-blue header-dataset-badge">
+              <Layers size={12} className="mr-1 inline flex-shrink-0" />
+              <span className="truncate-text">{datasetName || 'Loaded Dataset'}</span>
             </span>
 
+            {/* 4. Load Sample Dataset Selector */}
             <select 
               className="sample-select" 
               onChange={(e) => {
@@ -46,20 +85,13 @@ export default function Header({
               <option value="workforce">Workforce Intelligence (Demo)</option>
               <option value="sales">Sales & Revenue Analytics</option>
             </select>
-
-            <button className="btn btn-secondary" onClick={onExportCSV} title="Export Filtered CSV">
-              <Download size={16} /> Export CSV
-            </button>
-
-            <button className="btn btn-outline" onClick={onResetData} title="Reset / Upload New File">
-              <RefreshCw size={16} /> New File
-            </button>
           </>
         )}
 
-        {!hasData && (
-          <button className="btn btn-primary" onClick={onUploadClick}>
-            <Upload size={16} /> Upload CSV File
+        {!hasData && !isUploadMode && !hasPreviousDataset && (
+          <button className="btn btn-primary btn-new-file-highlight" onClick={onUploadClick}>
+            <Upload size={16} />
+            <span>Upload CSV File</span>
           </button>
         )}
 
@@ -121,4 +153,3 @@ export default function Header({
     </header>
   );
 }
-
