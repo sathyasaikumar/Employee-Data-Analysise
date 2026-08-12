@@ -20,6 +20,23 @@ export default function GlobalCurrencyChecker({ onCurrencyChange }) {
   const [isZoomedIn, setIsZoomedIn] = useState(false);
   const [isFullScreen, setIsFullScreen] = useState(false);
 
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      const isFs = Boolean(document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement);
+      setIsFullScreen(isFs);
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+    document.addEventListener('msfullscreenchange', handleFullscreenChange);
+
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('msfullscreenchange', handleFullscreenChange);
+    };
+  }, []);
+
   const toggleFullScreen = (forceState) => {
     const nextState = typeof forceState === 'boolean' ? forceState : !isFullScreen;
     setIsFullScreen(nextState);
@@ -31,9 +48,10 @@ export default function GlobalCurrencyChecker({ onCurrencyChange }) {
         else if (elem.webkitRequestFullscreen) elem.webkitRequestFullscreen().catch(() => {});
         else if (elem.msRequestFullscreen) elem.msRequestFullscreen().catch(() => {});
       } else {
-        if (document.fullscreenElement || document.webkitFullscreenElement) {
+        if (document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement) {
           if (document.exitFullscreen) document.exitFullscreen().catch(() => {});
           else if (document.webkitExitFullscreen) document.webkitExitFullscreen().catch(() => {});
+          else if (document.msExitFullscreen) document.msExitFullscreen().catch(() => {});
         }
       }
     } catch (err) {
@@ -43,12 +61,12 @@ export default function GlobalCurrencyChecker({ onCurrencyChange }) {
 
   const handleOpenZoom = () => {
     setIsZoomedIn(true);
-    toggleFullScreen(true);
+    setIsFullScreen(false);
   };
 
   const handleCloseZoom = () => {
     setIsZoomedIn(false);
-    toggleFullScreen(false);
+    setIsFullScreen(false);
   };
 
   // Searchable Country Dropdown State
@@ -127,9 +145,14 @@ export default function GlobalCurrencyChecker({ onCurrencyChange }) {
     fetchExchangeRates(fromCurrency.code);
   }, [fromCurrency.code]);
 
+  const onCurrencyChangeRef = useRef(onCurrencyChange);
   useEffect(() => {
-    if (onCurrencyChange) {
-      onCurrencyChange({
+    onCurrencyChangeRef.current = onCurrencyChange;
+  }, [onCurrencyChange]);
+
+  useEffect(() => {
+    if (onCurrencyChangeRef.current) {
+      onCurrencyChangeRef.current({
         selectedCountry,
         fromCurrency,
         toCurrency,
@@ -137,7 +160,7 @@ export default function GlobalCurrencyChecker({ onCurrencyChange }) {
         rates
       });
     }
-  }, [selectedCountry, fromCurrency, toCurrency, rates, onCurrencyChange]);
+  }, [selectedCountry, fromCurrency, toCurrency, rates]);
 
   // When user selects a Country from dropdown
   const handleSelectCountry = (countryObj) => {
@@ -396,8 +419,8 @@ export default function GlobalCurrencyChecker({ onCurrencyChange }) {
 
       {/* Zoomed-In Full Screen Overlay Modal (Portal to document.body) */}
       {isZoomedIn && createPortal(
-        <div className="currency-zoom-modal-overlay" onClick={handleCloseZoom}>
-          <div className={`currency-zoom-modal-content ${isFullScreen ? 'is-fullscreen' : ''}`} onClick={(e) => e.stopPropagation()}>
+        <div className={`currency-zoom-modal-overlay ${isFullScreen ? 'has-fullscreen is-fullscreen' : ''}`} onClick={handleCloseZoom}>
+          <div className={`currency-zoom-modal-content ${isFullScreen ? 'is-fullscreen modal-fullscreen' : ''}`} onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <div className="modal-title-group">
                 <img src="/logo.png" alt="Sathya Logo" className="modal-gold-logo" style={{ height: '26px', objectFit: 'contain' }} />

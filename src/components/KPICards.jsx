@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { 
   Database, 
@@ -54,6 +54,23 @@ export default function KPICards({
   const [anomalyFilter, setAnomalyFilter] = useState('all'); // 'all' | 'high_revenue' | 'low_revenue' | 'missing' | 'duplicate' | 'unusual_pattern'
   const [anomalySearch, setAnomalySearch] = useState('');
 
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      const isFs = Boolean(document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement);
+      setIsModalFullScreen(isFs);
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+    document.addEventListener('msfullscreenchange', handleFullscreenChange);
+
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('msfullscreenchange', handleFullscreenChange);
+    };
+  }, []);
+
   const toggleModalFullScreen = (forceState) => {
     const nextState = typeof forceState === 'boolean' ? forceState : !isModalFullScreen;
     setIsModalFullScreen(nextState);
@@ -65,14 +82,20 @@ export default function KPICards({
         else if (elem.webkitRequestFullscreen) elem.webkitRequestFullscreen().catch(() => {});
         else if (elem.msRequestFullscreen) elem.msRequestFullscreen().catch(() => {});
       } else {
-        if (document.fullscreenElement || document.webkitFullscreenElement) {
+        if (document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement) {
           if (document.exitFullscreen) document.exitFullscreen().catch(() => {});
           else if (document.webkitExitFullscreen) document.webkitExitFullscreen().catch(() => {});
+          else if (document.msExitFullscreen) document.msExitFullscreen().catch(() => {});
         }
       }
     } catch (err) {
       console.warn('Fullscreen request error:', err.message);
     }
+  };
+
+  const handleOpenZoomCard = (cardId) => {
+    setZoomedCard(cardId);
+    setIsModalFullScreen(false);
   };
 
   const toggleFolderCollapse = (folderId) => {
@@ -153,7 +176,7 @@ export default function KPICards({
             <div className="kpi-card-header">
               <span className="kpi-label">Total Records</span>
               <div className="kpi-header-action-group">
-                <button type="button" className="currency-zoom-btn blue" onClick={() => setZoomedCard('total')} title="Expand View">
+                <button type="button" className="currency-zoom-btn blue" onClick={() => handleOpenZoomCard('total')} title="Full Screen / Expand View">
                   <Maximize2 size={13} />
                 </button>
                 <div className="kpi-icon-box"><Database size={18} className="text-blue-400" /></div>
@@ -170,7 +193,7 @@ export default function KPICards({
             <div className="kpi-card-header">
               <span className="kpi-label">Filtered Overview</span>
               <div className="kpi-header-action-group">
-                <button type="button" className="currency-zoom-btn cyan" onClick={() => setZoomedCard('filtered')} title="Expand View">
+                <button type="button" className="currency-zoom-btn cyan" onClick={() => handleOpenZoomCard('filtered')} title="Full Screen / Expand View">
                   <Maximize2 size={13} />
                 </button>
                 <div className="kpi-icon-box"><Filter size={18} className="text-cyan-400" /></div>
@@ -198,7 +221,7 @@ export default function KPICards({
             <div className="kpi-card-header">
               <span className="kpi-label">AVG {primaryNumeric ? primaryNumeric.toUpperCase() : 'REVENUE'}</span>
               <div className="kpi-header-action-group">
-                <button type="button" className="currency-zoom-btn rose" onClick={() => setZoomedCard('revenue')} title="Expand View">
+                <button type="button" className="currency-zoom-btn rose" onClick={() => handleOpenZoomCard('revenue')} title="Full Screen / Expand View">
                   <Maximize2 size={13} />
                 </button>
                 <div className="kpi-icon-box"><DollarSign size={18} className="text-rose-400" /></div>
@@ -215,7 +238,7 @@ export default function KPICards({
             <div className="kpi-card-header">
               <span className="kpi-label">MEDIAN {primaryNumeric ? primaryNumeric.toUpperCase() : 'REVENUE'}</span>
               <div className="kpi-header-action-group">
-                <button type="button" className="currency-zoom-btn purple" onClick={() => setZoomedCard('median')} title="Expand View">
+                <button type="button" className="currency-zoom-btn purple" onClick={() => handleOpenZoomCard('median')} title="Full Screen / Expand View">
                   <Maximize2 size={13} />
                 </button>
                 <div className="kpi-icon-box"><Calculator size={18} className="text-purple-400" /></div>
@@ -232,7 +255,7 @@ export default function KPICards({
             <div className="kpi-card-header">
               <span className="kpi-label">MINIMUM {primaryNumeric ? primaryNumeric.toUpperCase() : 'REVENUE'}</span>
               <div className="kpi-header-action-group">
-                <button type="button" className="currency-zoom-btn teal" onClick={() => setZoomedCard('min')} title="Expand View">
+                <button type="button" className="currency-zoom-btn teal" onClick={() => handleOpenZoomCard('min')} title="Full Screen / Expand View">
                   <Maximize2 size={13} />
                 </button>
                 <div className="kpi-icon-box"><ArrowDownCircle size={18} className="text-teal-400" /></div>
@@ -249,7 +272,7 @@ export default function KPICards({
             <div className="kpi-card-header">
               <span className="kpi-label">MAXIMUM {primaryNumeric ? primaryNumeric.toUpperCase() : 'REVENUE'}</span>
               <div className="kpi-header-action-group">
-                <button type="button" className="currency-zoom-btn indigo" onClick={() => setZoomedCard('max')} title="Expand View">
+                <button type="button" className="currency-zoom-btn indigo" onClick={() => handleOpenZoomCard('max')} title="Full Screen / Expand View">
                   <Maximize2 size={13} />
                 </button>
                 <div className="kpi-icon-box"><ArrowUpCircle size={18} className="text-indigo-400" /></div>
@@ -266,7 +289,7 @@ export default function KPICards({
             <div className="kpi-card-header">
               <span className="kpi-label">{primaryNumeric ? primaryNumeric.toUpperCase() : 'REVENUE'} GROWTH</span>
               <div className="kpi-header-action-group">
-                <button type="button" className="currency-zoom-btn emerald" onClick={() => setZoomedCard('growth')} title="Expand View">
+                <button type="button" className="currency-zoom-btn emerald" onClick={() => handleOpenZoomCard('growth')} title="Full Screen / Expand View">
                   <Maximize2 size={13} />
                 </button>
                 <div className="kpi-icon-box"><TrendingUp size={18} className="text-emerald-400" /></div>
@@ -283,7 +306,7 @@ export default function KPICards({
             <div className="kpi-card-header">
               <span className="kpi-label">Missing Values</span>
               <div className="kpi-header-action-group">
-                <button type="button" className="currency-zoom-btn rose" onClick={() => setZoomedCard('missing')} title="Expand View">
+                <button type="button" className="currency-zoom-btn rose" onClick={() => handleOpenZoomCard('missing')} title="Full Screen / Expand View">
                   <Maximize2 size={13} />
                 </button>
                 <div className="kpi-icon-box"><AlertTriangle size={18} className="text-rose-400" /></div>
@@ -300,7 +323,7 @@ export default function KPICards({
             <div className="kpi-card-header">
               <span className="kpi-label">Duplicate Records</span>
               <div className="kpi-header-action-group">
-                <button type="button" className="currency-zoom-btn amber" onClick={() => setZoomedCard('duplicates')} title="Expand View">
+                <button type="button" className="currency-zoom-btn amber" onClick={() => handleOpenZoomCard('duplicates')} title="Full Screen / Expand View">
                   <Maximize2 size={13} />
                 </button>
                 <div className="kpi-icon-box"><Copy size={18} className="text-amber-400" /></div>
@@ -317,7 +340,7 @@ export default function KPICards({
             <div className="kpi-card-header">
               <span className="kpi-label">Data Completeness</span>
               <div className="kpi-header-action-group">
-                <button type="button" className="currency-zoom-btn blue" onClick={() => setZoomedCard('completeness')} title="Expand View">
+                <button type="button" className="currency-zoom-btn blue" onClick={() => handleOpenZoomCard('completeness')} title="Full Screen / Expand View">
                   <Maximize2 size={13} />
                 </button>
                 <div className="kpi-icon-box"><CheckCircle2 size={18} className="text-blue-400" /></div>
@@ -334,7 +357,7 @@ export default function KPICards({
             <div className="kpi-card-header">
               <span className="kpi-label">Data Health Score</span>
               <div className="kpi-header-action-group">
-                <button type="button" className="currency-zoom-btn amber" onClick={() => setZoomedCard('health')} title="Expand View">
+                <button type="button" className="currency-zoom-btn amber" onClick={() => handleOpenZoomCard('health')} title="Full Screen / Expand View">
                   <Maximize2 size={13} />
                 </button>
                 <div className="kpi-icon-box"><Activity size={18} className="text-amber-400" /></div>
@@ -382,7 +405,7 @@ export default function KPICards({
     : folderGroups.filter(fg => fg.id === activeFolder);
 
   // Filter anomalous rows inside modal
-  const filteredAnomalousRows = (anomalies?.anomalousRows || []).filter(item => {
+  const filteredAnomaliesList = (anomalies?.anomalousRows || []).filter(item => {
     if (anomalyFilter === 'high_revenue') return item.anomalies.some(a => a.type === 'high_revenue' || a.type === 'numeric_outlier');
     if (anomalyFilter === 'low_revenue') return item.anomalies.some(a => a.type === 'low_revenue');
     if (anomalyFilter === 'missing') return item.anomalies.some(a => a.type === 'missing');
@@ -497,9 +520,9 @@ export default function KPICards({
 
       {/* ⚠️ AFFECTED RECORDS ANOMALIES INTELLIGENCE MODAL (Portal to document.body) */}
       {isAnomaliesModalOpen && anomalies && createPortal(
-        <div className="currency-zoom-modal-overlay" onClick={() => setIsAnomaliesModalOpen(false)}>
+        <div className={`currency-zoom-modal-overlay ${isModalFullScreen ? 'has-fullscreen is-fullscreen' : ''}`} onClick={() => setIsAnomaliesModalOpen(false)}>
           <div 
-            className={`currency-zoom-modal-content anomalies-modal-content ${isModalFullScreen ? 'modal-fullscreen' : ''}`} 
+            className={`currency-zoom-modal-content anomalies-modal-content ${isModalFullScreen ? 'modal-fullscreen is-fullscreen' : ''}`} 
             onClick={(e) => e.stopPropagation()}
           >
             <div className="modal-header">
@@ -646,7 +669,7 @@ export default function KPICards({
                                 {item.severity.toUpperCase()}
                               </span>
                             </td>
-                            <td style={{ fontWeight: 700, color: 'var(--text-main)' }}>{formattedTargetVal}</td>
+                            <td style={{ fontWeight: 700, color: 'var(--text-main)' }}>{item.primaryAnomaly || 'Outlier Detected'}</td>
                             <td className="anomaly-detail-cell">
                               {item.anomalies.map((a, aIdx) => (
                                 <div key={'detail-' + aIdx} className="anomaly-detail-line">
@@ -663,13 +686,14 @@ export default function KPICards({
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Detailed Zoom Overlay Modal for Standard Metric Cards (Portal to document.body) */}
       {zoomedCard && createPortal(
-        <div className="currency-zoom-modal-overlay" onClick={() => { setZoomedCard(null); setIsModalFullScreen(false); }}>
-          <div className={`currency-zoom-modal-content ${isModalFullScreen ? 'is-fullscreen' : ''}`} onClick={(e) => e.stopPropagation()}>
+        <div className={`currency-zoom-modal-overlay ${isModalFullScreen ? 'has-fullscreen is-fullscreen' : ''}`} onClick={() => { setZoomedCard(null); setIsModalFullScreen(false); }}>
+          <div className={`currency-zoom-modal-content ${isModalFullScreen ? 'is-fullscreen modal-fullscreen' : ''}`} onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <div className="modal-title-group">
                 <img src="/logo.png" alt="Sathya Logo" className="modal-gold-logo" style={{ height: '26px', objectFit: 'contain' }} />
@@ -848,7 +872,8 @@ export default function KPICards({
               )}
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

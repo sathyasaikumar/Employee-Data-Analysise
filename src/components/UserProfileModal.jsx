@@ -48,6 +48,23 @@ export default function UserProfileModal({
   const [showPhotoPicker, setShowPhotoPicker] = useState(false);
   const [selectedPhoto, setSelectedPhoto] = useState(null);
 
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      const isFs = Boolean(document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement);
+      setIsFullScreen(isFs);
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+    document.addEventListener('msfullscreenchange', handleFullscreenChange);
+
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('msfullscreenchange', handleFullscreenChange);
+    };
+  }, []);
+
   const toggleFullScreen = (forceState) => {
     const nextState = typeof forceState === 'boolean' ? forceState : !isFullScreen;
     setIsFullScreen(nextState);
@@ -59,9 +76,10 @@ export default function UserProfileModal({
         else if (elem.webkitRequestFullscreen) elem.webkitRequestFullscreen().catch(() => {});
         else if (elem.msRequestFullscreen) elem.msRequestFullscreen().catch(() => {});
       } else {
-        if (document.fullscreenElement || document.webkitFullscreenElement) {
+        if (document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement) {
           if (document.exitFullscreen) document.exitFullscreen().catch(() => {});
           else if (document.webkitExitFullscreen) document.webkitExitFullscreen().catch(() => {});
+          else if (document.msExitFullscreen) document.msExitFullscreen().catch(() => {});
         }
       }
     } catch (err) {

@@ -6,7 +6,7 @@
     "role": "Executive Admin",
     "avatar": "CA",
     "loginType": "email",
-    "totalLogins": 35,
+    "totalLogins": 62,
     "registeredAt": "2026-07-13T06:00:07.404Z"
   },
   {
@@ -57,7 +57,18 @@
     "role": "Workforce Manager",
     "avatar": "NU",
     "loginType": "email",
-    "totalLogins": 6,
+    "totalLogins": 40,
     "registeredAt": "2026-08-12T06:06:46.975Z"
+  },
+  {
+    "id": "usr_google_1786537429674",
+    "name": "Dev Lead",
+    "email": "developer@workspace.org",
+    "phone": null,
+    "role": "Data Engineer",
+    "avatar": "DL",
+    "loginType": "google",
+    "totalLogins": 11,
+    "registeredAt": "2026-08-12T12:23:50.290Z"
   }
 ]

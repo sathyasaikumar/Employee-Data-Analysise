@@ -1,5 +1,73 @@
 [
   {
+    "id": "ds_1786538938984_iat2n",
+    "originalName": "Login_Activity_Log_Corporate_Account.csv",
+    "savedName": "dataset_1786538938927_4iy6yw_Login_Activity_Log_Corporate_Account.csv",
+    "filePath": "uploads/datasets/dataset_1786538938927_4iy6yw_Login_Activity_Log_Corporate_Account.csv",
+    "uploadDate": "2026-08-12T12:48:58.984Z",
+    "uploadDateFormatted": "Aug 12, 2026, 6:18 PM",
+    "fileSize": "5.39 KB",
+    "fileSizeBytes": 5516,
+    "fileType": "csv",
+    "rowCount": 36,
+    "columnCount": 8,
+    "columns": [
+      {
+        "name": "Session ID",
+        "type": "categorical",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "Date",
+        "type": "datetime",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "Login Time (Local)",
+        "type": "datetime",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "Logout Time (Local)",
+        "type": "datetime",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "Duration",
+        "type": "categorical",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "Status",
+        "type": "categorical",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "Device",
+        "type": "categorical",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "IP Address",
+        "type": "categorical",
+        "missingCount": 0,
+        "nullRatio": 0
+      }
+    ],
+    "healthScore": 100,
+    "missingCells": 0,
+    "duplicateCount": 0,
+    "completenessScore": 100,
+    "status": "Active"
+  },
+  {
     "id": "ds_seed_1001",
     "originalName": "workforce_intelligence_2026.csv",
     "savedName": "dataset_seed_1001_workforce_intelligence_2026.csv",
