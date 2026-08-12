@@ -38,7 +38,9 @@ export default function KPICards({
   stats = {}, 
   schema = {},
   activeLevel = 'all',
-  onLevelSelect
+  onLevelSelect,
+  liveStats = null,
+  onOpenLiveTracker = null
 }) {
   const [currencyState, setCurrencyState] = useState(null);
   const [activeFolder, setActiveFolder] = useState('all'); // 'all' | 'financial' | 'quality' | 'dataset'
@@ -373,6 +375,7 @@ export default function KPICards({
 
   return (
     <div className="kpi-overview-section">
+
       {/* ⚠️ STREAMLINED AUTOMATIC ANOMALY DETECTION BANNER */}
       {anomalies && anomalies.totalAnomalies > 0 && (
         <div className="anomalies-indicator-banner" onClick={() => setIsAnomaliesModalOpen(true)}>
@@ -645,8 +648,8 @@ export default function KPICards({
 
       {/* Detailed Zoom Overlay Modal for Standard Metric Cards */}
       {zoomedCard && (
-        <div className="currency-zoom-modal-overlay" onClick={() => setZoomedCard(null)}>
-          <div className="currency-zoom-modal-content" onClick={(e) => e.stopPropagation()}>
+        <div className="currency-zoom-modal-overlay" onClick={() => { setZoomedCard(null); setIsModalFullScreen(false); }}>
+          <div className={`currency-zoom-modal-content ${isModalFullScreen ? 'is-fullscreen' : ''}`} onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <div className="modal-title-group">
                 <img src="/logo.png" alt="Sathya Logo" className="modal-gold-logo" style={{ height: '26px', objectFit: 'contain' }} />
@@ -677,14 +680,28 @@ export default function KPICards({
                 </h3>
               </div>
 
-              <button
-                type="button"
-                className="currency-zoom-close-btn"
-                onClick={() => setZoomedCard(null)}
-                title="Zoom Out / Close View"
-              >
-                <Minimize2 size={16} />
-              </button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <button
+                  type="button"
+                  className="currency-zoom-close-btn"
+                  onClick={() => setIsModalFullScreen(prev => !prev)}
+                  title={isModalFullScreen ? "Exit Full Screen" : "Full Screen View"}
+                >
+                  {isModalFullScreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
+                </button>
+
+                <button
+                  type="button"
+                  className="currency-zoom-close-btn"
+                  onClick={() => {
+                    setZoomedCard(null);
+                    setIsModalFullScreen(false);
+                  }}
+                  title="Close View"
+                >
+                  <X size={16} />
+                </button>
+              </div>
             </div>
 
             <div className="modal-body modal-card-details-body">

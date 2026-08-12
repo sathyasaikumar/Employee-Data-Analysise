@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Header from './components/Header';
 import FileUpload from './components/FileUpload';
+import DatasetHistory from './components/DatasetHistory';
+import LiveUserTracker from './components/LiveUserTracker';
 import SidebarFilters from './components/SidebarFilters';
 import KPICards from './components/KPICards';
 import Dashboard from './components/Dashboard';
@@ -8,14 +10,21 @@ import CustomChartBuilder from './components/CustomChartBuilder';
 import DataTable from './components/DataTable';
 import StatsOverview from './components/StatsOverview';
 import ComparisonView from './components/ComparisonView';
-import LoginModal from './components/LoginModal';
 import LoginPage from './components/LoginPage';
 import UserProfileModal from './components/UserProfileModal';
 import { SAMPLE_DATASETS } from './utils/sampleData';
 import { getStoredUser, logoutUser } from './utils/auth';
 import { startSession, endActiveSession } from './utils/activityTracker';
+import { startLiveTracking, stopLiveTracking, subscribeToLiveStats, refreshLiveStatsNow } from './utils/liveTracker';
 import { convertFileToCsvContent } from './utils/fileConverter';
-import { LayoutDashboard, Sliders, Table as TableIcon, Calculator, GitCompare, Loader2, Filter } from 'lucide-react';
+import { 
+  fetchDatasetHistory, 
+  uploadDatasetFile, 
+  fetchDatasetById, 
+  deleteDatasetById, 
+  seedSampleDatasets 
+} from './utils/api';
+import { LayoutDashboard, Sliders, Table as TableIcon, Calculator, GitCompare, Loader2, Filter, Radio } from 'lucide-react';
 
 export default function App() {
   const [totalRows, setTotalRows] = useState(0);
@@ -37,6 +46,16 @@ export default function App() {
   const [activeLevel, setActiveLevel] = useState('all'); // 'all' | 'low' | 'medium' | 'high'
   const [isLoading, setIsLoading] = useState(false);
   const [progressInfo, setProgressInfo] = useState({ text: '', rowCount: 0 });
+
+  // Sidebar Visibility State
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+
+  // Mode States
+  const [isUploadMode, setIsUploadMode] = useState(false);
+  const [isHistoryMode, setIsHistoryMode] = useState(false);
+  const [isLiveUsersMode, setIsLiveUsersMode] = useState(false);
+  const [liveStats, setLiveStats] = useState(null);
+  const [datasetsList, setDatasetsList] = useState([]);
 
   // Mobile Filter Drawer state
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
@@ -69,13 +88,39 @@ export default function App() {
     numeric: {}
   });
 
+  // Fetch saved datasets history from backend API on boot
+  const refreshDatasetsHistory = async () => {
+    try {
+      let list = await fetchDatasetHistory();
+      if (list.length === 0) {
+        list = await seedSampleDatasets();
+      }
+      setDatasetsList(list);
+    } catch (err) {
+      console.warn('Backend server offline or unreachable:', err.message);
+    }
+  };
+
+  // Live Users real-time tracking effect
   useEffect(() => {
-    // Check initial user authentication session and record active session
+    const unsubscribe = subscribeToLiveStats((stats) => {
+      if (stats) setLiveStats(stats);
+    });
+
     const saved = getStoredUser();
     if (saved) {
       setCurrentUser(saved);
       startSession(saved);
+      startLiveTracking(saved, (stats) => setLiveStats(stats));
+    } else {
+      startLiveTracking(null, (stats) => setLiveStats(stats));
     }
+
+    refreshDatasetsHistory();
+
+    return () => {
+      unsubscribe();
+    };
   }, []);
 
   useEffect(() => {
@@ -89,9 +134,6 @@ export default function App() {
   useEffect(() => {
     handleLoadSample('workforce');
   }, []);
-
-  // Upload mode & navigation state
-  const [isUploadMode, setIsUploadMode] = useState(false);
 
   const processWithWorker = (payload, name) => {
     setIsLoading(true);
@@ -144,6 +186,7 @@ export default function App() {
 
         setIsLoading(false);
         setIsUploadMode(false);
+        setIsHistoryMode(false);
       } else if (type === 'FILTER_RESULT') {
         setFilteredCount(e.data.filteredCount);
         setDashboardMetrics(e.data.dashboardMetrics);
@@ -165,7 +208,7 @@ export default function App() {
         URL.revokeObjectURL(url);
         setIsLoading(false);
       } else if (type === 'ERROR') {
-        setError(message || 'Failed to parse CSV file.');
+        setError(message || 'Failed to parse dataset.');
         setIsLoading(false);
       }
     };
@@ -178,19 +221,64 @@ export default function App() {
     worker.postMessage({ action: 'PARSE', ...payload });
   };
 
+  // Upload file to backend server disk & analyze
   const handleFileSelect = async (file) => {
     try {
       setIsLoading(true);
-      setProgressInfo({ text: `Reading & converting ${file.name}...`, rowCount: 0 });
-      const converted = await convertFileToCsvContent(file);
-      if (converted.csvContent) {
-        processWithWorker({ rawCsv: converted.csvContent }, converted.datasetName);
+      setError(null);
+      setProgressInfo({ text: `Uploading & saving ${file.name} to uploads/datasets/...`, rowCount: 0 });
+
+      // 1. Save to physical disk via Express backend API
+      let uploadResult = null;
+      try {
+        uploadResult = await uploadDatasetFile(file);
+        await refreshDatasetsHistory();
+      } catch (backendErr) {
+        console.warn('Backend API upload warning (running client fallback):', backendErr.message);
+      }
+
+      // 2. Parse content for Web Worker
+      setProgressInfo({ text: `Analyzing dataset structures for ${file.name}...`, rowCount: 0 });
+      if (uploadResult && uploadResult.data) {
+        processWithWorker({ rows: uploadResult.data }, uploadResult.dataset?.originalName || file.name);
       } else {
-        processWithWorker({ file: converted.file }, converted.datasetName);
+        const converted = await convertFileToCsvContent(file);
+        if (converted.csvContent) {
+          processWithWorker({ rawCsv: converted.csvContent }, converted.datasetName);
+        } else {
+          processWithWorker({ file: converted.file }, converted.datasetName);
+        }
       }
     } catch (err) {
-      setError(`Failed to read file ${file.name}: ${err.message}`);
+      setError(`Failed to read/upload file ${file.name}: ${err.message}`);
       setIsLoading(false);
+    }
+  };
+
+  // Load dataset from History by ID
+  const handleSelectHistoryDataset = async (id) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      setProgressInfo({ text: 'Reading stored dataset from uploads/datasets/...', rowCount: 0 });
+
+      const res = await fetchDatasetById(id);
+      if (res.data) {
+        processWithWorker({ rows: res.data }, res.dataset.originalName);
+      }
+    } catch (err) {
+      setError(`Failed to load dataset: ${err.message}`);
+      setIsLoading(false);
+    }
+  };
+
+  // Delete dataset from History by ID
+  const handleDeleteHistoryDataset = async (id) => {
+    try {
+      await deleteDatasetById(id);
+      await refreshDatasetsHistory();
+    } catch (err) {
+      alert(`Failed to delete dataset: ${err.message}`);
     }
   };
 
@@ -222,7 +310,7 @@ export default function App() {
     const initialNumericFilters = {};
     headers.forEach(c => {
       if (schema[c] === 'numeric' && stats[c]) {
-        initialNumericFilters[col] = [stats[col].min, stats[col].max];
+        initialNumericFilters[c] = [stats[c].min, stats[c].max];
       }
     });
 
@@ -258,7 +346,6 @@ export default function App() {
   const handleLevelSelect = (level) => {
     setActiveLevel(level);
     const newNumericFilters = { ...filters.numeric };
-
     const numericCols = headers.filter(c => schema[c] === 'numeric' && stats[c]);
 
     numericCols.forEach(col => {
@@ -293,14 +380,15 @@ export default function App() {
   const handleExportCSV = () => {
     if (workerRef.current) {
       setIsLoading(true);
-      setProgressInfo({ text: 'Generating CSV file for instant download...', rowCount: filteredCount });
+      setProgressInfo({ text: 'Generating CSV file for download...', rowCount: filteredCount });
       workerRef.current.postMessage({ action: 'EXPORT_CSV' });
     }
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     if (currentUser) {
       endActiveSession(currentUser.id || currentUser.email || currentUser.phone);
+      await stopLiveTracking(currentUser);
     }
     logoutUser();
     setCurrentUser(null);
@@ -310,6 +398,7 @@ export default function App() {
   };
 
   const hasData = totalRows > 0;
+  const isFiltered = filteredCount !== totalRows;
 
   // Render Full Page Login Page when unauthenticated or requested
   if ((!currentUser && !isGuestMode) || isLoginOpen) {
@@ -318,6 +407,7 @@ export default function App() {
         onLoginSuccess={(user) => {
           setCurrentUser(user);
           startSession(user);
+          startLiveTracking(user, (stats) => setLiveStats(stats));
           setIsLoginOpen(false);
           setIsGuestMode(false);
         }}
@@ -337,14 +427,46 @@ export default function App() {
         hasData={hasData && !isLoading}
         hasPreviousDataset={hasData}
         isUploadMode={isUploadMode}
+        isHistoryMode={isHistoryMode}
+        isLiveUsersMode={isLiveUsersMode}
+        isSidebarOpen={isSidebarOpen}
+        onToggleSidebar={() => setIsSidebarOpen(prev => !prev)}
+        isFiltered={isFiltered}
+        savedDatasetsCount={datasetsList.length}
+        liveUsersCount={liveStats?.liveUsers ?? 0}
         datasetName={datasetName}
-        onUploadClick={() => setIsUploadMode(true)}
+        onUploadClick={() => {
+          setIsUploadMode(true);
+          setIsHistoryMode(false);
+          setIsLiveUsersMode(false);
+        }}
+        onHistoryClick={() => {
+          setIsHistoryMode(true);
+          setIsUploadMode(false);
+          setIsLiveUsersMode(false);
+          refreshDatasetsHistory();
+        }}
+        onLiveUsersClick={() => {
+          setIsLiveUsersMode(prev => !prev);
+          setIsHistoryMode(false);
+          setIsUploadMode(false);
+        }}
         onLoadSample={(sampleKey) => {
           setIsUploadMode(false);
+          setIsHistoryMode(false);
+          setIsLiveUsersMode(false);
           handleLoadSample(sampleKey);
         }}
-        onResetData={() => setIsUploadMode(true)}
-        onBackToDashboard={() => setIsUploadMode(false)}
+        onResetData={() => {
+          setIsUploadMode(true);
+          setIsHistoryMode(false);
+          setIsLiveUsersMode(false);
+        }}
+        onBackToDashboard={() => {
+          setIsUploadMode(false);
+          setIsHistoryMode(false);
+          setIsLiveUsersMode(false);
+        }}
         onExportCSV={handleExportCSV}
         currentUser={currentUser}
         onOpenLogin={() => setIsLoginOpen(true)}
@@ -360,10 +482,22 @@ export default function App() {
         onClose={() => setIsProfileOpen(false)}
         onLogout={handleLogout}
         onUpdateUser={(updatedUser) => setCurrentUser(updatedUser)}
+        datasets={datasetsList}
+        liveStats={liveStats}
+        onSelectDataset={(id) => {
+          setIsProfileOpen(false);
+          handleSelectDataset(id);
+        }}
+        onDeleteDataset={handleDeleteHistoryDataset}
+        onRefreshDatasets={refreshDatasetsHistory}
+        onOpenUpload={() => {
+          setIsProfileOpen(false);
+          setIsUploadMode(true);
+        }}
       />
 
       <div className="main-layout">
-        {hasData && !isUploadMode && !isLoading && (
+        {hasData && !isUploadMode && !isHistoryMode && !isLiveUsersMode && !isLoading && isSidebarOpen && (
           <>
             {isMobileFilterOpen && (
               <div 
@@ -386,21 +520,25 @@ export default function App() {
         )}
 
         <div className="content-area">
-          {hasData && !isUploadMode && !isLoading && (
+          {hasData && !isUploadMode && !isHistoryMode && !isLiveUsersMode && !isLoading && (
             <div className="mobile-filter-bar">
               <button 
                 type="button" 
                 className="mobile-filter-trigger-btn"
-                onClick={() => setIsMobileFilterOpen(true)}
+                onClick={() => {
+                  setIsSidebarOpen(true);
+                  setIsMobileFilterOpen(true);
+                }}
               >
                 <Filter size={16} />
                 <span>Filter Options</span>
-                {filteredCount !== totalRows && (
+                {isFiltered && (
                   <span className="mobile-filter-count-badge">Filtered</span>
                 )}
               </button>
             </div>
           )}
+
           {isLoading ? (
             <div className="dropzone-container" style={{ cursor: 'default' }}>
               <div className="upload-icon-circle" style={{ animation: 'spin 1.5s linear infinite' }}>
@@ -409,15 +547,48 @@ export default function App() {
               <h2 className="dropzone-title">Processing Dataset...</h2>
               <p className="dropzone-subtitle">{progressInfo.text}</p>
             </div>
+          ) : isLiveUsersMode ? (
+            <LiveUserTracker 
+              liveStats={liveStats}
+              currentUser={currentUser}
+              onManualRefresh={refreshLiveStatsNow}
+            />
+          ) : isHistoryMode ? (
+            <DatasetHistory 
+              datasets={datasetsList}
+              onSelectDataset={handleSelectHistoryDataset}
+              onDeleteDataset={handleDeleteHistoryDataset}
+              onRefresh={refreshDatasetsHistory}
+              onSeedSample={async () => {
+                await seedSampleDatasets();
+                await refreshDatasetsHistory();
+              }}
+              onOpenUpload={() => {
+                setIsUploadMode(true);
+                setIsHistoryMode(false);
+                setIsLiveUsersMode(false);
+              }}
+              isLoading={isLoading}
+            />
           ) : (!hasData || isUploadMode) ? (
             <FileUpload 
               onFileSelect={(file) => {
                 setIsUploadMode(false);
+                setIsHistoryMode(false);
+                setIsLiveUsersMode(false);
                 handleFileSelect(file);
               }}
               onLoadSample={(sampleKey) => {
                 setIsUploadMode(false);
+                setIsHistoryMode(false);
+                setIsLiveUsersMode(false);
                 handleLoadSample(sampleKey);
+              }}
+              onOpenHistory={() => {
+                setIsHistoryMode(true);
+                setIsUploadMode(false);
+                setIsLiveUsersMode(false);
+                refreshDatasetsHistory();
               }}
               error={error}
               hasPreviousDataset={hasData}
@@ -438,6 +609,8 @@ export default function App() {
                 schema={schema}
                 activeLevel={activeLevel}
                 onLevelSelect={handleLevelSelect}
+                liveStats={liveStats}
+                onOpenLiveTracker={() => setIsLiveUsersMode(true)}
               />
 
               <div className="nav-tabs">
@@ -446,6 +619,12 @@ export default function App() {
                   onClick={() => setActiveTab('dashboard')}
                 >
                   <LayoutDashboard size={16} /> Executive Dashboard
+                </button>
+                <button 
+                  className={`tab-btn ${activeTab === 'live_users' ? 'active' : ''}`}
+                  onClick={() => setActiveTab('live_users')}
+                >
+                  <Radio size={16} className="text-emerald animate-pulse" /> Live Users ({liveStats?.liveUsers ?? 0})
                 </button>
                 <button 
                   className={`tab-btn ${activeTab === 'builder' ? 'active' : ''}`}
@@ -479,6 +658,14 @@ export default function App() {
                   totalRows={totalRows}
                   filteredCount={filteredCount}
                   theme={theme}
+                />
+              )}
+
+              {activeTab === 'live_users' && (
+                <LiveUserTracker 
+                  liveStats={liveStats}
+                  currentUser={currentUser}
+                  onManualRefresh={refreshLiveStatsNow}
                 />
               )}
 

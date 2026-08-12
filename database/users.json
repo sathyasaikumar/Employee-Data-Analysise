@@ -1,0 +1,63 @@
+[
+  {
+    "id": "usr_admin_101",
+    "name": "Corporate Account",
+    "email": "admin@corporate.com",
+    "role": "Executive Admin",
+    "avatar": "CA",
+    "loginType": "email",
+    "totalLogins": 24,
+    "registeredAt": "2026-07-13T06:00:07.404Z"
+  },
+  {
+    "id": "usr_alex_102",
+    "name": "Alex Morgan",
+    "email": "alex.morgan@corporate.com",
+    "role": "Senior Data Lead",
+    "avatar": "AM",
+    "loginType": "email",
+    "totalLogins": 28,
+    "registeredAt": "2026-06-28T06:00:07.404Z"
+  },
+  {
+    "id": "usr_sarah_103",
+    "name": "Sarah Jenkins",
+    "email": "sarah.jenkins@corporate.com",
+    "role": "Workforce Manager",
+    "avatar": "SJ",
+    "loginType": "phone",
+    "totalLogins": 19,
+    "registeredAt": "2026-06-13T06:00:07.404Z"
+  },
+  {
+    "id": "usr_david_104",
+    "name": "David Chen",
+    "email": "david.dev@github.com",
+    "role": "Software Engineer",
+    "avatar": "DC",
+    "loginType": "github",
+    "totalLogins": 32,
+    "registeredAt": "2026-05-14T06:00:07.404Z"
+  },
+  {
+    "id": "usr_elena_105",
+    "name": "Elena Rostova",
+    "email": "elena.sso@enterprise.org",
+    "role": "Enterprise Architect",
+    "avatar": "ER",
+    "loginType": "sso",
+    "totalLogins": 11,
+    "registeredAt": "2026-07-28T06:00:07.404Z"
+  },
+  {
+    "id": "usr_1786380041461",
+    "name": "New User",
+    "email": "newuser@corporate.com",
+    "phone": null,
+    "role": "Workforce Manager",
+    "avatar": "NU",
+    "loginType": "email",
+    "totalLogins": 6,
+    "registeredAt": "2026-08-12T06:06:46.975Z"
+  }
+]

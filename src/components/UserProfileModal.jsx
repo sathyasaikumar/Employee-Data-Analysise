@@ -3,12 +3,15 @@ import {
   User, Mail, Phone, Calendar, Award, ShieldCheck, Clock, History, 
   CheckCircle2, LogOut, Activity, Lock, X, Edit3, Save, Download, 
   Camera, Upload, Image as ImageIcon, Sparkles, AlertCircle, Check,
-  Maximize2, Minimize2
+  Maximize2, Minimize2, Trash2, Database, Radio
 } from 'lucide-react';
 import { 
   getUserProfile, saveUserProfile, calculateSessionStats, 
-  formatLocalTimestamp, formatDuration, ensureSampleLoginHistory 
+  formatLocalTimestamp, formatDuration, ensureSampleLoginHistory,
+  deleteLoginSession, clearLoginHistory
 } from '../utils/activityTracker';
+import DatasetHistory from './DatasetHistory';
+import LiveUserTracker from './LiveUserTracker';
 
 export const PRESET_AVATARS = [
   { id: 'avatar1', name: 'Executive Male Portrait', url: '/avatars/avatar1.png' },
@@ -16,7 +19,19 @@ export const PRESET_AVATARS = [
   { id: 'avatar3', name: '3D Cyber Tech Avatar', url: '/avatars/avatar3.png' }
 ];
 
-export default function UserProfileModal({ currentUser, isOpen, onClose, onLogout, onUpdateUser }) {
+export default function UserProfileModal({ 
+  currentUser, 
+  isOpen, 
+  onClose, 
+  onLogout, 
+  onUpdateUser,
+  datasets = [],
+  onSelectDataset,
+  onDeleteDataset,
+  onRefreshDatasets,
+  onOpenUpload,
+  liveStats = null
+}) {
   const [profile, setProfile] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState({});
@@ -25,6 +40,7 @@ export default function UserProfileModal({ currentUser, isOpen, onClose, onLogou
   const [filterStatus, setFilterStatus] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [liveDuration, setLiveDuration] = useState('00m 00s');
+  const [activeTab, setActiveTab] = useState('session_history'); // 'session_history' | 'dataset_history'
 
   // Full Screen & Photo Picker Modal State
   const [isFullScreen, setIsFullScreen] = useState(false);
@@ -146,6 +162,24 @@ export default function UserProfileModal({ currentUser, isOpen, onClose, onLogou
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  };
+
+  const handleDeleteSession = (sessionId) => {
+    if (window.confirm('Are you sure you want to delete this login session record?')) {
+      deleteLoginSession(userId, sessionId);
+      const updatedStats = calculateSessionStats(userId);
+      setStats(updatedStats);
+      setHistory(updatedStats.history);
+    }
+  };
+
+  const handleClearAllHistory = () => {
+    if (window.confirm('Are you sure you want to clear all completed session history logs?')) {
+      clearLoginHistory(userId);
+      const updatedStats = calculateSessionStats(userId);
+      setStats(updatedStats);
+      setHistory(updatedStats.history);
+    }
   };
 
   // Filtered history records
@@ -466,119 +500,269 @@ export default function UserProfileModal({ currentUser, isOpen, onClose, onLogou
             </div>
 
 
-            {/* LOGIN HISTORY TABLE SECTION */}
-            <div className="login-history-container">
-              <div className="history-table-header">
-                <div className="history-header-title">
-                  <History size={18} className="text-blue-400" />
-                  <h3>Automated Login & Logout History</h3>
-                  <span className="badge-security-lock">
-                    <Lock size={12} /> Read-Only Timestamp Tracking
+            {/* TAB SELECTOR BAR FOR LOGIN & DATASET HISTORY */}
+            <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.5rem', marginBottom: '1.25rem', flexWrap: 'wrap' }}>
+              <button
+                type="button"
+                className={`profile-tab-pill ${activeTab === 'session_history' ? 'active' : ''}`}
+                onClick={() => setActiveTab('session_history')}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.45rem',
+                  padding: '0.65rem 1.15rem',
+                  borderRadius: '10px',
+                  fontSize: '0.875rem',
+                  fontWeight: 700,
+                  border: activeTab === 'session_history' ? '1.5px solid var(--accent-blue)' : '1px solid var(--border-color)',
+                  background: activeTab === 'session_history' ? 'linear-gradient(135deg, rgba(99, 102, 241, 0.25), rgba(6, 182, 212, 0.15))' : 'rgba(15, 23, 42, 0.6)',
+                  color: activeTab === 'session_history' ? '#ffffff' : 'var(--text-muted)',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  boxShadow: activeTab === 'session_history' ? '0 4px 15px rgba(99, 102, 241, 0.2)' : 'none'
+                }}
+              >
+                <History size={16} className={activeTab === 'session_history' ? 'text-cyan-400' : ''} />
+                <span>Automated Login & Session History</span>
+              </button>
+
+              <button
+                type="button"
+                className={`profile-tab-pill ${activeTab === 'dataset_history' ? 'active' : ''}`}
+                onClick={() => setActiveTab('dataset_history')}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.45rem',
+                  padding: '0.65rem 1.15rem',
+                  borderRadius: '10px',
+                  fontSize: '0.875rem',
+                  fontWeight: 700,
+                  border: activeTab === 'dataset_history' ? '1.5px solid var(--accent-blue)' : '1px solid var(--border-color)',
+                  background: activeTab === 'dataset_history' ? 'linear-gradient(135deg, rgba(99, 102, 241, 0.25), rgba(6, 182, 212, 0.15))' : 'rgba(15, 23, 42, 0.6)',
+                  color: activeTab === 'dataset_history' ? '#ffffff' : 'var(--text-muted)',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  boxShadow: activeTab === 'dataset_history' ? '0 4px 15px rgba(99, 102, 241, 0.2)' : 'none'
+                }}
+              >
+                <Database size={16} className={activeTab === 'dataset_history' ? 'text-cyan-400' : ''} />
+                <span>Dataset History</span>
+                <span style={{
+                  background: activeTab === 'dataset_history' ? 'rgba(6, 182, 212, 0.35)' : 'rgba(255, 255, 255, 0.1)',
+                  color: activeTab === 'dataset_history' ? '#38bdf8' : 'var(--text-muted)',
+                  padding: '0.15rem 0.55rem',
+                  borderRadius: '12px',
+                  fontSize: '0.75rem',
+                  fontWeight: 800
+                }}>
+                  {datasets.length}
+                </span>
+              </button>
+
+              {/* LIVE WEBSITE USERS TAB NEXT TO DATASET HISTORY */}
+              <button
+                type="button"
+                className={`profile-tab-pill ${activeTab === 'live_users' ? 'active' : ''}`}
+                onClick={() => setActiveTab('live_users')}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.45rem',
+                  padding: '0.65rem 1.15rem',
+                  borderRadius: '10px',
+                  fontSize: '0.875rem',
+                  fontWeight: 700,
+                  border: activeTab === 'live_users' ? '1.5px solid #10b981' : '1px solid var(--border-color)',
+                  background: activeTab === 'live_users' ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.25), rgba(6, 182, 212, 0.15))' : 'rgba(15, 23, 42, 0.6)',
+                  color: activeTab === 'live_users' ? '#ffffff' : 'var(--text-muted)',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  boxShadow: activeTab === 'live_users' ? '0 4px 15px rgba(16, 185, 129, 0.2)' : 'none'
+                }}
+              >
+                <Radio size={16} className={activeTab === 'live_users' ? 'text-emerald-400 animate-pulse' : 'text-emerald-400'} />
+                <span>Live Website Users</span>
+                <span style={{
+                  background: '#10b981',
+                  color: '#022c22',
+                  padding: '0.15rem 0.55rem',
+                  borderRadius: '12px',
+                  fontSize: '0.75rem',
+                  fontWeight: 800
+                }}>
+                  {liveStats?.liveUsers ?? 2}
+                </span>
+              </button>
+            </div>
+
+            {/* CONDITIONAL TAB CONTENT */}
+            {activeTab === 'live_users' ? (
+              <div style={{ background: 'rgba(15, 23, 42, 0.4)', borderRadius: '16px', border: '1px solid var(--border-color)', padding: '1rem', overflow: 'hidden' }}>
+                <LiveUserTracker 
+                  liveStats={liveStats}
+                  currentUser={currentUser}
+                />
+              </div>
+            ) : activeTab === 'dataset_history' ? (
+              <div style={{ background: 'rgba(15, 23, 42, 0.4)', borderRadius: '16px', border: '1px solid var(--border-color)', overflow: 'hidden' }}>
+                <DatasetHistory 
+                  datasets={datasets}
+                  onSelectDataset={onSelectDataset}
+                  onDeleteDataset={onDeleteDataset}
+                  onRefresh={onRefreshDatasets}
+                  onOpenUpload={onOpenUpload}
+                />
+              </div>
+            ) : (
+              /* LOGIN HISTORY TABLE SECTION */
+              <div className="login-history-container">
+                <div className="history-table-header">
+                  <div className="history-header-title">
+                    <History size={18} className="text-blue-400" />
+                    <h3>Automated Login & Logout History</h3>
+                    <span className="badge-security-lock">
+                      <Lock size={12} /> Read-Only Timestamp Tracking
+                    </span>
+                  </div>
+
+                  <div className="history-header-actions">
+                    {/* Search input */}
+                    <input 
+                      type="text" 
+                      placeholder="Search history..." 
+                      className="history-search-input"
+                      value={searchQuery}
+                      onChange={e => setSearchQuery(e.target.value)}
+                    />
+
+                    {/* Status Filter */}
+                    <select 
+                      className="history-filter-select"
+                      value={filterStatus}
+                      onChange={e => setFilterStatus(e.target.value)}
+                    >
+                      <option value="all">All Sessions</option>
+                      <option value="active">Active Only</option>
+                      <option value="logged_out">Logged Out</option>
+                    </select>
+
+                    {/* Export CSV Log */}
+                    <button 
+                      type="button" 
+                      className="btn btn-secondary btn-export-history"
+                      onClick={handleExportHistoryCSV}
+                      title="Export Login History CSV"
+                    >
+                      <Download size={14} /> Export CSV
+                    </button>
+                    
+                    {/* Clear All History */}
+                    <button 
+                      type="button" 
+                      className="btn btn-secondary btn-clear-history"
+                      onClick={handleClearAllHistory}
+                      title="Delete completed session history logs"
+                      style={{ color: 'var(--accent-rose)', borderColor: 'rgba(239, 68, 68, 0.3)', display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}
+                    >
+                      <Trash2 size={14} /> Clear History
+                    </button>
+                  </div>
+                </div>
+
+                {/* Table view */}
+                <div className="history-table-wrapper">
+                  <table className="login-history-table">
+                    <thead>
+                      <tr>
+                        <th>Date</th>
+                        <th>Login Time</th>
+                        <th>Logout Time</th>
+                        <th>Session Duration</th>
+                        <th>Device & Location</th>
+                        <th>Status</th>
+                        <th style={{ textAlign: 'right' }}>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredHistory.length > 0 ? (
+                        filteredHistory.map((sess, idx) => (
+                          <tr key={sess.id || idx} className={sess.status === 'Active' ? 'row-active' : ''}>
+                            <td className="font-semibold text-main">
+                              {sess.dateIso ? formatLocalTimestamp(sess.dateIso).split(',')[0] : 'Today'}
+                            </td>
+                            <td className="text-cyan-400 font-mono">
+                              {formatLocalTimestamp(sess.loginTime)}
+                            </td>
+                            <td className="text-muted font-mono">
+                              {sess.logoutTime ? (
+                                formatLocalTimestamp(sess.logoutTime)
+                              ) : (
+                                <span className="text-emerald font-semibold animate-pulse">🟢 Active Now</span>
+                              )}
+                            </td>
+                            <td className="font-mono text-purple-300">
+                              {sess.status === 'Active' ? liveDuration : formatDuration(sess.durationMs)}
+                            </td>
+                            <td className="text-dim text-xs">
+                              {sess.device || 'Windows Desktop'} ({sess.ipAddress || '192.168.1.104'})
+                            </td>
+                            <td>
+                              {sess.status === 'Active' ? (
+                                <span className="status-badge status-active">
+                                  <span className="dot"></span> Active
+                                </span>
+                              ) : (
+                                <span className="status-badge status-loggedout">
+                                  Logged Out
+                                </span>
+                              )}
+                            </td>
+                            <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteSession(sess.id)}
+                                title="Delete this session record"
+                                style={{
+                                  background: 'rgba(239, 68, 68, 0.12)',
+                                  border: '1px solid rgba(239, 68, 68, 0.3)',
+                                  color: '#f87171',
+                                  padding: '0.25rem 0.55rem',
+                                  borderRadius: '6px',
+                                  cursor: 'pointer',
+                                  fontSize: '0.75rem',
+                                  fontWeight: 600,
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '0.25rem'
+                                }}
+                              >
+                                <Trash2 size={13} /> Delete
+                              </button>
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan="7" className="text-center py-6 text-muted">
+                            No login history records match the selected filter.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Security Footer Notice */}
+                <div className="history-security-footer">
+                  <AlertCircle size={14} className="text-amber-400 flex-shrink-0" />
+                  <span>
+                    All login & logout events are automatically verified and timestamped using your local system timezone (<strong>{userTimezone}</strong>). Timestamps cannot be manually edited or modified.
                   </span>
                 </div>
 
-                <div className="history-header-actions">
-                  {/* Search input */}
-                  <input 
-                    type="text" 
-                    placeholder="Search history..." 
-                    className="history-search-input"
-                    value={searchQuery}
-                    onChange={e => setSearchQuery(e.target.value)}
-                  />
-
-                  {/* Status Filter */}
-                  <select 
-                    className="history-filter-select"
-                    value={filterStatus}
-                    onChange={e => setFilterStatus(e.target.value)}
-                  >
-                    <option value="all">All Sessions</option>
-                    <option value="active">Active Only</option>
-                    <option value="logged_out">Logged Out</option>
-                  </select>
-
-                  {/* Export CSV Log */}
-                  <button 
-                    type="button" 
-                    className="btn btn-secondary btn-export-history"
-                    onClick={handleExportHistoryCSV}
-                    title="Export Login History CSV"
-                  >
-                    <Download size={14} /> Export CSV
-                  </button>
-                </div>
               </div>
-
-              {/* Table view */}
-              <div className="history-table-wrapper">
-                <table className="login-history-table">
-                  <thead>
-                    <tr>
-                      <th>Date</th>
-                      <th>Login Time</th>
-                      <th>Logout Time</th>
-                      <th>Session Duration</th>
-                      <th>Device & Location</th>
-                      <th>Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredHistory.length > 0 ? (
-                      filteredHistory.map((sess, idx) => (
-                        <tr key={sess.id || idx} className={sess.status === 'Active' ? 'row-active' : ''}>
-                          <td className="font-semibold text-main">
-                            {sess.dateIso ? formatLocalTimestamp(sess.dateIso).split(',')[0] : 'Today'}
-                          </td>
-                          <td className="text-cyan-400 font-mono">
-                            {formatLocalTimestamp(sess.loginTime)}
-                          </td>
-                          <td className="text-muted font-mono">
-                            {sess.logoutTime ? (
-                              formatLocalTimestamp(sess.logoutTime)
-                            ) : (
-                              <span className="text-emerald font-semibold animate-pulse">🟢 Active Now</span>
-                            )}
-                          </td>
-                          <td className="font-mono text-purple-300">
-                            {sess.status === 'Active' ? liveDuration : formatDuration(sess.durationMs)}
-                          </td>
-                          <td className="text-dim text-xs">
-                            {sess.device || 'Windows Desktop'} ({sess.ipAddress || '192.168.1.104'})
-                          </td>
-                          <td>
-                            {sess.status === 'Active' ? (
-                              <span className="status-badge status-active">
-                                <span className="dot"></span> Active
-                              </span>
-                            ) : (
-                              <span className="status-badge status-loggedout">
-                                Logged Out
-                              </span>
-                            )}
-                          </td>
-                        </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td colSpan="6" className="text-center py-6 text-muted">
-                          No login history records match the selected filter.
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-
-              {/* Security Footer Notice */}
-              <div className="history-security-footer">
-                <AlertCircle size={14} className="text-amber-400 flex-shrink-0" />
-                <span>
-                  All login & logout events are automatically verified and timestamped using your local system timezone (<strong>{userTimezone}</strong>). Timestamps cannot be manually edited or modified.
-                </span>
-              </div>
-
-            </div>
+            )}
 
           </div>
 

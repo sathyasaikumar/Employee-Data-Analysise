@@ -1,0 +1,30 @@
+[
+  {
+    "id": "sess_1786515386526_vnmv",
+    "userId": "usr_admin_101",
+    "username": "Corporate Account",
+    "userEmail": "admin@corporate.com",
+    "userRole": "Executive Admin",
+    "avatar": "CA",
+    "loginType": "google",
+    "loginTime": "2026-08-12T06:16:26.526Z",
+    "logoutTime": "2026-08-12T06:16:26.676Z",
+    "status": "offline",
+    "lastActiveTime": "2026-08-12T06:16:26.676Z",
+    "clientTabId": "tab_1786515385679_nkfui"
+  },
+  {
+    "id": "sess_1786515386599_mqep",
+    "userId": "usr_admin_101",
+    "username": "Corporate Account",
+    "userEmail": "admin@corporate.com",
+    "userRole": "Executive Admin",
+    "avatar": "CA",
+    "loginType": "google",
+    "loginTime": "2026-08-12T06:16:26.599Z",
+    "logoutTime": null,
+    "status": "online",
+    "lastActiveTime": "2026-08-12T06:29:38.010Z",
+    "clientTabId": "tab_1786515385679_nkfui"
+  }
+]

@@ -14,10 +14,16 @@ let stats = {};
 let healthScore = 100;
 
 self.onmessage = function (e) {
-  const { action, file, rawCsv, filters, page, pageSize, sortColumn, sortDirection } = e.data;
+  const { action, file, rawCsv, rows, filters, page, pageSize, sortColumn, sortDirection } = e.data;
 
   if (action === 'PARSE') {
-    parseLargeCSV(file || rawCsv);
+    if (rows && Array.isArray(rows) && rows.length > 0) {
+      processParsedRows(rows);
+    } else if (file || rawCsv) {
+      parseLargeCSV(file || rawCsv);
+    } else {
+      self.postMessage({ type: 'ERROR', message: 'No valid dataset file, CSV content, or row array provided.' });
+    }
   } else if (action === 'FILTER') {
     applyFiltersAndAggregate(filters, page || 1, pageSize || 10, sortColumn, sortDirection);
   } else if (action === 'GET_PAGE') {
@@ -27,7 +33,90 @@ self.onmessage = function (e) {
   }
 };
 
+function processParsedRows(inputRows) {
+  headers = [];
+  masterData = inputRows || [];
+
+  if (masterData.length === 0) {
+    self.postMessage({ type: 'ERROR', message: 'The dataset contains no rows.' });
+    return;
+  }
+
+  headers = Object.keys(masterData[0] || {});
+  if (headers.length === 0) {
+    self.postMessage({ type: 'ERROR', message: 'The dataset contains no headers.' });
+    return;
+  }
+
+  self.postMessage({
+    type: 'PROGRESS',
+    rowCount: masterData.length,
+    percent: 90,
+    status: 'Detecting schema & computing global statistics...'
+  });
+
+  // 1. Fast Sampled Schema Detection
+  schema = detectColumnTypesFast(masterData, headers);
+
+  // 2. Fast Single-Pass Statistics
+  stats = computeSummaryStatsFast(masterData, headers, schema);
+
+  // 3. Health Score, Missing Cells, Duplicate Count & Data Completeness
+  let totalCells = masterData.length * headers.length;
+  let missingCells = 0;
+  headers.forEach(h => {
+    if (stats[h]) missingCells += stats[h].missingCount || 0;
+  });
+
+  let duplicateCount = 0;
+  const seenRows = new Set();
+  const sampleForDupes = masterData.length > 50000 ? masterData.slice(0, 50000) : masterData;
+  for (let i = 0; i < sampleForDupes.length; i++) {
+    const rowStr = JSON.stringify(sampleForDupes[i]);
+    if (seenRows.has(rowStr)) {
+      duplicateCount++;
+    } else {
+      seenRows.add(rowStr);
+    }
+  }
+  if (masterData.length > 50000) {
+    duplicateCount = Math.round(duplicateCount * (masterData.length / 50000));
+  }
+
+  healthScore = totalCells > 0 ? Math.max(0, Math.round(100 - (missingCells / totalCells) * 100)) : 100;
+  const completenessScore = totalCells > 0 ? Number(((totalCells - missingCells) / totalCells * 100).toFixed(1)) : 100;
+
+  // 4. Automatic Anomaly Detection Engine
+  const anomaliesResult = detectAnomaliesFast(masterData, headers, schema, stats);
+
+  // Apply initial empty filters & return response
+  const filterResult = filterDataset(masterData, {}, headers);
+  const aggregatedChartData = aggregateDashboardMetrics(filterResult, headers, schema);
+  const pageSlice = getTableSlice(filterResult, 1, 10, null, 'asc', schema);
+
+  self.postMessage({
+    type: 'COMPLETE',
+    totalRows: masterData.length,
+    totalCols: headers.length,
+    filteredCount: filterResult.length,
+    headers,
+    schema,
+    stats,
+    healthScore,
+    missingCells,
+    duplicateCount,
+    completenessScore,
+    anomalies: anomaliesResult,
+    dashboardMetrics: aggregatedChartData,
+    pageData: pageSlice
+  });
+}
+
 function parseLargeCSV(input) {
+  if (!input) {
+    self.postMessage({ type: 'ERROR', message: 'No input file or CSV content string was provided.' });
+    return;
+  }
   headers = [];
   masterData = [];
   let rowCount = 0;

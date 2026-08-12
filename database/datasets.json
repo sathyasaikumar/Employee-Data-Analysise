@@ -1,0 +1,76 @@
+[
+  {
+    "id": "ds_seed_1001",
+    "originalName": "workforce_intelligence_2026.csv",
+    "savedName": "dataset_seed_1001_workforce_intelligence_2026.csv",
+    "filePath": "uploads/datasets/dataset_seed_1001_workforce_intelligence_2026.csv",
+    "uploadDate": "2026-08-12T05:47:48.764Z",
+    "uploadDateFormatted": "Aug 12, 2026, 11:17 AM",
+    "fileSize": "979 Bytes",
+    "fileSizeBytes": 979,
+    "fileType": "csv",
+    "rowCount": 10,
+    "columnCount": 9,
+    "columns": [
+      {
+        "name": "EmployeeID",
+        "type": "datetime",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "FullName",
+        "type": "categorical",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "Department",
+        "type": "categorical",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "Role",
+        "type": "categorical",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "Salary",
+        "type": "numeric",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "WorkMode",
+        "type": "categorical",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "PerformanceRating",
+        "type": "numeric",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "JoinDate",
+        "type": "datetime",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "Status",
+        "type": "categorical",
+        "missingCount": 0,
+        "nullRatio": 0
+      }
+    ],
+    "healthScore": 100,
+    "missingCells": 0,
+    "duplicateCount": 0,
+    "completenessScore": 100,
+    "status": "Active"
+  }
+]

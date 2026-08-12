@@ -1,12 +1,21 @@
 import React, { useState } from 'react';
-import { BarChart3, Upload, Download, Layers, LogIn, LogOut, ShieldCheck, Sun, Moon, ArrowLeft, Menu, X } from 'lucide-react';
+import { BarChart3, Upload, Download, Layers, LogIn, LogOut, ShieldCheck, Sun, Moon, ArrowLeft, Menu, X, Database, Filter, Radio } from 'lucide-react';
 
 export default function Header({ 
   hasData, 
   hasPreviousDataset,
   isUploadMode,
+  isHistoryMode,
+  isLiveUsersMode,
+  isSidebarOpen = true,
+  onToggleSidebar,
+  isFiltered = false,
   datasetName, 
   onUploadClick, 
+  onHistoryClick,
+  onLiveUsersClick,
+  savedDatasetsCount = 0,
+  liveUsersCount = 0,
   onLoadSample, 
   onResetData, 
   onBackToDashboard,
@@ -18,7 +27,6 @@ export default function Header({
   theme = 'dark',
   onToggleTheme
 }) {
-  const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const toggleMobileMenu = () => {
@@ -50,8 +58,8 @@ export default function Header({
       </div>
 
       <div className={`header-actions ${isMobileMenuOpen ? 'mobile-open' : ''}`}>
-        {/* ONE unique Back button on the left side when in upload mode */}
-        {(isUploadMode || !hasData) && hasPreviousDataset && (
+        {/* Back button when in upload mode or history mode */}
+        {(isUploadMode || isHistoryMode || !hasData) && hasPreviousDataset && (
           <button 
             type="button"
             className="btn btn-secondary btn-back-unique"
@@ -59,29 +67,31 @@ export default function Header({
               onBackToDashboard();
               closeMobileMenu();
             }}
-            title="Return back to your active dataset and dashboard"
+            title="Return back to active dataset dashboard"
           >
             <ArrowLeft size={16} />
-            <span>Back</span>
+            <span>Back to Dashboard</span>
           </button>
         )}
 
-        {hasData && !isUploadMode && (
+        {hasData && !isUploadMode && !isHistoryMode && (
           <>
-            {/* 1. FIRST POSITION ON LEFT: New File Button */}
+
+
+            {/* New Upload Button */}
             <button 
-              className="btn btn-primary btn-new-file-highlight" 
+              className="btn btn-secondary btn-new-file-highlight" 
               onClick={() => {
                 onResetData();
                 closeMobileMenu();
               }} 
-              title="Upload a New CSV File or Reset Dataset"
+              title="Upload a New Dataset File"
             >
               <Upload size={16} />
-              <span>New File</span>
+              <span>Upload Dataset</span>
             </button>
 
-            {/* 2. NEXT TO NEW FILE: Export CSV Button */}
+            {/* Export CSV Button */}
             <button 
               className="btn btn-secondary btn-export-csv" 
               onClick={() => {
@@ -94,13 +104,13 @@ export default function Header({
               <span>Export CSV</span>
             </button>
 
-            {/* 3. Loaded Dataset Badge */}
+            {/* Loaded Dataset Badge */}
             <span className="badge badge-blue header-dataset-badge">
               <Layers size={12} className="mr-1 inline flex-shrink-0" />
               <span className="truncate-text">{datasetName || 'Loaded Dataset'}</span>
             </span>
 
-            {/* 4. Load Sample Dataset Selector */}
+            {/* Load Demo Dataset Selector */}
             <select 
               className="sample-select" 
               onChange={(e) => {
@@ -111,14 +121,14 @@ export default function Header({
               }}
               defaultValue=""
             >
-              <option value="" disabled>Load Sample Dataset...</option>
+              <option value="" disabled>Load Demo Dataset...</option>
               <option value="workforce">Workforce Intelligence (Demo)</option>
               <option value="sales">Sales & Revenue Analytics</option>
             </select>
           </>
         )}
 
-        {!hasData && !isUploadMode && !hasPreviousDataset && (
+        {!hasData && !isUploadMode && !isHistoryMode && !hasPreviousDataset && (
           <button 
             className="btn btn-primary btn-new-file-highlight" 
             onClick={() => {
@@ -127,11 +137,44 @@ export default function Header({
             }}
           >
             <Upload size={16} />
-            <span>Upload CSV File</span>
+            <span>Upload File</span>
           </button>
         )}
 
-        {/* Theme Mode Switcher */}
+        {/* Live Users Counter & Dashboard Button */}
+        <button 
+          className={`btn ${isLiveUsersMode ? 'btn-primary' : 'btn-secondary'}`}
+          style={{
+            borderColor: 'rgba(16, 185, 129, 0.4)',
+            background: isLiveUsersMode ? 'linear-gradient(135deg, #059669, #10b981)' : 'rgba(6, 78, 59, 0.4)',
+            color: '#ffffff',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.4rem',
+            position: 'relative'
+          }}
+          onClick={() => {
+            if (onLiveUsersClick) onLiveUsersClick();
+            closeMobileMenu();
+          }}
+          title="Open Live Website Login & User Activity Counter Dashboard"
+        >
+          <Radio size={16} className="text-emerald animate-pulse" />
+          <span>Live Users</span>
+          <span style={{
+            background: '#10b981',
+            color: '#022c22',
+            padding: '0.15rem 0.5rem',
+            borderRadius: '12px',
+            fontSize: '0.75rem',
+            fontWeight: 800,
+            marginLeft: '0.2rem'
+          }}>
+            {liveUsersCount}
+          </span>
+        </button>
+
+        {/* Theme Switcher */}
         <button 
           className="btn btn-secondary theme-toggle-btn"
           onClick={() => {
@@ -142,17 +185,17 @@ export default function Header({
           {theme === 'dark' ? (
             <>
               <Sun size={16} style={{ color: '#f59e0b' }} />
-              <span>Light Theme</span>
+              <span>Light</span>
             </>
           ) : (
             <>
               <Moon size={16} style={{ color: '#6366f1' }} />
-              <span>Dark Theme</span>
+              <span>Dark</span>
             </>
           )}
         </button>
 
-        {/* User Authentication & Profile Control */}
+        {/* User Profile Badge */}
         <div className="user-auth-wrapper">
           {currentUser ? (
             <div className="user-profile-badge" title="Click to View Personal Profile & Login Activity System">
@@ -209,4 +252,3 @@ export default function Header({
     </header>
   );
 }
-

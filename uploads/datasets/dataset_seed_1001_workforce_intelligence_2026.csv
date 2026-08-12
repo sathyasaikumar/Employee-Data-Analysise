@@ -1,0 +1,11 @@
+EmployeeID,FullName,Department,Role,Salary,WorkMode,PerformanceRating,JoinDate,Status
+EMP-101,Aarav Sharma,Engineering,Senior FullStack Engineer,98500,Hybrid,4.8,2022-03-15,Active
+EMP-102,Priya Patel,Data Analytics,Lead Data Scientist,112000,Remote,4.9,2021-08-10,Active
+EMP-103,Rohan Verma,Product Management,Senior Product Manager,105000,On-Site,4.5,2020-01-20,Active
+EMP-104,Ananya Roy,Human Resources,HR Business Partner,68000,Hybrid,4.2,2023-05-12,Active
+EMP-105,Vikram Malhotra,Engineering,DevOps Architect,118000,Remote,4.9,2019-11-04,Active
+EMP-106,Sneha Gupta,Finance,Financial Analyst,74000,On-Site,4.1,2022-09-01,Active
+EMP-107,Karan Singh,Marketing,Growth Marketing Lead,89000,Hybrid,4.6,2021-04-18,Active
+EMP-108,Divya Nair,Sales,Enterprise Account Exec,95000,Remote,4.7,2022-11-30,Active
+EMP-109,Aditya Joshi,Cybersecurity,Security Consultant,102000,Hybrid,4.8,2020-06-25,Active
+EMP-110,Meera Reddy,Engineering,QA Automation Lead,82000,On-Site,4.3,2023-02-14,Active

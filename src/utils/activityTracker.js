@@ -213,6 +213,29 @@ export const endActiveSession = (userId) => {
 };
 
 /**
+ * Deletes a specific login session by ID
+ */
+export const deleteLoginSession = (userId, sessionId) => {
+  if (!userId || !sessionId) return [];
+  const history = getLoginHistory(userId);
+  const updated = history.filter(s => s.id !== sessionId);
+  saveLoginHistory(userId, updated);
+  return updated;
+};
+
+/**
+ * Clears all completed/logged-out login history for a user
+ */
+export const clearLoginHistory = (userId) => {
+  if (!userId) return [];
+  const history = getLoginHistory(userId);
+  // Keep only currently active session if any
+  const updated = history.filter(s => s.status === 'Active');
+  saveLoginHistory(userId, updated);
+  return updated;
+};
+
+/**
  * Gets currently active session for live duration calculation
  */
 export const getActiveSession = (userId) => {
