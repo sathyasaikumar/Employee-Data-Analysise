@@ -237,12 +237,14 @@ export default function App() {
         processWithWorker({ file: converted.file || file }, converted.datasetName || file.name);
       }
 
-      // 2. Concurrently save to server storage (uploads/datasets/) in background
-      uploadDatasetFile(file)
-        .then(() => refreshDatasetsHistory())
-        .catch((backendErr) => {
-          console.warn('Backend API background save notice:', backendErr.message);
-        });
+      // 2. Concurrently save to server storage (uploads/datasets/) in background & refresh history
+      try {
+        await uploadDatasetFile(file);
+        await refreshDatasetsHistory();
+      } catch (backendErr) {
+        console.warn('Backend API background save notice:', backendErr.message);
+        await refreshDatasetsHistory();
+      }
     } catch (err) {
       setError(`Failed to read/upload file ${file.name}: ${err.message}`);
       setIsLoading(false);
@@ -267,6 +269,8 @@ export default function App() {
       setIsLoading(false);
     }
   };
+
+  const handleSelectDataset = handleSelectHistoryDataset;
 
   // Delete dataset from History by ID
   const handleDeleteHistoryDataset = async (id) => {

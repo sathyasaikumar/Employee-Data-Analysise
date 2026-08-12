@@ -112,6 +112,33 @@ export default function Header({
               <span>Upload Dataset</span>
             </button>
 
+            {/* Dataset History Button */}
+            <button 
+              className={`btn ${isHistoryMode ? 'btn-primary' : 'btn-secondary'}`}
+              onClick={() => {
+                if (onHistoryClick) onHistoryClick();
+                closeMobileMenu();
+              }} 
+              title="Open Stored Dataset History Center"
+              style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}
+            >
+              <Database size={15} className="text-cyan-400" />
+              <span>History</span>
+              {savedDatasetsCount > 0 && (
+                <span style={{
+                  background: 'rgba(6, 182, 212, 0.2)',
+                  color: '#22d3ee',
+                  padding: '0.1rem 0.45rem',
+                  borderRadius: '10px',
+                  fontSize: '0.7rem',
+                  fontWeight: 800,
+                  marginLeft: '0.15rem'
+                }}>
+                  {savedDatasetsCount}
+                </span>
+              )}
+            </button>
+
             {/* Export CSV Button */}
             <button 
               className="btn btn-secondary btn-export-csv" 

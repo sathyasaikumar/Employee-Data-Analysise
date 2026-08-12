@@ -1,5 +1,49 @@
 [
   {
+    "id": "ds_1786541144030_722z3",
+    "originalName": "Decision Tree Play Cricket Data.csv",
+    "savedName": "dataset_1786541144005_abewqi_Decision_Tree_Play_Cricket_Data.csv",
+    "filePath": "uploads/datasets/dataset_1786541144005_abewqi_Decision_Tree_Play_Cricket_Data.csv",
+    "uploadDate": "2026-08-12T13:25:44.030Z",
+    "uploadDateFormatted": "Aug 12, 2026, 6:55 PM",
+    "fileSize": "1.1 KB",
+    "fileSizeBytes": 1123,
+    "fileType": "csv",
+    "rowCount": 30,
+    "columnCount": 4,
+    "columns": [
+      {
+        "name": "Gender",
+        "type": "categorical",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "Height",
+        "type": "categorical",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "Class",
+        "type": "categorical",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "Play_Cricket_Flag",
+        "type": "numeric",
+        "missingCount": 0,
+        "nullRatio": 0
+      }
+    ],
+    "healthScore": 79,
+    "missingCells": 0,
+    "duplicateCount": 21,
+    "completenessScore": 100,
+    "status": "Active"
+  },
+  {
     "id": "ds_1786538938984_iat2n",
     "originalName": "Login_Activity_Log_Corporate_Account.csv",
     "savedName": "dataset_1786538938927_4iy6yw_Login_Activity_Log_Corporate_Account.csv",
