@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { 
   Database, 
   Filter, 
@@ -52,6 +53,27 @@ export default function KPICards({
   const [isModalFullScreen, setIsModalFullScreen] = useState(false);
   const [anomalyFilter, setAnomalyFilter] = useState('all'); // 'all' | 'high_revenue' | 'low_revenue' | 'missing' | 'duplicate' | 'unusual_pattern'
   const [anomalySearch, setAnomalySearch] = useState('');
+
+  const toggleModalFullScreen = (forceState) => {
+    const nextState = typeof forceState === 'boolean' ? forceState : !isModalFullScreen;
+    setIsModalFullScreen(nextState);
+
+    try {
+      if (nextState) {
+        const elem = document.documentElement;
+        if (elem.requestFullscreen) elem.requestFullscreen().catch(() => {});
+        else if (elem.webkitRequestFullscreen) elem.webkitRequestFullscreen().catch(() => {});
+        else if (elem.msRequestFullscreen) elem.msRequestFullscreen().catch(() => {});
+      } else {
+        if (document.fullscreenElement || document.webkitFullscreenElement) {
+          if (document.exitFullscreen) document.exitFullscreen().catch(() => {});
+          else if (document.webkitExitFullscreen) document.webkitExitFullscreen().catch(() => {});
+        }
+      }
+    } catch (err) {
+      console.warn('Fullscreen request error:', err.message);
+    }
+  };
 
   const toggleFolderCollapse = (folderId) => {
     setCollapsedFolders(prev => ({
@@ -473,8 +495,8 @@ export default function KPICards({
         })}
       </div>
 
-      {/* ⚠️ AFFECTED RECORDS ANOMALIES INTELLIGENCE MODAL */}
-      {isAnomaliesModalOpen && anomalies && (
+      {/* ⚠️ AFFECTED RECORDS ANOMALIES INTELLIGENCE MODAL (Portal to document.body) */}
+      {isAnomaliesModalOpen && anomalies && createPortal(
         <div className="currency-zoom-modal-overlay" onClick={() => setIsAnomaliesModalOpen(false)}>
           <div 
             className={`currency-zoom-modal-content anomalies-modal-content ${isModalFullScreen ? 'modal-fullscreen' : ''}`} 
@@ -496,7 +518,7 @@ export default function KPICards({
                 <button
                   type="button"
                   className="currency-zoom-close-btn"
-                  onClick={() => setIsModalFullScreen(!isModalFullScreen)}
+                  onClick={() => toggleModalFullScreen()}
                   title={isModalFullScreen ? "Restore Normal Size" : "Expand to Full Screen View"}
                   style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
                 >
@@ -531,52 +553,52 @@ export default function KPICards({
                 </div>
                 <div className="anomalies-stat-card purple">
                   <span className="stat-num">{anomalies.duplicateCount}</span>
-                  <span className="stat-label">Duplicate Records</span>
+                  <span className="stat-label">Duplicate Rows</span>
                 </div>
               </div>
 
-              {/* Filter Tabs & Search Bar */}
-              <div className="anomalies-toolbar">
-                <div className="anomalies-category-pills">
-                  <button 
-                    type="button" 
-                    className={`anomaly-pill ${anomalyFilter === 'all' ? 'active' : ''}`}
+              {/* Filter Tabs */}
+              <div className="anomalies-filter-bar">
+                <div className="anomalies-tabs">
+                  <button
+                    type="button"
+                    className={`tab-btn ${anomalyFilter === 'all' ? 'active' : ''}`}
                     onClick={() => setAnomalyFilter('all')}
                   >
                     All Anomalies ({anomalies.totalAnomalies})
                   </button>
-                  <button 
-                    type="button" 
-                    className={`anomaly-pill rose ${anomalyFilter === 'high_revenue' ? 'active' : ''}`}
+                  <button
+                    type="button"
+                    className={`tab-btn ${anomalyFilter === 'high_revenue' ? 'active' : ''}`}
                     onClick={() => setAnomalyFilter('high_revenue')}
                   >
                     High Revenue ({anomalies.highRevenueCount})
                   </button>
-                  <button 
-                    type="button" 
-                    className={`anomaly-pill teal ${anomalyFilter === 'low_revenue' ? 'active' : ''}`}
+                  <button
+                    type="button"
+                    className={`tab-btn ${anomalyFilter === 'low_revenue' ? 'active' : ''}`}
                     onClick={() => setAnomalyFilter('low_revenue')}
                   >
                     Low Revenue ({anomalies.lowRevenueCount})
                   </button>
-                  <button 
-                    type="button" 
-                    className={`anomaly-pill amber ${anomalyFilter === 'missing' ? 'active' : ''}`}
+                  <button
+                    type="button"
+                    className={`tab-btn ${anomalyFilter === 'missing' ? 'active' : ''}`}
                     onClick={() => setAnomalyFilter('missing')}
                   >
-                    Missing Data ({anomalies.missingCount})
+                    Missing Values ({anomalies.missingCount})
                   </button>
-                  <button 
-                    type="button" 
-                    className={`anomaly-pill purple ${anomalyFilter === 'duplicate' ? 'active' : ''}`}
+                  <button
+                    type="button"
+                    className={`tab-btn ${anomalyFilter === 'duplicate' ? 'active' : ''}`}
                     onClick={() => setAnomalyFilter('duplicate')}
                   >
                     Duplicates ({anomalies.duplicateCount})
                   </button>
                 </div>
 
-                <div className="anomaly-search-box">
-                  <Search size={14} className="text-muted" />
+                <div className="anomalies-search-box">
+                  <Search size={14} className="search-icon" />
                   <input
                     type="text"
                     placeholder="Search affected records..."
@@ -592,25 +614,23 @@ export default function KPICards({
                   <thead>
                     <tr>
                       <th>Row #</th>
-                      <th>Primary Anomaly</th>
+                      <th>Anomaly Type</th>
                       <th>Severity</th>
-                      <th>{primaryNumeric || 'Target Metric'}</th>
-                      <th>Detection Explanation</th>
+                      <th>Reason & Description</th>
+                      <th>Sample Record Data</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredAnomalousRows.length === 0 ? (
+                    {filteredAnomaliesList.length === 0 ? (
                       <tr>
-                        <td colSpan={5} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '2rem' }}>
-                          No anomalous records matching current filter.
-                        </td>
+                        <td colSpan="5" className="empty-row">No matching anomalous records found.</td>
                       </tr>
                     ) : (
-                      filteredAnomalousRows.map((item, idx) => {
-                        const targetVal = primaryNumeric && item.rowData ? item.rowData[primaryNumeric] : null;
-                        const formattedTargetVal = targetVal !== null && targetVal !== undefined 
-                          ? (typeof targetVal === 'number' ? formatRevenue(targetVal) : targetVal.toString())
-                          : '-';
+                      filteredAnomaliesList.map((item, idx) => {
+                        const isHigh = item.type === 'High Revenue Outlier';
+                        const isLow = item.type === 'Low Revenue Outlier';
+                        const isMissing = item.type === 'Missing Field Value';
+                        const isDupe = item.type === 'Duplicate Record';
 
                         return (
                           <tr key={'anom-row-' + idx}>
@@ -646,8 +666,8 @@ export default function KPICards({
         </div>
       )}
 
-      {/* Detailed Zoom Overlay Modal for Standard Metric Cards */}
-      {zoomedCard && (
+      {/* Detailed Zoom Overlay Modal for Standard Metric Cards (Portal to document.body) */}
+      {zoomedCard && createPortal(
         <div className="currency-zoom-modal-overlay" onClick={() => { setZoomedCard(null); setIsModalFullScreen(false); }}>
           <div className={`currency-zoom-modal-content ${isModalFullScreen ? 'is-fullscreen' : ''}`} onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
@@ -684,7 +704,7 @@ export default function KPICards({
                 <button
                   type="button"
                   className="currency-zoom-close-btn"
-                  onClick={() => setIsModalFullScreen(prev => !prev)}
+                  onClick={() => toggleModalFullScreen()}
                   title={isModalFullScreen ? "Exit Full Screen" : "Full Screen View"}
                 >
                   {isModalFullScreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
@@ -719,15 +739,10 @@ export default function KPICards({
               {zoomedCard === 'filtered' && (
                 <div className="zoomed-card-details">
                   <div className="zoomed-metric-display text-cyan-400">{safeFiltered.toLocaleString()}</div>
-                  <p className="zoomed-description">Active Filter Selection: {activePercentage}% of total dataset.</p>
-                  <div className="modal-filter-levels">
-                    <label className="currency-input-label">Filter Level Stack</label>
-                    <div className="kpi-horizontal-level-stack large">
-                      <button type="button" className={`kpi-h-pill low ${activeLevel === 'low' ? 'active' : ''}`} onClick={() => onLevelSelect && onLevelSelect('low')}>LOW (Bottom 33%)</button>
-                      <button type="button" className={`kpi-h-pill medium ${activeLevel === 'medium' ? 'active' : ''}`} onClick={() => onLevelSelect && onLevelSelect('medium')}>MED (Middle 34%)</button>
-                      <button type="button" className={`kpi-h-pill high ${activeLevel === 'high' ? 'active' : ''}`} onClick={() => onLevelSelect && onLevelSelect('high')}>HIGH (Top 33%)</button>
-                      <button type="button" className={`kpi-h-pill all ${activeLevel === 'all' ? 'active' : ''}`} onClick={() => onLevelSelect && onLevelSelect('all')}>ALL RECORDS</button>
-                    </div>
+                  <p className="zoomed-description">Currently matching rows after active filters & search terms are applied.</p>
+                  <div className="zoomed-stats-grid">
+                    <div className="stat-box"><span className="stat-lbl">Match Ratio</span><span className="stat-val">{safeTotal > 0 ? ((safeFiltered / safeTotal) * 100).toFixed(1) : 100}%</span></div>
+                    <div className="stat-box"><span className="stat-lbl">Filtered Out</span><span className="stat-val">{(safeTotal - safeFiltered).toLocaleString()}</span></div>
                   </div>
                 </div>
               )}

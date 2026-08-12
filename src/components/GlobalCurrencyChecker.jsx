@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { Globe, ArrowRightLeft, Search, RefreshCw, AlertTriangle, ChevronDown, Check, Clock, Maximize2, Minimize2, X } from 'lucide-react';
 import { WORLD_CURRENCIES, getCurrencyByCode, searchCurrencies } from '../utils/currencyData';
 
@@ -17,6 +18,38 @@ export default function GlobalCurrencyChecker({ onCurrencyChange }) {
 
   // Zoom In / Zoom Out Modal State
   const [isZoomedIn, setIsZoomedIn] = useState(false);
+  const [isFullScreen, setIsFullScreen] = useState(false);
+
+  const toggleFullScreen = (forceState) => {
+    const nextState = typeof forceState === 'boolean' ? forceState : !isFullScreen;
+    setIsFullScreen(nextState);
+
+    try {
+      if (nextState) {
+        const elem = document.documentElement;
+        if (elem.requestFullscreen) elem.requestFullscreen().catch(() => {});
+        else if (elem.webkitRequestFullscreen) elem.webkitRequestFullscreen().catch(() => {});
+        else if (elem.msRequestFullscreen) elem.msRequestFullscreen().catch(() => {});
+      } else {
+        if (document.fullscreenElement || document.webkitFullscreenElement) {
+          if (document.exitFullscreen) document.exitFullscreen().catch(() => {});
+          else if (document.webkitExitFullscreen) document.webkitExitFullscreen().catch(() => {});
+        }
+      }
+    } catch (err) {
+      console.warn('Fullscreen request:', err.message);
+    }
+  };
+
+  const handleOpenZoom = () => {
+    setIsZoomedIn(true);
+    toggleFullScreen(true);
+  };
+
+  const handleCloseZoom = () => {
+    setIsZoomedIn(false);
+    toggleFullScreen(false);
+  };
 
   // Searchable Country Dropdown State
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -340,12 +373,12 @@ export default function GlobalCurrencyChecker({ onCurrencyChange }) {
           </div>
 
           <div className="kpi-header-action-group">
-            {/* Zoom In Button (Icon Only) */}
+            {/* Full Screen / Zoom In Button */}
             <button
               type="button"
               className="currency-zoom-btn"
-              onClick={() => setIsZoomedIn(true)}
-              title="Zoom In / Expand View"
+              onClick={handleOpenZoom}
+              title="Full Screen / Expand View"
             >
               <Maximize2 size={14} />
             </button>
@@ -361,10 +394,10 @@ export default function GlobalCurrencyChecker({ onCurrencyChange }) {
         </div>
       </div>
 
-      {/* Zoomed-In Full Screen Overlay Modal */}
-      {isZoomedIn && (
-        <div className="currency-zoom-modal-overlay" onClick={() => setIsZoomedIn(false)}>
-          <div className="currency-zoom-modal-content" onClick={(e) => e.stopPropagation()}>
+      {/* Zoomed-In Full Screen Overlay Modal (Portal to document.body) */}
+      {isZoomedIn && createPortal(
+        <div className="currency-zoom-modal-overlay" onClick={handleCloseZoom}>
+          <div className={`currency-zoom-modal-content ${isFullScreen ? 'is-fullscreen' : ''}`} onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <div className="modal-title-group">
                 <img src="/logo.png" alt="Sathya Logo" className="modal-gold-logo" style={{ height: '26px', objectFit: 'contain' }} />
@@ -375,22 +408,33 @@ export default function GlobalCurrencyChecker({ onCurrencyChange }) {
                 </span>
               </div>
 
-              {/* Zoom Out / Close Button (Icon Only) */}
-              <button
-                type="button"
-                className="currency-zoom-close-btn"
-                onClick={() => setIsZoomedIn(false)}
-                title="Zoom Out / Close View"
-              >
-                <Minimize2 size={16} />
-              </button>
+              {/* Modal Action Controls: Full Screen Toggle + Close */}
+              <div className="modal-header-actions" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <button
+                  type="button"
+                  className="currency-zoom-close-btn"
+                  onClick={() => toggleFullScreen()}
+                  title={isFullScreen ? "Exit Full Screen" : "Expand to Full Screen View"}
+                >
+                  {isFullScreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
+                </button>
+                <button
+                  type="button"
+                  className="currency-zoom-close-btn"
+                  onClick={handleCloseZoom}
+                  title="Close View"
+                >
+                  <X size={16} />
+                </button>
+              </div>
             </div>
 
             <div className="modal-body">
               {renderFormControls(true)}
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );

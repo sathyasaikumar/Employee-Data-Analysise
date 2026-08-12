@@ -1,4 +1,4 @@
-const API_BASE = 'http://localhost:5000/api';
+export const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api';
 
 /**
  * Fetch list of all saved dataset metadata
@@ -24,17 +24,30 @@ export async function uploadDatasetFile(file) {
   const formData = new FormData();
   formData.append('file', file);
 
-  const res = await fetch(`${API_BASE}/upload`, {
-    method: 'POST',
-    body: formData
-  });
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
 
-  const json = await res.json();
-  if (!res.ok || !json.success) {
-    throw new Error(json.error || 'Failed to upload dataset file.');
+  try {
+    const res = await fetch(`${API_BASE}/upload`, {
+      method: 'POST',
+      body: formData,
+      signal: controller.signal
+    });
+    clearTimeout(timeoutId);
+
+    const json = await res.json();
+    if (!res.ok || !json.success) {
+      throw new Error(json.error || 'Failed to upload dataset file.');
+    }
+
+    return json;
+  } catch (err) {
+    clearTimeout(timeoutId);
+    if (err.name === 'AbortError') {
+      throw new Error('Upload server connection timed out.');
+    }
+    throw err;
   }
-
-  return json;
 }
 
 /**

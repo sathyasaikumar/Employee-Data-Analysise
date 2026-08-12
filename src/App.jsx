@@ -12,6 +12,7 @@ import StatsOverview from './components/StatsOverview';
 import ComparisonView from './components/ComparisonView';
 import LoginPage from './components/LoginPage';
 import UserProfileModal from './components/UserProfileModal';
+import CookieConsentBanner from './components/CookieConsentBanner';
 import { SAMPLE_DATASETS } from './utils/sampleData';
 import { getStoredUser, logoutUser } from './utils/auth';
 import { startSession, endActiveSession } from './utils/activityTracker';
@@ -226,29 +227,22 @@ export default function App() {
     try {
       setIsLoading(true);
       setError(null);
-      setProgressInfo({ text: `Uploading & saving ${file.name} to uploads/datasets/...`, rowCount: 0 });
-
-      // 1. Save to physical disk via Express backend API
-      let uploadResult = null;
-      try {
-        uploadResult = await uploadDatasetFile(file);
-        await refreshDatasetsHistory();
-      } catch (backendErr) {
-        console.warn('Backend API upload warning (running client fallback):', backendErr.message);
-      }
-
-      // 2. Parse content for Web Worker
       setProgressInfo({ text: `Analyzing dataset structures for ${file.name}...`, rowCount: 0 });
-      if (uploadResult && uploadResult.data) {
-        processWithWorker({ rows: uploadResult.data }, uploadResult.dataset?.originalName || file.name);
+
+      // 1. Immediately start high-speed Web Worker analysis directly in browser (non-blocking)
+      const converted = await convertFileToCsvContent(file);
+      if (converted.csvContent) {
+        processWithWorker({ rawCsv: converted.csvContent }, converted.datasetName);
       } else {
-        const converted = await convertFileToCsvContent(file);
-        if (converted.csvContent) {
-          processWithWorker({ rawCsv: converted.csvContent }, converted.datasetName);
-        } else {
-          processWithWorker({ file: converted.file }, converted.datasetName);
-        }
+        processWithWorker({ file: converted.file || file }, converted.datasetName || file.name);
       }
+
+      // 2. Concurrently save to server storage (uploads/datasets/) in background
+      uploadDatasetFile(file)
+        .then(() => refreshDatasetsHistory())
+        .catch((backendErr) => {
+          console.warn('Backend API background save notice:', backendErr.message);
+        });
     } catch (err) {
       setError(`Failed to read/upload file ${file.name}: ${err.message}`);
       setIsLoading(false);
@@ -263,8 +257,10 @@ export default function App() {
       setProgressInfo({ text: 'Reading stored dataset from uploads/datasets/...', rowCount: 0 });
 
       const res = await fetchDatasetById(id);
-      if (res.data) {
-        processWithWorker({ rows: res.data }, res.dataset.originalName);
+      if (res.data && res.data.length > 0) {
+        processWithWorker({ rows: res.data }, res.dataset?.originalName || 'History Dataset');
+      } else {
+        throw new Error('No readable records found in stored dataset.');
       }
     } catch (err) {
       setError(`Failed to load dataset: ${err.message}`);
@@ -709,6 +705,9 @@ export default function App() {
           )}
         </div>
       </div>
+
+      {/* GDPR Cookie Consent & Data Privacy Banner */}
+      <CookieConsentBanner />
     </div>
   );
 }

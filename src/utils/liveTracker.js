@@ -1,6 +1,6 @@
-import { fetchLiveUserStatsApi, loginUserApi, logoutUserApi, sendHeartbeatApi } from './api';
+import { API_BASE, fetchLiveUserStatsApi, loginUserApi, logoutUserApi, sendHeartbeatApi } from './api';
 
-const SSE_STREAM_URL = 'http://localhost:5000/api/live-users/stream';
+const SSE_STREAM_URL = `${API_BASE}/live-users/stream`;
 const HEARTBEAT_INTERVAL_MS = 10000; // 10 seconds heartbeat interval
 
 // Generate unique ID per browser tab to handle tab deduplication
@@ -94,7 +94,7 @@ function handleUnload() {
     try {
       const user = JSON.parse(userRaw);
       const blob = new Blob([JSON.stringify({ sessionId: currentSessionId, userId: user.id })], { type: 'application/json' });
-      navigator.sendBeacon('http://localhost:5000/api/auth/logout', blob);
+      navigator.sendBeacon(`${API_BASE}/auth/logout`, blob);
     } catch (e) {
       // Ignore beacon error on shutdown
     }

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { BarChart3, Upload, Download, Layers, LogIn, LogOut, ShieldCheck, Sun, Moon, ArrowLeft, Menu, X, Database, Filter, Radio } from 'lucide-react';
+import { BarChart3, Upload, Download, Layers, LogIn, LogOut, ShieldCheck, Sun, Moon, ArrowLeft, Menu, X, Database, Filter, Radio, Maximize2, Minimize2 } from 'lucide-react';
 
 export default function Header({ 
   hasData, 
@@ -28,6 +28,27 @@ export default function Header({
   onToggleTheme
 }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isAppFullScreen, setIsAppFullScreen] = useState(false);
+
+  const toggleAppFullScreen = () => {
+    const nextState = !isAppFullScreen;
+    setIsAppFullScreen(nextState);
+    try {
+      if (nextState) {
+        const elem = document.documentElement;
+        if (elem.requestFullscreen) elem.requestFullscreen().catch(() => {});
+        else if (elem.webkitRequestFullscreen) elem.webkitRequestFullscreen().catch(() => {});
+        else if (elem.msRequestFullscreen) elem.msRequestFullscreen().catch(() => {});
+      } else {
+        if (document.fullscreenElement || document.webkitFullscreenElement) {
+          if (document.exitFullscreen) document.exitFullscreen().catch(() => {});
+          else if (document.webkitExitFullscreen) document.webkitExitFullscreen().catch(() => {});
+        }
+      }
+    } catch (err) {
+      console.warn('App Fullscreen error:', err.message);
+    }
+  };
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(prev => !prev);
@@ -191,6 +212,26 @@ export default function Header({
             <>
               <Moon size={16} style={{ color: '#6366f1' }} />
               <span>Dark</span>
+            </>
+          )}
+        </button>
+
+        {/* Global Application Fullscreen Toggle */}
+        <button
+          type="button"
+          className="btn btn-secondary theme-toggle-btn"
+          onClick={toggleAppFullScreen}
+          title={isAppFullScreen ? "Exit Full Screen Mode" : "Expand Application to Full Screen"}
+        >
+          {isAppFullScreen ? (
+            <>
+              <Minimize2 size={16} style={{ color: '#10b981' }} />
+              <span>Normal</span>
+            </>
+          ) : (
+            <>
+              <Maximize2 size={16} style={{ color: '#10b981' }} />
+              <span>Full Screen</span>
             </>
           )}
         </button>

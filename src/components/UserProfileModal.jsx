@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { 
   User, Mail, Phone, Calendar, Award, ShieldCheck, Clock, History, 
   CheckCircle2, LogOut, Activity, Lock, X, Edit3, Save, Download, 
@@ -46,6 +47,27 @@ export default function UserProfileModal({
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [showPhotoPicker, setShowPhotoPicker] = useState(false);
   const [selectedPhoto, setSelectedPhoto] = useState(null);
+
+  const toggleFullScreen = (forceState) => {
+    const nextState = typeof forceState === 'boolean' ? forceState : !isFullScreen;
+    setIsFullScreen(nextState);
+
+    try {
+      if (nextState) {
+        const elem = document.documentElement;
+        if (elem.requestFullscreen) elem.requestFullscreen().catch(() => {});
+        else if (elem.webkitRequestFullscreen) elem.webkitRequestFullscreen().catch(() => {});
+        else if (elem.msRequestFullscreen) elem.msRequestFullscreen().catch(() => {});
+      } else {
+        if (document.fullscreenElement || document.webkitFullscreenElement) {
+          if (document.exitFullscreen) document.exitFullscreen().catch(() => {});
+          else if (document.webkitExitFullscreen) document.webkitExitFullscreen().catch(() => {});
+        }
+      }
+    } catch (err) {
+      console.warn('Fullscreen error:', err.message);
+    }
+  };
 
   const userId = currentUser?.id || currentUser?.email || currentUser?.phone || 'guest';
   const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'Local Timezone';
@@ -197,12 +219,12 @@ export default function UserProfileModal({
     return matchesStatus && matchesSearch;
   });
 
-  return (
+  return createPortal(
     <div className={`profile-modal-overlay ${isFullScreen ? 'has-fullscreen' : ''}`} onClick={onClose}>
       <div className={`profile-modal-container ${isFullScreen ? 'is-fullscreen' : ''}`} onClick={(e) => e.stopPropagation()}>
         
         {/* Modal Top Header Bar */}
-        <div className="profile-modal-header" onDoubleClick={() => setIsFullScreen(!isFullScreen)}>
+        <div className="profile-modal-header" onDoubleClick={() => toggleFullScreen()}>
           <div className="profile-modal-title">
             <User size={22} className="text-indigo-400" />
             <div>
@@ -215,7 +237,7 @@ export default function UserProfileModal({
             <button 
               type="button" 
               className="profile-modal-action-btn" 
-              onClick={() => setIsFullScreen(!isFullScreen)} 
+              onClick={() => toggleFullScreen()} 
               title={isFullScreen ? "Exit Full Screen" : "Full Screen View"}
             >
               {isFullScreen ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
@@ -860,6 +882,7 @@ export default function UserProfileModal({
         </div>
       )}
 
-    </div>
+    </div>,
+    document.body
   );
 }
