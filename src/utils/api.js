@@ -168,3 +168,36 @@ export async function sendHeartbeatApi(sessionId, userId, clientTabId) {
   }
 }
 
+/**
+ * Delete a specific live user login session log by ID
+ */
+export async function deleteLiveSessionApi(sessionId) {
+  try {
+    const res = await fetch(`${API_BASE}/live-users/sessions/${sessionId}`, {
+      method: 'DELETE'
+    });
+    const json = await res.json();
+    return json;
+  } catch (err) {
+    console.warn('Failed to delete live session log:', err.message);
+    return { success: false, error: err.message };
+  }
+}
+
+/**
+ * Bulk clear live user login session logs (mode='offline' or 'all')
+ */
+export async function clearLiveSessionsApi(mode = 'offline') {
+  try {
+    const res = await fetch(`${API_BASE}/live-users/sessions?mode=${mode}`, {
+      method: 'DELETE'
+    });
+    const json = await res.json();
+    return json;
+  } catch (err) {
+    console.warn('Failed to clear live session logs:', err.message);
+    return { success: false, error: err.message };
+  }
+}
+
+

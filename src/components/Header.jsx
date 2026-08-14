@@ -1,5 +1,9 @@
-import React, { useState } from 'react';
-import { BarChart3, Upload, Download, Layers, LogIn, LogOut, ShieldCheck, Sun, Moon, ArrowLeft, Menu, X, Database, Filter, Radio, Maximize2, Minimize2 } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { 
+  BarChart3, Upload, Download, Layers, LogIn, LogOut, ShieldCheck, Sun, Moon, 
+  ArrowLeft, Menu, X, Database, Filter, Radio, Maximize2, Minimize2, 
+  Folder, ChevronDown, Sparkles
+} from 'lucide-react';
 
 export default function Header({ 
   hasData, 
@@ -29,6 +33,19 @@ export default function Header({
 }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isAppFullScreen, setIsAppFullScreen] = useState(false);
+  const [isFolderOpen, setIsFolderOpen] = useState(false);
+  const folderRef = useRef(null);
+
+  // Close folder menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (folderRef.current && !folderRef.current.contains(event.target)) {
+        setIsFolderOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const toggleAppFullScreen = () => {
     const nextState = !isAppFullScreen;
@@ -79,8 +96,8 @@ export default function Header({
       </div>
 
       <div className={`header-actions ${isMobileMenuOpen ? 'mobile-open' : ''}`}>
-        {/* Back button when in upload mode or history mode */}
-        {(isUploadMode || isHistoryMode || !hasData) && hasPreviousDataset && (
+        {/* Back button when in upload mode, history mode, or live users mode */}
+        {(isUploadMode || isHistoryMode || isLiveUsersMode || !hasData) && hasPreviousDataset && (
           <button 
             type="button"
             className="btn btn-secondary btn-back-unique"
@@ -95,173 +112,184 @@ export default function Header({
           </button>
         )}
 
-        {hasData && !isUploadMode && !isHistoryMode && (
-          <>
-
-
-            {/* New Upload Button */}
-            <button 
-              className="btn btn-secondary btn-new-file-highlight" 
-              onClick={() => {
-                onResetData();
-                closeMobileMenu();
-              }} 
-              title="Upload a New Dataset File"
-            >
-              <Upload size={16} />
-              <span>Upload Dataset</span>
-            </button>
-
-            {/* Dataset History Button */}
-            <button 
-              className={`btn ${isHistoryMode ? 'btn-primary' : 'btn-secondary'}`}
-              onClick={() => {
-                if (onHistoryClick) onHistoryClick();
-                closeMobileMenu();
-              }} 
-              title="Open Stored Dataset History Center"
-              style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}
-            >
-              <Database size={15} className="text-cyan-400" />
-              <span>History</span>
-              {savedDatasetsCount > 0 && (
-                <span style={{
-                  background: 'rgba(6, 182, 212, 0.2)',
-                  color: '#22d3ee',
-                  padding: '0.1rem 0.45rem',
-                  borderRadius: '10px',
-                  fontSize: '0.7rem',
-                  fontWeight: 800,
-                  marginLeft: '0.15rem'
-                }}>
-                  {savedDatasetsCount}
-                </span>
-              )}
-            </button>
-
-            {/* Export CSV Button */}
-            <button 
-              className="btn btn-secondary btn-export-csv" 
-              onClick={() => {
-                onExportCSV();
-                closeMobileMenu();
-              }} 
-              title="Export Filtered CSV Dataset"
-            >
-              <Download size={16} />
-              <span>Export CSV</span>
-            </button>
-
-            {/* Loaded Dataset Badge */}
-            <span className="badge badge-blue header-dataset-badge">
-              <Layers size={12} className="mr-1 inline flex-shrink-0" />
-              <span className="truncate-text">{datasetName || 'Loaded Dataset'}</span>
-            </span>
-
-            {/* Load Demo Dataset Selector */}
-            <select 
-              className="sample-select" 
-              onChange={(e) => {
-                if (e.target.value) {
-                  onLoadSample(e.target.value);
-                  closeMobileMenu();
-                }
-              }}
-              defaultValue=""
-            >
-              <option value="" disabled>Load Demo Dataset...</option>
-              <option value="workforce">Workforce Intelligence (Demo)</option>
-              <option value="sales">Sales & Revenue Analytics</option>
-            </select>
-          </>
-        )}
-
-        {!hasData && !isUploadMode && !isHistoryMode && !hasPreviousDataset && (
-          <button 
-            className="btn btn-primary btn-new-file-highlight" 
-            onClick={() => {
-              onUploadClick();
-              closeMobileMenu();
-            }}
-          >
-            <Upload size={16} />
-            <span>Upload File</span>
-          </button>
-        )}
-
-        {/* Live Users Counter & Dashboard Button */}
-        <button 
-          className={`btn ${isLiveUsersMode ? 'btn-primary' : 'btn-secondary'}`}
-          style={{
-            borderColor: 'rgba(16, 185, 129, 0.4)',
-            background: isLiveUsersMode ? 'linear-gradient(135deg, #059669, #10b981)' : 'rgba(6, 78, 59, 0.4)',
-            color: '#ffffff',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.4rem',
-            position: 'relative'
-          }}
-          onClick={() => {
-            if (onLiveUsersClick) onLiveUsersClick();
-            closeMobileMenu();
-          }}
-          title="Open Live Website Login & User Activity Counter Dashboard"
-        >
-          <Radio size={16} className="text-emerald animate-pulse" />
-          <span>Live Users</span>
-          <span style={{
-            background: '#10b981',
-            color: '#022c22',
-            padding: '0.15rem 0.5rem',
-            borderRadius: '12px',
-            fontSize: '0.75rem',
-            fontWeight: 800,
-            marginLeft: '0.2rem'
-          }}>
-            {liveUsersCount}
+        {/* Loaded Dataset Badge */}
+        {hasData && !isUploadMode && !isHistoryMode && !isLiveUsersMode && (
+          <span className="badge badge-blue header-dataset-badge">
+            <Layers size={12} className="mr-1 inline flex-shrink-0" />
+            <span className="truncate-text">{datasetName || 'Loaded Dataset'}</span>
           </span>
-        </button>
+        )}
 
-        {/* Theme Switcher */}
-        <button 
-          className="btn btn-secondary theme-toggle-btn"
-          onClick={() => {
-            onToggleTheme();
-          }}
-          title={`Switch to ${theme === 'dark' ? 'Light' : 'Dark'} Mode`}
-        >
-          {theme === 'dark' ? (
-            <>
-              <Sun size={16} style={{ color: '#f59e0b' }} />
-              <span>Light</span>
-            </>
-          ) : (
-            <>
-              <Moon size={16} style={{ color: '#6366f1' }} />
-              <span>Dark</span>
-            </>
-          )}
-        </button>
+        {/* CONSOLIDATED TOOLS FOLDER DROPDOWN MENU NEAR LOGOUT */}
+        <div className="folder-menu-container" ref={folderRef} style={{ position: 'relative' }}>
+          <button 
+            type="button"
+            className={`btn header-folder-btn ${isFolderOpen ? 'active' : ''}`}
+            onClick={() => setIsFolderOpen(prev => !prev)}
+            title="Open System Tools & Actions Folder"
+          >
+            <Folder size={18} className="folder-icon" />
+            <span>System Folder</span>
+            {savedDatasetsCount > 0 && (
+              <span className="folder-counter-badge">{savedDatasetsCount}</span>
+            )}
+            <ChevronDown size={14} className={`folder-chevron ${isFolderOpen ? 'rotate' : ''}`} />
+          </button>
 
-        {/* Global Application Fullscreen Toggle */}
-        <button
-          type="button"
-          className="btn btn-secondary theme-toggle-btn"
-          onClick={toggleAppFullScreen}
-          title={isAppFullScreen ? "Exit Full Screen Mode" : "Expand Application to Full Screen"}
-        >
-          {isAppFullScreen ? (
-            <>
-              <Minimize2 size={16} style={{ color: '#10b981' }} />
-              <span>Normal</span>
-            </>
-          ) : (
-            <>
-              <Maximize2 size={16} style={{ color: '#10b981' }} />
-              <span>Full Screen</span>
-            </>
+          {/* Folder Dropdown Content */}
+          {isFolderOpen && (
+            <div className="folder-dropdown-menu">
+              <div className="folder-dropdown-header">
+                <div className="folder-header-title">
+                  <Folder size={16} style={{ color: '#6366f1' }} />
+                  <span>System Tools Folder</span>
+                </div>
+                <span className="folder-header-sub">Data & System Features</span>
+              </div>
+
+              {/* Data & Storage Section */}
+              <div className="folder-section">
+                <div className="folder-section-label">DATASET MANAGEMENT</div>
+
+                <button 
+                  type="button" 
+                  className="folder-item-btn"
+                  onClick={() => {
+                    if (hasData) onResetData(); else onUploadClick();
+                    setIsFolderOpen(false);
+                    closeMobileMenu();
+                  }}
+                >
+                  <Upload size={16} style={{ color: '#38bdf8' }} />
+                  <div className="folder-item-text">
+                    <span className="item-title">Upload Dataset</span>
+                    <span className="item-desc">CSV, Excel, or JSON files</span>
+                  </div>
+                </button>
+
+                <button 
+                  type="button" 
+                  className={`folder-item-btn ${isHistoryMode ? 'active' : ''}`}
+                  onClick={() => {
+                    if (onHistoryClick) onHistoryClick();
+                    setIsFolderOpen(false);
+                    closeMobileMenu();
+                  }}
+                >
+                  <Database size={16} style={{ color: '#06b6d4' }} />
+                  <div className="folder-item-text">
+                    <span className="item-title">Dataset History</span>
+                    <span className="item-desc">Stored server files</span>
+                  </div>
+                  {savedDatasetsCount > 0 && (
+                    <span className="folder-item-badge">{savedDatasetsCount}</span>
+                  )}
+                </button>
+
+                {hasData && (
+                  <button 
+                    type="button" 
+                    className="folder-item-btn"
+                    onClick={() => {
+                      onExportCSV();
+                      setIsFolderOpen(false);
+                      closeMobileMenu();
+                    }}
+                  >
+                    <Download size={16} style={{ color: '#10b981' }} />
+                    <div className="folder-item-text">
+                      <span className="item-title">Export Filtered CSV</span>
+                      <span className="item-desc">Download active processed data</span>
+                    </div>
+                  </button>
+                )}
+
+                <div className="folder-demo-selector-group">
+                  <div className="demo-group-label">
+                    <Sparkles size={13} style={{ color: '#fb923c' }} />
+                    <span>Load Demo Dataset</span>
+                  </div>
+                  <div className="demo-btn-row">
+                    <button 
+                      type="button" 
+                      className="demo-chip-btn"
+                      onClick={() => {
+                        onLoadSample('workforce');
+                        setIsFolderOpen(false);
+                        closeMobileMenu();
+                      }}
+                    >
+                      Workforce Demo
+                    </button>
+                    <button 
+                      type="button" 
+                      className="demo-chip-btn"
+                      onClick={() => {
+                        onLoadSample('sales');
+                        setIsFolderOpen(false);
+                        closeMobileMenu();
+                      }}
+                    >
+                      Sales Demo
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* System & Analytics Section */}
+              <div className="folder-section border-top">
+                <div className="folder-section-label">SYSTEM & MONITORING</div>
+
+                <button 
+                  type="button" 
+                  className={`folder-item-btn ${isLiveUsersMode ? 'active' : ''}`}
+                  onClick={() => {
+                    if (onLiveUsersClick) onLiveUsersClick();
+                    setIsFolderOpen(false);
+                    closeMobileMenu();
+                  }}
+                >
+                  <Radio size={16} style={{ color: '#10b981' }} className="animate-pulse" />
+                  <div className="folder-item-text">
+                    <span className="item-title">Live Website Users</span>
+                    <span className="item-desc">Real-time active connections</span>
+                  </div>
+                  <span className="folder-item-badge green">{liveUsersCount}</span>
+                </button>
+
+                <button 
+                  type="button" 
+                  className="folder-item-btn"
+                  onClick={() => {
+                    onToggleTheme();
+                    setIsFolderOpen(false);
+                  }}
+                >
+                  {theme === 'dark' ? <Sun size={16} style={{ color: '#f59e0b' }} /> : <Moon size={16} style={{ color: '#6366f1' }} />}
+                  <div className="folder-item-text">
+                    <span className="item-title">Switch Theme</span>
+                    <span className="item-desc">Current: {theme === 'dark' ? 'Dark Mode' : 'Light Mode'}</span>
+                  </div>
+                </button>
+
+                <button 
+                  type="button" 
+                  className="folder-item-btn"
+                  onClick={() => {
+                    toggleAppFullScreen();
+                    setIsFolderOpen(false);
+                  }}
+                >
+                  {isAppFullScreen ? <Minimize2 size={16} style={{ color: '#10b981' }} /> : <Maximize2 size={16} style={{ color: '#10b981' }} />}
+                  <div className="folder-item-text">
+                    <span className="item-title">{isAppFullScreen ? 'Exit Full Screen' : 'Full Screen View'}</span>
+                    <span className="item-desc">Toggle display mode</span>
+                  </div>
+                </button>
+              </div>
+            </div>
           )}
-        </button>
+        </div>
 
         {/* User Profile Badge */}
         <div className="user-auth-wrapper">
@@ -320,3 +348,4 @@ export default function Header({
     </header>
   );
 }
+

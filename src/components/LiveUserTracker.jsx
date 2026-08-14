@@ -16,7 +16,9 @@ import {
   TrendingUp, 
   Filter,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  Trash2,
+  Trash
 } from 'lucide-react';
 import {
   Chart as ChartJS,
@@ -31,6 +33,7 @@ import {
   Filler
 } from 'chart.js';
 import { Line, Bar } from 'react-chartjs-2';
+import { deleteLiveSessionApi, clearLiveSessionsApi } from '../utils/api';
 
 ChartJS.register(
   CategoryScale,
@@ -56,6 +59,28 @@ export default function LiveUserTracker({ liveStats, onManualRefresh, currentUse
       await onManualRefresh();
     }
     setTimeout(() => setIsRefreshing(false), 500);
+  };
+
+  const handleDeleteSingleSession = async (sessionId, username) => {
+    if (window.confirm(`Are you sure you want to delete the login session record for "${username || 'this user'}"?`)) {
+      setIsRefreshing(true);
+      await deleteLiveSessionApi(sessionId);
+      if (onManualRefresh) await onManualRefresh();
+      setIsRefreshing(false);
+    }
+  };
+
+  const handleClearSessions = async (mode = 'offline') => {
+    const confirmMsg = mode === 'offline' 
+      ? 'Are you sure you want to delete all offline user session logs?' 
+      : 'Are you sure you want to clear all user login activity logs?';
+    
+    if (window.confirm(confirmMsg)) {
+      setIsRefreshing(true);
+      await clearLiveSessionsApi(mode);
+      if (onManualRefresh) await onManualRefresh();
+      setIsRefreshing(false);
+    }
   };
 
   // Safe fallback stats structure
@@ -149,16 +174,18 @@ export default function LiveUserTracker({ liveStats, onManualRefresh, currentUse
     ]
   };
 
+  const isLightTheme = typeof document !== 'undefined' && document.documentElement.getAttribute('data-theme') === 'light';
+
   const chartOptions = {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
       legend: { display: false },
       tooltip: {
-        backgroundColor: 'rgba(15, 23, 42, 0.95)',
-        titleColor: '#38bdf8',
-        bodyColor: '#e2e8f0',
-        borderColor: 'rgba(56, 189, 248, 0.3)',
+        backgroundColor: isLightTheme ? 'rgba(255, 255, 255, 0.95)' : 'rgba(15, 23, 42, 0.95)',
+        titleColor: isLightTheme ? '#0284c7' : '#38bdf8',
+        bodyColor: isLightTheme ? '#1e293b' : '#e2e8f0',
+        borderColor: isLightTheme ? '#cbd5e1' : 'rgba(56, 189, 248, 0.3)',
         borderWidth: 1,
         padding: 12,
         boxPadding: 6,
@@ -167,12 +194,12 @@ export default function LiveUserTracker({ liveStats, onManualRefresh, currentUse
     },
     scales: {
       x: {
-        grid: { color: 'rgba(255, 255, 255, 0.05)' },
-        ticks: { color: '#94a3b8', font: { family: 'Inter, sans-serif', size: 12 } }
+        grid: { color: isLightTheme ? 'rgba(0, 0, 0, 0.06)' : 'rgba(255, 255, 255, 0.05)' },
+        ticks: { color: isLightTheme ? '#475569' : '#94a3b8', font: { family: 'Inter, sans-serif', size: 12 } }
       },
       y: {
-        grid: { color: 'rgba(255, 255, 255, 0.05)' },
-        ticks: { color: '#94a3b8', font: { family: 'Inter, sans-serif', size: 12 }, precision: 0 },
+        grid: { color: isLightTheme ? 'rgba(0, 0, 0, 0.06)' : 'rgba(255, 255, 255, 0.05)' },
+        ticks: { color: isLightTheme ? '#475569' : '#94a3b8', font: { family: 'Inter, sans-serif', size: 12 }, precision: 0 },
         beginAtZero: true
       }
     }
@@ -182,90 +209,34 @@ export default function LiveUserTracker({ liveStats, onManualRefresh, currentUse
     <div className="live-user-tracker-container animate-fade-in" style={{ padding: '1.5rem', width: '100%', maxWidth: '1400px', margin: '0 auto' }}>
       
       {/* Top Banner Header */}
-      <div className="tracker-header-card" style={{
-        background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.9) 0%, rgba(30, 41, 59, 0.9) 100%)',
-        border: '1px solid rgba(56, 189, 248, 0.25)',
-        borderRadius: '16px',
-        padding: '1.5rem 2rem',
-        marginBottom: '2rem',
-        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.37)',
-        backdropFilter: 'blur(12px)',
-        display: 'flex',
-        flexWrap: 'wrap',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        gap: '1.5rem'
-      }}>
+      <div className="tracker-header-card">
         <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
-          <div style={{
-            position: 'relative',
-            width: '56px',
-            height: '56px',
-            borderRadius: '14px',
-            background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(6, 182, 212, 0.2))',
-            border: '1px solid rgba(16, 185, 129, 0.4)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center'
-          }}>
+          <div className="tracker-header-icon-box">
             <Radio size={30} style={{ color: '#10b981' }} className="animate-pulse" />
-            <span style={{
-              position: 'absolute',
-              top: '-3px',
-              right: '-3px',
-              width: '12px',
-              height: '12px',
-              borderRadius: '50%',
-              backgroundColor: '#10b981',
-              boxShadow: '0 0 12px #10b981'
-            }} />
+            <span className="live-status-ping-dot" />
           </div>
 
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-              <h1 style={{ margin: 0, fontSize: '1.75rem', fontWeight: 800, color: '#f8fafc', letterSpacing: '-0.02em' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+              <h1 className="tracker-main-title">
                 Live Website Login & User Activity Counter
               </h1>
-              <span style={{
-                background: 'rgba(16, 185, 129, 0.15)',
-                color: '#34d399',
-                border: '1px solid rgba(16, 185, 129, 0.3)',
-                padding: '0.25rem 0.75rem',
-                borderRadius: '20px',
-                fontSize: '0.75rem',
-                fontWeight: 700,
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.35rem'
-              }}>
-                <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#10b981' }} />
+              <span className="live-stream-active-chip">
+                <span className="chip-dot" />
                 SSE REAL-TIME STREAM ACTIVE
               </span>
             </div>
-            <p style={{ margin: '0.35rem 0 0 0', color: '#94a3b8', fontSize: '0.9rem' }}>
+            <p className="tracker-main-subtitle">
               Real-time user session status backend database engine • Automatic multi-tab deduplication • 5-minute inactivity heartbeat cleanup
             </p>
           </div>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
           <button
             onClick={handleRefresh}
             disabled={isRefreshing}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              padding: '0.65rem 1.25rem',
-              borderRadius: '10px',
-              background: 'rgba(51, 65, 85, 0.8)',
-              border: '1px solid rgba(148, 163, 184, 0.25)',
-              color: '#e2e8f0',
-              fontWeight: 600,
-              fontSize: '0.875rem',
-              cursor: 'pointer',
-              transition: 'all 0.2s ease'
-            }}
+            className="btn btn-secondary live-sync-btn"
           >
             <RefreshCw size={16} className={isRefreshing ? 'animate-spin' : ''} />
             {isRefreshing ? 'Syncing...' : 'Sync Live Engine'}
@@ -274,265 +245,163 @@ export default function LiveUserTracker({ liveStats, onManualRefresh, currentUse
       </div>
 
       {/* MAIN FEATURE HIGHLIGHT CARD: LIVE USERS */}
-      <div style={{
-        background: 'linear-gradient(135deg, rgba(6, 78, 59, 0.4) 0%, rgba(15, 23, 42, 0.95) 100%)',
-        border: '2px solid rgba(16, 185, 129, 0.5)',
-        borderRadius: '20px',
-        padding: '2rem',
-        marginBottom: '2rem',
-        boxShadow: '0 12px 40px rgba(16, 185, 129, 0.15)',
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-        gap: '2rem',
-        alignItems: 'center'
-      }}>
+      <div className="live-users-hero-card">
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', marginBottom: '0.5rem' }}>
-            <span style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '0.4rem',
-              background: '#10b981',
-              color: '#022c22',
-              padding: '0.25rem 0.75rem',
-              borderRadius: '20px',
-              fontSize: '0.75rem',
-              fontWeight: 800,
-              letterSpacing: '0.05em'
-            }}>
+            <span className="hero-feature-badge">
               <Radio size={12} className="animate-pulse" />
               MAIN FEATURE CARD
             </span>
-            <span style={{ color: '#64748b', fontSize: '0.85rem' }}>• Backend Live State Sync</span>
+            <span className="hero-feature-subtag">• Backend Live State Sync</span>
           </div>
 
-          <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 800, color: '#f8fafc' }}>
+          <h2 className="hero-card-heading">
             LIVE USERS
           </h2>
-          <p style={{ margin: '0.5rem 0 0 0', color: '#cbd5e1', fontSize: '0.95rem', lineHeight: '1.5' }}>
+          <p className="hero-card-desc">
             Total number of verified unique users currently logged in and actively browsing on the website.
           </p>
 
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', marginTop: '1.25rem' }}>
-            <div style={{ background: 'rgba(15, 23, 42, 0.6)', padding: '0.5rem 0.85rem', borderRadius: '8px', border: '1px solid rgba(255, 255, 255, 0.08)', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.8rem', color: '#94a3b8' }}>
+            <div className="hero-pill-info">
               <ShieldCheck size={14} style={{ color: '#34d399' }} />
               <span>Multi-Tab Deduplicated</span>
             </div>
-            <div style={{ background: 'rgba(15, 23, 42, 0.6)', padding: '0.5rem 0.85rem', borderRadius: '8px', border: '1px solid rgba(255, 255, 255, 0.08)', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.8rem', color: '#94a3b8' }}>
+            <div className="hero-pill-info">
               <Clock size={14} style={{ color: '#38bdf8' }} />
               <span>Auto-Offline after {stats.inactivityTimeoutMinutes || 5} min inactivity</span>
             </div>
           </div>
         </div>
 
-        <div style={{
-          background: 'rgba(15, 23, 42, 0.8)',
-          border: '1px solid rgba(16, 185, 129, 0.3)',
-          borderRadius: '16px',
-          padding: '1.5rem 2rem',
-          textAlign: 'center',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          position: 'relative',
-          overflow: 'hidden'
-        }}>
-          <div style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            height: '4px',
-            background: 'linear-gradient(90deg, #10b981, #06b6d4, #10b981)',
-            backgroundSize: '200% 100%',
-            animation: 'pulse 2s infinite'
-          }} />
+        <div className="live-users-hero-stat-box">
+          <div className="hero-stat-top-bar" />
 
           <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.75rem' }}>
-            <span style={{ fontSize: '4.5rem', fontWeight: 900, color: '#34d399', lineHeight: 1, letterSpacing: '-0.03em' }}>
+            <span className="hero-stat-big-number">
               {stats.liveUsers}
             </span>
-            <span style={{ color: '#a7f3d0', fontWeight: 700, fontSize: '1.25rem' }}>Users Online</span>
+            <span className="hero-stat-label">Users Online</span>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.75rem', color: '#64748b', fontSize: '0.85rem' }}>
-            <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#10b981', boxShadow: '0 0 10px #10b981' }} />
+          <div className="hero-stat-bottom-status">
+            <span className="green-pulse-dot" />
             <span>Updated live from backend websocket/SSE stream</span>
           </div>
         </div>
       </div>
 
       {/* 6 ADMIN DASHBOARD CARDS */}
-      <h3 style={{ fontSize: '1.2rem', fontWeight: 700, color: '#f8fafc', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+      <h3 className="admin-metrics-section-title">
         <Layers size={20} style={{ color: '#38bdf8' }} />
         ADMIN DASHBOARD METRICS
       </h3>
 
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-        gap: '1.25rem',
-        marginBottom: '2rem'
-      }}>
+      <div className="admin-metrics-grid">
         {/* Card 1: TOTAL USERS */}
-        <div style={{
-          background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.8), rgba(15, 23, 42, 0.9))',
-          border: '1px solid rgba(56, 189, 248, 0.2)',
-          borderRadius: '14px',
-          padding: '1.25rem',
-          boxShadow: '0 4px 20px rgba(0,0,0,0.2)'
-        }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
-            <span style={{ color: '#94a3b8', fontSize: '0.8rem', fontWeight: 700, letterSpacing: '0.05em' }}>TOTAL USERS</span>
+        <div className="admin-metric-card border-blue">
+          <div className="metric-card-header">
+            <span className="metric-card-label">TOTAL USERS</span>
             <Users size={20} style={{ color: '#38bdf8' }} />
           </div>
-          <div style={{ fontSize: '2.25rem', fontWeight: 800, color: '#f8fafc', lineHeight: 1 }}>
+          <div className="metric-card-number">
             {stats.totalUsers}
           </div>
-          <div style={{ color: '#64748b', fontSize: '0.75rem', marginTop: '0.5rem' }}>
+          <div className="metric-card-sub">
             Registered User Accounts
           </div>
         </div>
 
         {/* Card 2: ONLINE NOW */}
-        <div style={{
-          background: 'linear-gradient(135deg, rgba(6, 78, 59, 0.3), rgba(15, 23, 42, 0.9))',
-          border: '1px solid rgba(16, 185, 129, 0.3)',
-          borderRadius: '14px',
-          padding: '1.25rem',
-          boxShadow: '0 4px 20px rgba(0,0,0,0.2)'
-        }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
-            <span style={{ color: '#a7f3d0', fontSize: '0.8rem', fontWeight: 700, letterSpacing: '0.05em' }}>ONLINE NOW</span>
+        <div className="admin-metric-card border-emerald bg-emerald-tint">
+          <div className="metric-card-header">
+            <span className="metric-card-label emerald-text">ONLINE NOW</span>
             <UserCheck size={20} style={{ color: '#10b981' }} />
           </div>
-          <div style={{ fontSize: '2.25rem', fontWeight: 800, color: '#34d399', lineHeight: 1 }}>
+          <div className="metric-card-number emerald-number">
             {stats.onlineNow}
           </div>
-          <div style={{ color: '#64748b', fontSize: '0.75rem', marginTop: '0.5rem' }}>
+          <div className="metric-card-sub">
             Active Real-Time Connections
           </div>
         </div>
 
         {/* Card 3: TOTAL LOGINS */}
-        <div style={{
-          background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.8), rgba(15, 23, 42, 0.9))',
-          border: '1px solid rgba(168, 85, 247, 0.2)',
-          borderRadius: '14px',
-          padding: '1.25rem',
-          boxShadow: '0 4px 20px rgba(0,0,0,0.2)'
-        }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
-            <span style={{ color: '#e9d5ff', fontSize: '0.8rem', fontWeight: 700, letterSpacing: '0.05em' }}>TOTAL LOGINS</span>
+        <div className="admin-metric-card border-purple">
+          <div className="metric-card-header">
+            <span className="metric-card-label">TOTAL LOGINS</span>
             <LogIn size={20} style={{ color: '#c084fc' }} />
           </div>
-          <div style={{ fontSize: '2.25rem', fontWeight: 800, color: '#f8fafc', lineHeight: 1 }}>
+          <div className="metric-card-number">
             {stats.totalLogins}
           </div>
-          <div style={{ color: '#64748b', fontSize: '0.75rem', marginTop: '0.5rem' }}>
+          <div className="metric-card-sub">
             Cumulative Login Events
           </div>
         </div>
 
         {/* Card 4: TODAY'S LOGINS */}
-        <div style={{
-          background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.8), rgba(15, 23, 42, 0.9))',
-          border: '1px solid rgba(251, 146, 60, 0.2)',
-          borderRadius: '14px',
-          padding: '1.25rem',
-          boxShadow: '0 4px 20px rgba(0,0,0,0.2)'
-        }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
-            <span style={{ color: '#ffedd5', fontSize: '0.8rem', fontWeight: 700, letterSpacing: '0.05em' }}>TODAY'S LOGINS</span>
+        <div className="admin-metric-card border-amber">
+          <div className="metric-card-header">
+            <span className="metric-card-label">TODAY'S LOGINS</span>
             <Calendar size={20} style={{ color: '#fb923c' }} />
           </div>
-          <div style={{ fontSize: '2.25rem', fontWeight: 800, color: '#f8fafc', lineHeight: 1 }}>
+          <div className="metric-card-number">
             {stats.todaysLogins}
           </div>
-          <div style={{ color: '#64748b', fontSize: '0.75rem', marginTop: '0.5rem' }}>
+          <div className="metric-card-sub">
             Sign-ins Since 00:00 Local
           </div>
         </div>
 
         {/* Card 5: ACTIVE USERS */}
-        <div style={{
-          background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.8), rgba(15, 23, 42, 0.9))',
-          border: '1px solid rgba(34, 211, 238, 0.2)',
-          borderRadius: '14px',
-          padding: '1.25rem',
-          boxShadow: '0 4px 20px rgba(0,0,0,0.2)'
-        }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
-            <span style={{ color: '#cffafe', fontSize: '0.8rem', fontWeight: 700, letterSpacing: '0.05em' }}>ACTIVE USERS</span>
+        <div className="admin-metric-card border-cyan">
+          <div className="metric-card-header">
+            <span className="metric-card-label">ACTIVE USERS</span>
             <Activity size={20} style={{ color: '#22d3ee' }} />
           </div>
-          <div style={{ fontSize: '2.25rem', fontWeight: 800, color: '#f8fafc', lineHeight: 1 }}>
+          <div className="metric-card-number">
             {stats.activeUsers}
           </div>
-          <div style={{ color: '#64748b', fontSize: '0.75rem', marginTop: '0.5rem' }}>
+          <div className="metric-card-sub">
             Active In Last 24 Hours
           </div>
         </div>
 
         {/* Card 6: OFFLINE USERS */}
-        <div style={{
-          background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.8), rgba(15, 23, 42, 0.9))',
-          border: '1px solid rgba(148, 163, 184, 0.2)',
-          borderRadius: '14px',
-          padding: '1.25rem',
-          boxShadow: '0 4px 20px rgba(0,0,0,0.2)'
-        }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
-            <span style={{ color: '#cbd5e1', fontSize: '0.8rem', fontWeight: 700, letterSpacing: '0.05em' }}>OFFLINE USERS</span>
+        <div className="admin-metric-card border-gray">
+          <div className="metric-card-header">
+            <span className="metric-card-label">OFFLINE USERS</span>
             <UserX size={20} style={{ color: '#94a3b8' }} />
           </div>
-          <div style={{ fontSize: '2.25rem', fontWeight: 800, color: '#f8fafc', lineHeight: 1 }}>
+          <div className="metric-card-number">
             {stats.offlineUsers}
           </div>
-          <div style={{ color: '#64748b', fontSize: '0.75rem', marginTop: '0.5rem' }}>
+          <div className="metric-card-sub">
             Registered Users Inactive
           </div>
         </div>
       </div>
 
       {/* LOGIN ACTIVITY CHARTS SECTION */}
-      <div style={{
-        background: 'rgba(15, 23, 42, 0.9)',
-        border: '1px solid rgba(56, 189, 248, 0.15)',
-        borderRadius: '16px',
-        padding: '1.5rem',
-        marginBottom: '2rem',
-        boxShadow: '0 8px 32px rgba(0,0,0,0.3)'
-      }}>
+      <div className="live-chart-container-box">
         <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', marginBottom: '1.25rem' }}>
           <div>
-            <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 700, color: '#f8fafc', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <h3 className="section-card-heading">
               <TrendingUp size={20} style={{ color: '#10b981' }} />
               Login Activity Trends & Analytics
             </h3>
-            <p style={{ margin: '0.25rem 0 0 0', color: '#94a3b8', fontSize: '0.85rem' }}>
+            <p className="section-card-subheading">
               Visualizing daily, weekly, and monthly login count distributions
             </p>
           </div>
 
-          <div style={{ display: 'flex', background: 'rgba(30, 41, 59, 0.8)', padding: '0.25rem', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.08)' }}>
+          <div className="chart-timeframe-toggle-wrap">
             {['daily', 'weekly', 'monthly'].map(tf => (
               <button
                 key={tf}
                 onClick={() => setChartTimeframe(tf)}
-                style={{
-                  padding: '0.4rem 1rem',
-                  borderRadius: '8px',
-                  border: 'none',
-                  background: chartTimeframe === tf ? '#10b981' : 'transparent',
-                  color: chartTimeframe === tf ? '#022c22' : '#94a3b8',
-                  fontWeight: chartTimeframe === tf ? 700 : 500,
-                  fontSize: '0.8rem',
-                  cursor: 'pointer',
-                  textTransform: 'capitalize',
-                  transition: 'all 0.2s ease'
-                }}
+                className={`chart-timeframe-btn ${chartTimeframe === tf ? 'active' : ''}`}
               >
                 {tf} View
               </button>
@@ -546,20 +415,14 @@ export default function LiveUserTracker({ liveStats, onManualRefresh, currentUse
       </div>
 
       {/* RECENT LOGIN ACTIVITY LOGS TABLE */}
-      <div style={{
-        background: 'rgba(15, 23, 42, 0.9)',
-        border: '1px solid rgba(56, 189, 248, 0.15)',
-        borderRadius: '16px',
-        padding: '1.5rem',
-        boxShadow: '0 8px 32px rgba(0,0,0,0.3)'
-      }}>
+      <div className="live-logs-container-box">
         <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', marginBottom: '1.25rem' }}>
           <div>
-            <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 700, color: '#f8fafc', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <h3 className="section-card-heading">
               <Clock size={20} style={{ color: '#38bdf8' }} />
               Recent User Login & Activity Log
             </h3>
-            <p style={{ margin: '0.25rem 0 0 0', color: '#94a3b8', fontSize: '0.85rem' }}>
+            <p className="section-card-subheading">
               Detailed audit trail of successful logins, logouts, active sessions, and last seen timestamps
             </p>
           </div>
@@ -567,65 +430,68 @@ export default function LiveUserTracker({ liveStats, onManualRefresh, currentUse
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', alignItems: 'center' }}>
             {/* Search Input */}
             <div style={{ position: 'relative' }}>
-              <Search size={16} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#64748b' }} />
+              <Search size={16} className="search-input-icon" />
               <input
                 type="text"
                 placeholder="Search user, email, role..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                style={{
-                  padding: '0.5rem 0.75rem 0.5rem 2.2rem',
-                  borderRadius: '8px',
-                  background: 'rgba(30, 41, 59, 0.8)',
-                  border: '1px solid rgba(148, 163, 184, 0.2)',
-                  color: '#e2e8f0',
-                  fontSize: '0.85rem',
-                  outline: 'none',
-                  width: '220px'
-                }}
+                className="live-logs-search-input"
               />
             </div>
 
             {/* Status Filter Buttons */}
-            <div style={{ display: 'flex', background: 'rgba(30, 41, 59, 0.8)', padding: '0.2rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.08)' }}>
+            <div className="status-filter-pills-wrap">
               {['ALL', 'ONLINE', 'OFFLINE'].map(st => (
                 <button
                   key={st}
                   onClick={() => setStatusFilter(st)}
-                  style={{
-                    padding: '0.35rem 0.75rem',
-                    borderRadius: '6px',
-                    border: 'none',
-                    background: statusFilter === st ? 'rgba(56, 189, 248, 0.2)' : 'transparent',
-                    color: statusFilter === st ? '#38bdf8' : '#94a3b8',
-                    fontWeight: statusFilter === st ? 700 : 500,
-                    fontSize: '0.75rem',
-                    cursor: 'pointer'
-                  }}
+                  className={`status-pill-btn ${statusFilter === st ? 'active' : ''}`}
                 >
                   {st}
                 </button>
               ))}
             </div>
+
+            {/* Clear Logs Actions Button */}
+            <button
+              type="button"
+              onClick={() => handleClearSessions('offline')}
+              className="btn-clear-logs-action"
+              title="Delete offline user login records"
+            >
+              <Trash size={15} />
+              <span>Clear Offline Logs</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => handleClearSessions('all')}
+              className="btn-clear-all-logs-action"
+              title="Clear all login activity records"
+            >
+              <Trash2 size={15} />
+              <span>Clear All</span>
+            </button>
           </div>
         </div>
 
         {/* Logs Table */}
         <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.875rem' }}>
+          <table className="live-logs-table">
             <thead>
-              <tr style={{ background: 'rgba(30, 41, 59, 0.6)', borderBottom: '1px solid rgba(148, 163, 184, 0.2)' }}>
-                <th style={{ padding: '0.85rem 1rem', color: '#94a3b8', fontWeight: 600 }}>USER / ACCOUNT</th>
-                <th style={{ padding: '0.85rem 1rem', color: '#94a3b8', fontWeight: 600 }}>LOGIN TIME</th>
-                <th style={{ padding: '0.85rem 1rem', color: '#94a3b8', fontWeight: 600 }}>LOGOUT TIME</th>
-                <th style={{ padding: '0.85rem 1rem', color: '#94a3b8', fontWeight: 600 }}>STATUS</th>
-                <th style={{ padding: '0.85rem 1rem', color: '#94a3b8', fontWeight: 600 }}>LAST ACTIVE</th>
+              <tr className="logs-table-header-tr">
+                <th>USER / ACCOUNT</th>
+                <th>LOGIN TIME</th>
+                <th>LOGOUT TIME</th>
+                <th>STATUS</th>
+                <th>LAST ACTIVE</th>
+                <th style={{ textAlign: 'center', width: '90px' }}>ACTION</th>
               </tr>
             </thead>
             <tbody>
               {filteredLogs.length === 0 ? (
                 <tr>
-                  <td colSpan={5} style={{ padding: '2.5rem', textAlign: 'center', color: '#64748b' }}>
+                  <td colSpan={6} className="empty-logs-td">
                     No matching activity logs found.
                   </td>
                 </tr>
@@ -633,49 +499,28 @@ export default function LiveUserTracker({ liveStats, onManualRefresh, currentUse
                 filteredLogs.map(log => {
                   const isOnline = log.status === 'Online';
                   return (
-                    <tr 
-                      key={log.id} 
-                      style={{ 
-                        borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
-                        transition: 'background 0.15s ease'
-                      }}
-                      onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(30, 41, 59, 0.4)'}
-                      onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
-                    >
+                    <tr key={log.id} className="logs-table-tr">
                       {/* User Column */}
-                      <td style={{ padding: '0.85rem 1rem' }}>
+                      <td>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                          <div style={{
-                            width: '36px',
-                            height: '36px',
-                            borderRadius: '50%',
-                            background: isOnline 
-                              ? 'linear-gradient(135deg, #10b981, #059669)' 
-                              : 'linear-gradient(135deg, #475569, #334155)',
-                            color: '#ffffff',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            fontWeight: 700,
-                            fontSize: '0.85rem'
-                          }}>
+                          <div className={`user-avatar-circle ${isOnline ? 'online' : 'offline'}`}>
                             {log.avatar || 'US'}
                           </div>
                           <div>
-                            <div style={{ fontWeight: 600, color: '#f8fafc' }}>{log.username}</div>
-                            <div style={{ fontSize: '0.75rem', color: '#64748b' }}>{log.userRole} • {log.userEmail}</div>
+                            <div className="user-log-name">{log.username}</div>
+                            <div className="user-log-sub">{log.userRole} • {log.userEmail}</div>
                           </div>
                         </div>
                       </td>
 
                       {/* Login Time */}
-                      <td style={{ padding: '0.85rem 1rem', color: '#cbd5e1' }}>
+                      <td className="log-time-cell">
                         <div>{formatTime(log.loginTime)}</div>
-                        <div style={{ fontSize: '0.75rem', color: '#64748b' }}>{formatDate(log.loginTime)}</div>
+                        <div className="sub-date">{formatDate(log.loginTime)}</div>
                       </td>
 
                       {/* Logout Time */}
-                      <td style={{ padding: '0.85rem 1rem', color: isOnline ? '#34d399' : '#94a3b8' }}>
+                      <td className={`log-logout-cell ${isOnline ? 'online' : ''}`}>
                         {isOnline ? (
                           <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', fontWeight: 600 }}>
                             <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#10b981' }} />
@@ -684,38 +529,34 @@ export default function LiveUserTracker({ liveStats, onManualRefresh, currentUse
                         ) : (
                           <div>
                             <div>{formatTime(log.logoutTime)}</div>
-                            <div style={{ fontSize: '0.75rem', color: '#64748b' }}>{formatDate(log.logoutTime)}</div>
+                            <div className="sub-date">{formatDate(log.logoutTime)}</div>
                           </div>
                         )}
                       </td>
 
                       {/* Status Badge */}
-                      <td style={{ padding: '0.85rem 1rem' }}>
-                        <span style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '0.4rem',
-                          padding: '0.25rem 0.65rem',
-                          borderRadius: '12px',
-                          fontSize: '0.75rem',
-                          fontWeight: 700,
-                          background: isOnline ? 'rgba(16, 185, 129, 0.15)' : 'rgba(148, 163, 184, 0.1)',
-                          color: isOnline ? '#34d399' : '#94a3b8',
-                          border: isOnline ? '1px solid rgba(16, 185, 129, 0.3)' : '1px solid rgba(148, 163, 184, 0.2)'
-                        }}>
-                          <span style={{
-                            width: '6px',
-                            height: '6px',
-                            borderRadius: '50%',
-                            backgroundColor: isOnline ? '#10b981' : '#64748b'
-                          }} />
+                      <td>
+                        <span className={`log-status-badge ${isOnline ? 'online' : 'offline'}`}>
+                          <span className="status-dot-indicator" />
                           {isOnline ? 'ONLINE' : 'OFFLINE'}
                         </span>
                       </td>
 
                       {/* Last Active Time */}
-                      <td style={{ padding: '0.85rem 1rem', color: '#94a3b8', fontSize: '0.8rem' }}>
+                      <td className="log-last-active-cell">
                         {formatTime(log.lastActiveTime || log.loginTime)}
+                      </td>
+
+                      {/* Delete Option */}
+                      <td style={{ textAlign: 'center' }}>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteSingleSession(log.id, log.username)}
+                          className="delete-log-row-btn"
+                          title={`Delete session record for ${log.username}`}
+                        >
+                          <Trash2 size={15} />
+                        </button>
                       </td>
                     </tr>
                   );
@@ -728,3 +569,4 @@ export default function LiveUserTracker({ liveStats, onManualRefresh, currentUse
     </div>
   );
 }
+

@@ -148,7 +148,7 @@ export default function SidebarFilters({
                 )}
               </label>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
                 {selectedValues.length > 0 && (
                   <button
                     type="button"
@@ -159,7 +159,15 @@ export default function SidebarFilters({
                         [header]: []
                       });
                     }}
-                    style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: '0.7rem', cursor: 'pointer', textDecoration: 'underline' }}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: 'var(--text-muted)',
+                      fontSize: '0.7rem',
+                      cursor: 'pointer',
+                      textDecoration: 'underline'
+                    }}
+                    title={`Clear selections in ${header}`}
                   >
                     Clear
                   </button>
@@ -190,6 +198,24 @@ export default function SidebarFilters({
                 )}
 
                 <div className="checkbox-group" style={{ maxHeight: '180px', overflowY: 'auto', paddingRight: '0.2rem' }}>
+                  {/* Select All Checkbox Row */}
+                  <label className="checkbox-label select-all-row" style={{ fontSize: '0.8rem', padding: '0.25rem 0', borderBottom: '1px dashed var(--border-color)', marginBottom: '0.25rem', fontWeight: 700 }}>
+                    <input 
+                      type="checkbox"
+                      checked={selectedValues.length === categories.length && categories.length > 0}
+                      onChange={(e) => {
+                        onFilterChange('categorical', {
+                          ...filters.categorical,
+                          [header]: e.target.checked ? [...categories] : []
+                        });
+                      }}
+                    />
+                    <span style={{ color: 'var(--accent-blue)', fontWeight: 700 }}>Select All</span>
+                    <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)', marginLeft: 'auto', fontWeight: 700 }}>
+                      ({categories.length})
+                    </span>
+                  </label>
+
                   {filteredCategories.map(cat => {
                     const isChecked = selectedValues.includes(cat);
                     return (

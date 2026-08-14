@@ -6,7 +6,7 @@
     "role": "Executive Admin",
     "avatar": "CA",
     "loginType": "email",
-    "totalLogins": 69,
+    "totalLogins": 129,
     "registeredAt": "2026-07-13T06:00:07.404Z"
   },
   {
@@ -57,7 +57,7 @@
     "role": "Workforce Manager",
     "avatar": "NU",
     "loginType": "email",
-    "totalLogins": 45,
+    "totalLogins": 64,
     "registeredAt": "2026-08-12T06:06:46.975Z"
   },
   {
@@ -70,5 +70,16 @@
     "loginType": "google",
     "totalLogins": 11,
     "registeredAt": "2026-08-12T12:23:50.290Z"
+  },
+  {
+    "id": "usr_1786089353360",
+    "name": "sathya",
+    "email": "usr_1786089353360@corporate.com",
+    "phone": "+91 7207523327",
+    "role": "Senior Data Lead",
+    "avatar": "S",
+    "loginType": "phone",
+    "totalLogins": 4,
+    "registeredAt": "2026-08-14T03:30:04.187Z"
   }
 ]

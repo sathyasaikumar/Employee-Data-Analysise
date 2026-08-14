@@ -30,8 +30,10 @@ export default function UserProfileModal({
   onSelectDataset,
   onDeleteDataset,
   onRefreshDatasets,
+  onSeedSample = () => {},
   onOpenUpload,
-  liveStats = null
+  liveStats = null,
+  isLoadingDatasets = false
 }) {
   const [profile, setProfile] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -539,7 +541,6 @@ export default function UserProfileModal({
 
             </div>
 
-
             {/* TAB SELECTOR BAR FOR LOGIN & DATASET HISTORY */}
             <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.5rem', marginBottom: '1.25rem', flexWrap: 'wrap' }}>
               <button
@@ -555,14 +556,14 @@ export default function UserProfileModal({
                   fontSize: '0.875rem',
                   fontWeight: 700,
                   border: activeTab === 'session_history' ? '1.5px solid var(--accent-blue)' : '1px solid var(--border-color)',
-                  background: activeTab === 'session_history' ? 'linear-gradient(135deg, rgba(99, 102, 241, 0.25), rgba(6, 182, 212, 0.15))' : 'rgba(15, 23, 42, 0.6)',
-                  color: activeTab === 'session_history' ? '#ffffff' : 'var(--text-muted)',
+                  background: activeTab === 'session_history' ? 'linear-gradient(135deg, #6366f1, #06b6d4)' : 'var(--bg-input)',
+                  color: activeTab === 'session_history' ? '#ffffff' : 'var(--text-main)',
                   cursor: 'pointer',
                   transition: 'all 0.2s ease',
-                  boxShadow: activeTab === 'session_history' ? '0 4px 15px rgba(99, 102, 241, 0.2)' : 'none'
+                  boxShadow: activeTab === 'session_history' ? '0 4px 15px rgba(99, 102, 241, 0.3)' : 'none'
                 }}
               >
-                <History size={16} className={activeTab === 'session_history' ? 'text-cyan-400' : ''} />
+                <History size={16} style={{ color: activeTab === 'session_history' ? '#ffffff' : 'var(--accent-blue)' }} />
                 <span>Automated Login & Session History</span>
               </button>
 
@@ -579,18 +580,18 @@ export default function UserProfileModal({
                   fontSize: '0.875rem',
                   fontWeight: 700,
                   border: activeTab === 'dataset_history' ? '1.5px solid var(--accent-blue)' : '1px solid var(--border-color)',
-                  background: activeTab === 'dataset_history' ? 'linear-gradient(135deg, rgba(99, 102, 241, 0.25), rgba(6, 182, 212, 0.15))' : 'rgba(15, 23, 42, 0.6)',
-                  color: activeTab === 'dataset_history' ? '#ffffff' : 'var(--text-muted)',
+                  background: activeTab === 'dataset_history' ? 'linear-gradient(135deg, #6366f1, #06b6d4)' : 'var(--bg-input)',
+                  color: activeTab === 'dataset_history' ? '#ffffff' : 'var(--text-main)',
                   cursor: 'pointer',
                   transition: 'all 0.2s ease',
-                  boxShadow: activeTab === 'dataset_history' ? '0 4px 15px rgba(99, 102, 241, 0.2)' : 'none'
+                  boxShadow: activeTab === 'dataset_history' ? '0 4px 15px rgba(99, 102, 241, 0.3)' : 'none'
                 }}
               >
-                <Database size={16} className={activeTab === 'dataset_history' ? 'text-cyan-400' : ''} />
+                <Database size={16} style={{ color: activeTab === 'dataset_history' ? '#ffffff' : 'var(--accent-blue)' }} />
                 <span>Dataset History</span>
                 <span style={{
-                  background: activeTab === 'dataset_history' ? 'rgba(6, 182, 212, 0.35)' : 'rgba(255, 255, 255, 0.1)',
-                  color: activeTab === 'dataset_history' ? '#38bdf8' : 'var(--text-muted)',
+                  background: activeTab === 'dataset_history' ? 'rgba(255, 255, 255, 0.25)' : 'var(--border-color)',
+                  color: activeTab === 'dataset_history' ? '#ffffff' : 'var(--text-muted)',
                   padding: '0.15rem 0.55rem',
                   borderRadius: '12px',
                   fontSize: '0.75rem',
@@ -614,18 +615,18 @@ export default function UserProfileModal({
                   fontSize: '0.875rem',
                   fontWeight: 700,
                   border: activeTab === 'live_users' ? '1.5px solid #10b981' : '1px solid var(--border-color)',
-                  background: activeTab === 'live_users' ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.25), rgba(6, 182, 212, 0.15))' : 'rgba(15, 23, 42, 0.6)',
-                  color: activeTab === 'live_users' ? '#ffffff' : 'var(--text-muted)',
+                  background: activeTab === 'live_users' ? 'linear-gradient(135deg, #059669, #10b981)' : 'var(--bg-input)',
+                  color: activeTab === 'live_users' ? '#ffffff' : 'var(--text-main)',
                   cursor: 'pointer',
                   transition: 'all 0.2s ease',
-                  boxShadow: activeTab === 'live_users' ? '0 4px 15px rgba(16, 185, 129, 0.2)' : 'none'
+                  boxShadow: activeTab === 'live_users' ? '0 4px 15px rgba(16, 185, 129, 0.3)' : 'none'
                 }}
               >
-                <Radio size={16} className={activeTab === 'live_users' ? 'text-emerald-400 animate-pulse' : 'text-emerald-400'} />
+                <Radio size={16} className={activeTab === 'live_users' ? 'animate-pulse' : ''} style={{ color: activeTab === 'live_users' ? '#ffffff' : '#10b981' }} />
                 <span>Live Website Users</span>
                 <span style={{
-                  background: '#10b981',
-                  color: '#022c22',
+                  background: activeTab === 'live_users' ? '#ffffff' : '#10b981',
+                  color: activeTab === 'live_users' ? '#022c22' : '#ffffff',
                   padding: '0.15rem 0.55rem',
                   borderRadius: '12px',
                   fontSize: '0.75rem',
@@ -638,20 +639,28 @@ export default function UserProfileModal({
 
             {/* CONDITIONAL TAB CONTENT */}
             {activeTab === 'live_users' ? (
-              <div style={{ background: 'rgba(15, 23, 42, 0.4)', borderRadius: '16px', border: '1px solid var(--border-color)', padding: '1rem', overflow: 'hidden' }}>
+              <div style={{ background: 'var(--bg-card)', borderRadius: '16px', border: '1px solid var(--border-color)', padding: '1rem', overflow: 'hidden' }}>
                 <LiveUserTracker 
                   liveStats={liveStats}
                   currentUser={currentUser}
                 />
               </div>
             ) : activeTab === 'dataset_history' ? (
-              <div style={{ background: 'rgba(15, 23, 42, 0.4)', borderRadius: '16px', border: '1px solid var(--border-color)', overflow: 'hidden' }}>
+              <div style={{ background: 'var(--bg-card)', borderRadius: '16px', border: '1px solid var(--border-color)', overflow: 'hidden' }}>
                 <DatasetHistory 
                   datasets={datasets}
-                  onSelectDataset={onSelectDataset}
+                  onSelectDataset={(id) => {
+                    onSelectDataset(id);
+                    onClose();
+                  }}
                   onDeleteDataset={onDeleteDataset}
                   onRefresh={onRefreshDatasets}
-                  onOpenUpload={onOpenUpload}
+                  onSeedSample={onSeedSample}
+                  onOpenUpload={() => {
+                    onOpenUpload();
+                    onClose();
+                  }}
+                  isLoading={isLoadingDatasets}
                 />
               </div>
             ) : (

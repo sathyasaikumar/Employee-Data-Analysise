@@ -903,6 +903,63 @@ app.post('/api/auth/heartbeat', (req, res) => {
   }
 });
 
+// DELETE /api/live-users/sessions/:id - Delete single login session record
+app.delete('/api/live-users/sessions/:id', (req, res) => {
+  try {
+    const sessions = getSessionsList();
+    const index = sessions.findIndex(s => s.id === req.params.id);
+    if (index === -1) {
+      return res.status(404).json({ success: false, error: 'Session log record not found.' });
+    }
+    const deletedSession = sessions[index];
+    sessions.splice(index, 1);
+    saveSessionsList(sessions);
+    broadcastLiveStats();
+
+    res.json({
+      success: true,
+      message: `Session log for user '${deletedSession.username || deletedSession.userEmail}' deleted successfully.`,
+      stats: calculateLiveStats()
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// DELETE /api/live-users/sessions - Bulk clear live session logs (mode=all or mode=offline)
+app.delete('/api/live-users/sessions', (req, res) => {
+  try {
+    const { mode = 'offline' } = req.query;
+    let sessions = getSessionsList();
+    const now = Date.now();
+
+    if (mode === 'offline') {
+      // Remove only offline / inactive sessions
+      sessions = sessions.filter(sess => {
+        const lastActive = new Date(sess.lastActiveTime || sess.loginTime).getTime();
+        return sess.status === 'online' && (now - lastActive <= INACTIVITY_TIMEOUT_MS);
+      });
+    } else {
+      // Clear all sessions except current active online connections if any
+      sessions = sessions.filter(sess => {
+        const lastActive = new Date(sess.lastActiveTime || sess.loginTime).getTime();
+        return sess.status === 'online' && (now - lastActive <= INACTIVITY_TIMEOUT_MS);
+      });
+    }
+
+    saveSessionsList(sessions);
+    broadcastLiveStats();
+
+    res.json({
+      success: true,
+      message: mode === 'offline' ? 'Cleared all offline user session logs.' : 'Cleared all user activity session logs.',
+      stats: calculateLiveStats()
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 if (!isVercel) {
   app.listen(PORT, () => {
     console.log(`====================================================`);
@@ -914,4 +971,5 @@ if (!isVercel) {
 }
 
 export default app;
+
 

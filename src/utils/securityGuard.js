@@ -82,3 +82,51 @@ export function initSecurityGuard() {
 
   console.log('%c[Security System Active] Code protection & anti-tampering guards engaged.', 'color: #00ffaa; font-weight: bold;');
 }
+
+/**
+ * Check if current session is authenticated
+ */
+export function isAuthenticated(user) {
+  if (!user) return false;
+  const storedUser = localStorage.getItem('corporate_auth_user');
+  const storedSessionId = sessionStorage.getItem('corporate_session_id');
+  return Boolean(storedUser && (storedSessionId || user.id));
+}
+
+/**
+ * Role-Based Access Control (RBAC) Permission Verifier
+ */
+export function hasPermission(user, requiredRole = 'any') {
+  if (!isAuthenticated(user)) return false;
+  if (requiredRole === 'any') return true;
+
+  const role = (user.role || '').toLowerCase();
+
+  switch (requiredRole.toLowerCase()) {
+    case 'admin':
+    case 'executive admin':
+      return role.includes('admin') || role.includes('executive');
+    case 'manager':
+      return role.includes('admin') || role.includes('manager') || role.includes('lead');
+    default:
+      return true;
+  }
+}
+
+/**
+ * Enforce Auth Guard before executing sensitive actions (Upload, Delete, Export)
+ */
+export function requireAuthGuard(user, actionCallback, onUnauthorized) {
+  if (!isAuthenticated(user)) {
+    if (typeof onUnauthorized === 'function') {
+      onUnauthorized('Please log in to access this feature without permission.');
+    }
+    return false;
+  }
+  
+  if (typeof actionCallback === 'function') {
+    actionCallback();
+  }
+  return true;
+}
+

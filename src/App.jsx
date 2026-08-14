@@ -490,6 +490,7 @@ export default function App() {
         }}
         onDeleteDataset={handleDeleteHistoryDataset}
         onRefreshDatasets={refreshDatasetsHistory}
+        onSeedSample={() => handleLoadSampleDataset('workforce')}
         onOpenUpload={() => {
           setIsProfileOpen(false);
           setIsUploadMode(true);
@@ -619,12 +620,6 @@ export default function App() {
                   onClick={() => setActiveTab('dashboard')}
                 >
                   <LayoutDashboard size={16} /> Executive Dashboard
-                </button>
-                <button 
-                  className={`tab-btn ${activeTab === 'live_users' ? 'active' : ''}`}
-                  onClick={() => setActiveTab('live_users')}
-                >
-                  <Radio size={16} className="text-emerald animate-pulse" /> Live Users ({liveStats?.liveUsers ?? 0})
                 </button>
                 <button 
                   className={`tab-btn ${activeTab === 'builder' ? 'active' : ''}`}

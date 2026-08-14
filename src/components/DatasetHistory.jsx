@@ -251,7 +251,7 @@ export default function DatasetHistory({
         }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.85rem' }}>
             <thead>
-              <tr style={{ background: 'rgba(15, 23, 42, 0.6)', borderBottom: '1px solid var(--border-color)', color: 'var(--text-muted)' }}>
+              <tr style={{ background: 'var(--bg-input)', borderBottom: '1px solid var(--border-color)', color: 'var(--text-muted)' }}>
                 <th style={{ padding: '0.85rem 1rem' }}>Dataset Name & Stored File</th>
                 <th style={{ padding: '0.85rem 1rem' }}>Upload Date & Time</th>
                 <th style={{ padding: '0.85rem 1rem' }}>Size</th>
