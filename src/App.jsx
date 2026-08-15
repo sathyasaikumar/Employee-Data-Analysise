@@ -13,17 +13,19 @@ import ComparisonView from './components/ComparisonView';
 import LoginPage from './components/LoginPage';
 import UserProfileModal from './components/UserProfileModal';
 import CookieConsentBanner from './components/CookieConsentBanner';
+import MLPipelineModal from './components/MLPipelineModal';
+import AutoMLEngineModal from './components/AutoMLEngineModal';
 import { SAMPLE_DATASETS } from './utils/sampleData';
 import { getStoredUser, logoutUser } from './utils/auth';
 import { startSession, endActiveSession } from './utils/activityTracker';
 import { startLiveTracking, stopLiveTracking, subscribeToLiveStats, refreshLiveStatsNow } from './utils/liveTracker';
 import { convertFileToCsvContent } from './utils/fileConverter';
-import { 
-  fetchDatasetHistory, 
-  uploadDatasetFile, 
-  fetchDatasetById, 
-  deleteDatasetById, 
-  seedSampleDatasets 
+import {
+  fetchDatasetHistory,
+  uploadDatasetFile,
+  fetchDatasetById,
+  deleteDatasetById,
+  seedSampleDatasets
 } from './utils/api';
 import { LayoutDashboard, Sliders, Table as TableIcon, Calculator, GitCompare, Loader2, Filter, Radio } from 'lucide-react';
 
@@ -41,7 +43,7 @@ export default function App() {
   const [datasetName, setDatasetName] = useState('');
   const [dashboardMetrics, setDashboardMetrics] = useState(null);
   const [pageData, setPageData] = useState([]);
-  
+
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('dashboard');
   const [activeLevel, setActiveLevel] = useState('all'); // 'all' | 'low' | 'medium' | 'high'
@@ -66,6 +68,10 @@ export default function App() {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isGuestMode, setIsGuestMode] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+
+  // AutoML Model Intelligence Engine Modal State
+  const [isAutoMLOpen, setIsAutoMLOpen] = useState(false);
+  const [isMLPipelineOpen, setIsMLPipelineOpen] = useState(false);
 
   // Theme State ('dark' | 'light')
   const [theme, setTheme] = useState(() => {
@@ -403,7 +409,7 @@ export default function App() {
   // Render Full Page Login Page when unauthenticated or requested
   if ((!currentUser && !isGuestMode) || isLoginOpen) {
     return (
-      <LoginPage 
+      <LoginPage
         onLoginSuccess={(user) => {
           setCurrentUser(user);
           startSession(user);
@@ -423,7 +429,7 @@ export default function App() {
 
   return (
     <div className="app-container">
-      <Header 
+      <Header
         hasData={hasData && !isLoading}
         hasPreviousDataset={hasData}
         isUploadMode={isUploadMode}
@@ -474,9 +480,11 @@ export default function App() {
         onLogout={handleLogout}
         theme={theme}
         onToggleTheme={handleToggleTheme}
+        onOpenMLPipeline={() => setIsMLPipelineOpen(true)}
+        onOpenAutoML={() => setIsAutoMLOpen(true)}
       />
 
-      <UserProfileModal 
+      <UserProfileModal
         currentUser={currentUser}
         isOpen={isProfileOpen}
         onClose={() => setIsProfileOpen(false)}
@@ -501,13 +509,13 @@ export default function App() {
         {hasData && !isUploadMode && !isHistoryMode && !isLiveUsersMode && !isLoading && isSidebarOpen && (
           <>
             {isMobileFilterOpen && (
-              <div 
-                className="sidebar-backdrop" 
-                onClick={() => setIsMobileFilterOpen(false)} 
+              <div
+                className="sidebar-backdrop"
+                onClick={() => setIsMobileFilterOpen(false)}
                 title="Close Filter Drawer"
               />
             )}
-            <SidebarFilters 
+            <SidebarFilters
               headers={headers}
               schema={schema}
               stats={stats}
@@ -523,8 +531,8 @@ export default function App() {
         <div className="content-area">
           {hasData && !isUploadMode && !isHistoryMode && !isLiveUsersMode && !isLoading && (
             <div className="mobile-filter-bar">
-              <button 
-                type="button" 
+              <button
+                type="button"
                 className="mobile-filter-trigger-btn"
                 onClick={() => {
                   setIsSidebarOpen(true);
@@ -549,13 +557,13 @@ export default function App() {
               <p className="dropzone-subtitle">{progressInfo.text}</p>
             </div>
           ) : isLiveUsersMode ? (
-            <LiveUserTracker 
+            <LiveUserTracker
               liveStats={liveStats}
               currentUser={currentUser}
               onManualRefresh={refreshLiveStatsNow}
             />
           ) : isHistoryMode ? (
-            <DatasetHistory 
+            <DatasetHistory
               datasets={datasetsList}
               onSelectDataset={handleSelectHistoryDataset}
               onDeleteDataset={handleDeleteHistoryDataset}
@@ -572,7 +580,7 @@ export default function App() {
               isLoading={isLoading}
             />
           ) : (!hasData || isUploadMode) ? (
-            <FileUpload 
+            <FileUpload
               onFileSelect={(file) => {
                 setIsUploadMode(false);
                 setIsHistoryMode(false);
@@ -598,7 +606,7 @@ export default function App() {
             />
           ) : (
             <>
-              <KPICards 
+              <KPICards
                 totalRows={totalRows}
                 filteredRows={filteredCount}
                 healthScore={healthScore}
@@ -615,31 +623,31 @@ export default function App() {
               />
 
               <div className="nav-tabs">
-                <button 
+                <button
                   className={`tab-btn ${activeTab === 'dashboard' ? 'active' : ''}`}
                   onClick={() => setActiveTab('dashboard')}
                 >
                   <LayoutDashboard size={16} /> Executive Dashboard
                 </button>
-                <button 
+                <button
                   className={`tab-btn ${activeTab === 'builder' ? 'active' : ''}`}
                   onClick={() => setActiveTab('builder')}
                 >
                   <Sliders size={16} /> Custom Visual Studio
                 </button>
-                <button 
+                <button
                   className={`tab-btn ${activeTab === 'table' ? 'active' : ''}`}
                   onClick={() => setActiveTab('table')}
                 >
                   <TableIcon size={16} /> Data Explorer Table ({filteredCount.toLocaleString()})
                 </button>
-                <button 
+                <button
                   className={`tab-btn ${activeTab === 'stats' ? 'active' : ''}`}
                   onClick={() => setActiveTab('stats')}
                 >
                   <Calculator size={16} /> Statistical Profiling
                 </button>
-                <button 
+                <button
                   className={`tab-btn ${activeTab === 'comparison' ? 'active' : ''}`}
                   onClick={() => setActiveTab('comparison')}
                 >
@@ -648,7 +656,7 @@ export default function App() {
               </div>
 
               {activeTab === 'dashboard' && (
-                <Dashboard 
+                <Dashboard
                   dashboardMetrics={dashboardMetrics}
                   totalRows={totalRows}
                   filteredCount={filteredCount}
@@ -657,7 +665,7 @@ export default function App() {
               )}
 
               {activeTab === 'live_users' && (
-                <LiveUserTracker 
+                <LiveUserTracker
                   liveStats={liveStats}
                   currentUser={currentUser}
                   onManualRefresh={refreshLiveStatsNow}
@@ -665,7 +673,7 @@ export default function App() {
               )}
 
               {activeTab === 'builder' && (
-                <CustomChartBuilder 
+                <CustomChartBuilder
                   data={pageData}
                   headers={headers}
                   schema={schema}
@@ -674,7 +682,7 @@ export default function App() {
               )}
 
               {activeTab === 'table' && (
-                <DataTable 
+                <DataTable
                   pageData={pageData}
                   headers={headers}
                   schema={schema}
@@ -685,7 +693,7 @@ export default function App() {
               )}
 
               {activeTab === 'stats' && (
-                <StatsOverview 
+                <StatsOverview
                   stats={stats}
                   headers={headers}
                   schema={schema}
@@ -693,7 +701,7 @@ export default function App() {
               )}
 
               {activeTab === 'comparison' && (
-                <ComparisonView 
+                <ComparisonView
                   data={pageData}
                   headers={headers}
                   schema={schema}
@@ -707,6 +715,23 @@ export default function App() {
 
       {/* GDPR Cookie Consent & Data Privacy Banner */}
       <CookieConsentBanner />
+
+      {/* AutoML Model Intelligence Engine Modal */}
+      <AutoMLEngineModal 
+        isOpen={isAutoMLOpen}
+        onClose={() => setIsAutoMLOpen(false)}
+        data={pageData && pageData.length > 0 ? pageData : SAMPLE_DATASETS.workforce?.data}
+        headers={headers && headers.length > 0 ? headers : SAMPLE_DATASETS.workforce?.headers}
+        schema={schema}
+        datasetName={datasetName || 'Workforce Dataset'}
+      />
+
+      {/* 14-Stage End-to-End ML Workflow Pipeline Modal */}
+      <MLPipelineModal
+        isOpen={isMLPipelineOpen}
+        onClose={() => setIsMLPipelineOpen(false)}
+        activeDatasetName={datasetName || 'Workforce Dataset'}
+      />
     </div>
   );
 }

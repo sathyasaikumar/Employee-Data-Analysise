@@ -6,7 +6,7 @@
     "role": "Executive Admin",
     "avatar": "CA",
     "loginType": "email",
-    "totalLogins": 129,
+    "totalLogins": 303,
     "registeredAt": "2026-07-13T06:00:07.404Z"
   },
   {
@@ -68,7 +68,7 @@
     "role": "Data Engineer",
     "avatar": "DL",
     "loginType": "google",
-    "totalLogins": 11,
+    "totalLogins": 16,
     "registeredAt": "2026-08-12T12:23:50.290Z"
   },
   {
@@ -79,7 +79,7 @@
     "role": "Senior Data Lead",
     "avatar": "S",
     "loginType": "phone",
-    "totalLogins": 4,
+    "totalLogins": 130,
     "registeredAt": "2026-08-14T03:30:04.187Z"
   }
 ]

@@ -1,12 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { 
-  BarChart3, Upload, Download, Layers, LogIn, LogOut, ShieldCheck, Sun, Moon, 
-  ArrowLeft, Menu, X, Database, Filter, Radio, Maximize2, Minimize2, 
-  Folder, ChevronDown, Sparkles
+import {
+  BarChart3, Upload, Download, Layers, LogIn, LogOut, ShieldCheck, Sun, Moon,
+  ArrowLeft, Menu, X, Database, Filter, Radio, Maximize2, Minimize2,
+  Folder, ChevronDown, Sparkles, Cpu, Zap
 } from 'lucide-react';
 
-export default function Header({ 
-  hasData, 
+export default function Header({
+  hasData,
   hasPreviousDataset,
   isUploadMode,
   isHistoryMode,
@@ -14,14 +14,14 @@ export default function Header({
   isSidebarOpen = true,
   onToggleSidebar,
   isFiltered = false,
-  datasetName, 
-  onUploadClick, 
+  datasetName,
+  onUploadClick,
   onHistoryClick,
   onLiveUsersClick,
   savedDatasetsCount = 0,
   liveUsersCount = 0,
-  onLoadSample, 
-  onResetData, 
+  onLoadSample,
+  onResetData,
   onBackToDashboard,
   onExportCSV,
   currentUser,
@@ -29,7 +29,8 @@ export default function Header({
   onOpenProfile,
   onLogout,
   theme = 'dark',
-  onToggleTheme
+  onToggleTheme,
+  onOpenAutoML
 }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isAppFullScreen, setIsAppFullScreen] = useState(false);
@@ -53,13 +54,13 @@ export default function Header({
     try {
       if (nextState) {
         const elem = document.documentElement;
-        if (elem.requestFullscreen) elem.requestFullscreen().catch(() => {});
-        else if (elem.webkitRequestFullscreen) elem.webkitRequestFullscreen().catch(() => {});
-        else if (elem.msRequestFullscreen) elem.msRequestFullscreen().catch(() => {});
+        if (elem.requestFullscreen) elem.requestFullscreen().catch(() => { });
+        else if (elem.webkitRequestFullscreen) elem.webkitRequestFullscreen().catch(() => { });
+        else if (elem.msRequestFullscreen) elem.msRequestFullscreen().catch(() => { });
       } else {
         if (document.fullscreenElement || document.webkitFullscreenElement) {
-          if (document.exitFullscreen) document.exitFullscreen().catch(() => {});
-          else if (document.webkitExitFullscreen) document.webkitExitFullscreen().catch(() => {});
+          if (document.exitFullscreen) document.exitFullscreen().catch(() => { });
+          else if (document.webkitExitFullscreen) document.webkitExitFullscreen().catch(() => { });
         }
       }
     } catch (err) {
@@ -85,7 +86,7 @@ export default function Header({
         </div>
 
         {/* Mobile Hamburger Toggle Button */}
-        <button 
+        <button
           type="button"
           className="mobile-menu-toggle-btn"
           onClick={toggleMobileMenu}
@@ -98,7 +99,7 @@ export default function Header({
       <div className={`header-actions ${isMobileMenuOpen ? 'mobile-open' : ''}`}>
         {/* Back button when in upload mode, history mode, or live users mode */}
         {(isUploadMode || isHistoryMode || isLiveUsersMode || !hasData) && hasPreviousDataset && (
-          <button 
+          <button
             type="button"
             className="btn btn-secondary btn-back-unique"
             onClick={() => {
@@ -120,9 +121,28 @@ export default function Header({
           </span>
         )}
 
+        {/* UNIQUE ADVANCED FOLDER-LIKE AUTOML ENGINE BUTTON */}
+        <div className="automl-folder-btn-container">
+          <button
+            type="button"
+            className="btn header-folder-btn automl-header-folder-btn"
+            onClick={() => {
+              if (onOpenAutoML) onOpenAutoML();
+              closeMobileMenu();
+            }}
+            title="Open AI-Powered AutoML Model Selection & Prediction Platform"
+          >
+            <Folder size={18} className="folder-icon text-cyan-400" />
+            <span>AutoML Engine</span>
+            <span className="automl-folder-ai-pill">
+              <Zap size={9} className="inline mr-0.5" /> AI
+            </span>
+          </button>
+        </div>
+
         {/* CONSOLIDATED TOOLS FOLDER DROPDOWN MENU NEAR LOGOUT */}
         <div className="folder-menu-container" ref={folderRef} style={{ position: 'relative' }}>
-          <button 
+          <button
             type="button"
             className={`btn header-folder-btn ${isFolderOpen ? 'active' : ''}`}
             onClick={() => setIsFolderOpen(prev => !prev)}
@@ -130,9 +150,6 @@ export default function Header({
           >
             <Folder size={18} className="folder-icon" />
             <span>System Folder</span>
-            {savedDatasetsCount > 0 && (
-              <span className="folder-counter-badge">{savedDatasetsCount}</span>
-            )}
             <ChevronDown size={14} className={`folder-chevron ${isFolderOpen ? 'rotate' : ''}`} />
           </button>
 
@@ -142,17 +159,17 @@ export default function Header({
               <div className="folder-dropdown-header">
                 <div className="folder-header-title">
                   <Folder size={16} style={{ color: '#6366f1' }} />
-                  <span>System Tools Folder</span>
+                  <span>System Folder</span>
                 </div>
-                <span className="folder-header-sub">Data & System Features</span>
+                <span className="folder-header-sub">System Tools & Dataset Management</span>
               </div>
 
               {/* Data & Storage Section */}
-              <div className="folder-section">
+              <div className="folder-section border-top">
                 <div className="folder-section-label">DATASET MANAGEMENT</div>
 
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   className="folder-item-btn"
                   onClick={() => {
                     if (hasData) onResetData(); else onUploadClick();
@@ -167,8 +184,8 @@ export default function Header({
                   </div>
                 </button>
 
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   className={`folder-item-btn ${isHistoryMode ? 'active' : ''}`}
                   onClick={() => {
                     if (onHistoryClick) onHistoryClick();
@@ -187,8 +204,8 @@ export default function Header({
                 </button>
 
                 {hasData && (
-                  <button 
-                    type="button" 
+                  <button
+                    type="button"
                     className="folder-item-btn"
                     onClick={() => {
                       onExportCSV();
@@ -210,8 +227,8 @@ export default function Header({
                     <span>Load Demo Dataset</span>
                   </div>
                   <div className="demo-btn-row">
-                    <button 
-                      type="button" 
+                    <button
+                      type="button"
                       className="demo-chip-btn"
                       onClick={() => {
                         onLoadSample('workforce');
@@ -221,8 +238,8 @@ export default function Header({
                     >
                       Workforce Demo
                     </button>
-                    <button 
-                      type="button" 
+                    <button
+                      type="button"
                       className="demo-chip-btn"
                       onClick={() => {
                         onLoadSample('sales');
@@ -240,8 +257,8 @@ export default function Header({
               <div className="folder-section border-top">
                 <div className="folder-section-label">SYSTEM & MONITORING</div>
 
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   className={`folder-item-btn ${isLiveUsersMode ? 'active' : ''}`}
                   onClick={() => {
                     if (onLiveUsersClick) onLiveUsersClick();
@@ -257,8 +274,8 @@ export default function Header({
                   <span className="folder-item-badge green">{liveUsersCount}</span>
                 </button>
 
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   className="folder-item-btn"
                   onClick={() => {
                     onToggleTheme();
@@ -272,8 +289,8 @@ export default function Header({
                   </div>
                 </button>
 
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   className="folder-item-btn"
                   onClick={() => {
                     toggleAppFullScreen();
@@ -295,7 +312,7 @@ export default function Header({
         <div className="user-auth-wrapper">
           {currentUser ? (
             <div className="user-profile-badge" title="Click to View Personal Profile & Login Activity System">
-              <div 
+              <div
                 className="user-avatar-trigger"
                 onClick={() => {
                   if (onOpenProfile) onOpenProfile();
@@ -319,7 +336,7 @@ export default function Header({
                 </div>
               </div>
 
-              <button 
+              <button
                 className="logout-btn"
                 onClick={(e) => {
                   e.stopPropagation();
@@ -333,8 +350,8 @@ export default function Header({
               </button>
             </div>
           ) : (
-            <button 
-              className="btn btn-primary login-trigger-btn" 
+            <button
+              className="btn btn-primary login-trigger-btn"
               onClick={() => {
                 onOpenLogin();
                 closeMobileMenu();
