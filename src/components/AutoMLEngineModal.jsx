@@ -79,6 +79,7 @@ export default function AutoMLEngineModal({ isOpen, onClose, data = [], headers 
   const [predictInputs, setPredictInputs] = useState({});
   const [singlePredResult, setSinglePredResult] = useState(null);
   const [batchPredictions, setBatchPredictions] = useState(null);
+  const [batchPredictRowCount, setBatchPredictRowCount] = useState('all');
   const [showBatchTable, setShowBatchTable] = useState(false);
   const [isBatchTableFullscreen, setIsBatchTableFullscreen] = useState(false);
 
@@ -95,9 +96,50 @@ export default function AutoMLEngineModal({ isOpen, onClose, data = [], headers 
   const [savedModelsList, setSavedModelsList] = useState([]);
   const [selectedViewModel, setSelectedViewModel] = useState(null);
 
-  // Active Working Data State
+  // Active Working Data & Row Limit State
+  const [rawSourceData, setRawSourceData] = useState([]);
+  const [selectedRowLimit, setSelectedRowLimit] = useState('all');
   const [workingData, setWorkingData] = useState([]);
   const [workingHeaders, setWorkingHeaders] = useState([]);
+
+  // Helper to slice/expand rows according to row limit selection
+  const getRowsForLimit = useCallback((sourceRows, limit) => {
+    if (!sourceRows || sourceRows.length === 0) return [];
+    if (limit === 'all') return sourceRows;
+    const targetCount = parseInt(limit, 10);
+    if (isNaN(targetCount) || targetCount <= 0) return sourceRows;
+    if (sourceRows.length >= targetCount) {
+      return sourceRows.slice(0, targetCount);
+    }
+    const expanded = [...sourceRows];
+    let i = 0;
+    while (expanded.length < targetCount) {
+      const baseRow = sourceRows[i % sourceRows.length];
+      const clone = { ...baseRow };
+      Object.keys(clone).forEach(k => {
+        const val = clone[k];
+        if (typeof val === 'number') {
+          const noise = (Math.random() * 0.08 - 0.04) * val;
+          clone[k] = Math.round((val + noise) * 100) / 100;
+        } else if (typeof val === 'string' && (k.toLowerCase().includes('id') || k.toLowerCase().includes('name'))) {
+          clone[k] = `${val}_${expanded.length + 1}`;
+        }
+      });
+      expanded.push(clone);
+      i++;
+    }
+    return expanded;
+  }, []);
+
+  const handleRowLimitChange = (newLimit) => {
+    setSelectedRowLimit(newLimit);
+    const updatedRows = getRowsForLimit(rawSourceData, newLimit);
+    setWorkingData(updatedRows);
+    const prof = analyzeDatasetProfile(updatedRows, workingHeaders, schema);
+    setProfile(prof);
+    const prob = detectMLProblemType(updatedRows, targetCol, workingHeaders);
+    setProblemInfo(prob);
+  };
 
   // Boot Initialization
   useEffect(() => {
@@ -111,17 +153,19 @@ export default function AutoMLEngineModal({ isOpen, onClose, data = [], headers 
         activeCols = fallback.headers;
       }
 
-      setWorkingData(activeRows);
+      setRawSourceData(activeRows);
+      const initialEffectiveRows = getRowsForLimit(activeRows, selectedRowLimit);
+      setWorkingData(initialEffectiveRows);
       setWorkingHeaders(activeCols);
 
-      const prof = analyzeDatasetProfile(activeRows, activeCols, schema);
+      const prof = analyzeDatasetProfile(initialEffectiveRows, activeCols, schema);
       setProfile(prof);
 
-      const recTarget = recommendTargetColumn(activeRows, activeCols);
+      const recTarget = recommendTargetColumn(initialEffectiveRows, activeCols);
       const initialTarget = recTarget || activeCols[0] || 'Status';
       setTargetCol(initialTarget);
 
-      const prob = detectMLProblemType(activeRows, initialTarget, activeCols);
+      const prob = detectMLProblemType(initialEffectiveRows, initialTarget, activeCols);
       setProblemInfo(prob);
 
       // Select default top 4 models
@@ -132,7 +176,7 @@ export default function AutoMLEngineModal({ isOpen, onClose, data = [], headers 
       // Load Registry
       setSavedModelsList(getSavedModels());
     }
-  }, [isOpen, data, headers, schema]);
+  }, [isOpen, data, headers, schema, getRowsForLimit]);
 
   function getCategoryKey(probType) {
     if (probType.includes('classification')) return 'classification';
@@ -382,6 +426,8 @@ export default function AutoMLEngineModal({ isOpen, onClose, data = [], headers 
     a.click();
   };
 
+  if (!isOpen) return null;
+
   return (
     <div className={`automl-modal-overlay ${isFullScreen ? 'is-fullscreen' : ''}`}>
       <div className={`automl-modal-container ${isFullScreen ? 'is-fullscreen' : ''}`}>
@@ -519,6 +565,29 @@ export default function AutoMLEngineModal({ isOpen, onClose, data = [], headers 
                         <span className="lbl">Outliers</span>
                         <span className="val text-rose-400">~{profile.outliersCount}</span>
                       </div>
+                    </div>
+
+                    <div className="mt-2.5 pt-2.5 border-t border-slate-800/80">
+                      <div className="flex items-center justify-between mb-1.5">
+                        <span className="text-xxs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
+                          <Layers size={11} className="text-cyan-400" /> Select Rows to Process:
+                        </span>
+                        <span className="text-xxs font-mono font-bold text-cyan-400">
+                          {selectedRowLimit === 'all' ? `All (${rawSourceData.length})` : `${selectedRowLimit} Rows`}
+                        </span>
+                      </div>
+                      <select
+                        className="automl-select-modern text-xs py-1.5"
+                        value={selectedRowLimit}
+                        onChange={(e) => handleRowLimitChange(e.target.value)}
+                      >
+                        {[25, 50, 75, 100, 125, 150, 175, 200, 225, 250, 275, 300, 325, 350, 375, 400, 425, 450, 475, 500, 750, 1000, 2000, 5000].map(count => (
+                          <option key={count} value={count}>
+                            {count} Rows {count > rawSourceData.length ? `(Expanded Sample)` : ''}
+                          </option>
+                        ))}
+                        <option value="all">Unlimited / Full Dataset ({rawSourceData.length} rows)</option>
+                      </select>
                     </div>
 
                     <div className="text-xxs text-muted mt-2 pt-2 border-t border-slate-800 flex justify-between">
@@ -1646,7 +1715,7 @@ export default function AutoMLEngineModal({ isOpen, onClose, data = [], headers 
                             Primary Metric Score: <strong className="text-emerald-400">{(activeModel.primaryScore * 100).toFixed(1)}%</strong> | Top Driver: <strong className="text-cyan-400">{topFeat.name}</strong> ({(topFeat.importance * 100).toFixed(1)}%)
                           </span>
                         </div>
-                        <div className="text-xxs text-slate-400 bg-slate-900/90 px-3 py-1.5 rounded-full border border-slate-700 font-mono">
+                        <div style={{ fontSize: '0.72rem', color: '#94a3b8', background: 'rgba(15, 23, 42, 0.9)', padding: '0.25rem 0.65rem', borderRadius: '9999px', border: '1px solid #334155', fontFamily: 'monospace' }}>
                           SHAP Kernel Explainer v2.4
                         </div>
                       </div>
@@ -1828,7 +1897,7 @@ export default function AutoMLEngineModal({ isOpen, onClose, data = [], headers 
                                               <span className={`shap-model-label ${colorClass}`}>
                                                 {s.shortName}
                                               </span>
-                                              <div className="flex-1 bg-slate-950 rounded-full h-2 overflow-hidden border border-slate-800 p-0.5">
+                                              <div style={{ flex: 1, background: '#020617', borderRadius: '9999px', height: '8px', overflow: 'hidden', border: '1px solid #1e293b', padding: '1px' }}>
                                                 <div
                                                   className={`shap-matrix-bar-fill ${colorClass}`}
                                                   style={{ width: `${Math.max((s.score / maxScore) * 100, 6)}%` }}
@@ -2018,11 +2087,34 @@ export default function AutoMLEngineModal({ isOpen, onClose, data = [], headers 
                 </div>
 
                 <div className="batch-predict-actions flex items-center gap-3 flex-wrap">
+                  {/* Select Row Count Options */}
+                  <div className="flex items-center gap-2">
+                    <label className="text-xs font-bold text-slate-300 flex items-center gap-1.5 whitespace-nowrap">
+                      <Layers size={14} className="text-cyan-400" />
+                      <span>Select Rows:</span>
+                    </label>
+                    <select
+                      value={batchPredictRowCount}
+                      onChange={(e) => setBatchPredictRowCount(e.target.value)}
+                      className="batch-row-select"
+                    >
+                      {[25, 50, 75, 100, 125, 150, 175, 200, 225, 250, 275, 300, 325, 350, 375, 400, 425, 450, 475, 500, 750, 1000, 2000, 5000].map(count => (
+                        <option key={count} value={count}>
+                          {count} Rows {count >= workingData.length ? `(Full: ${workingData.length})` : ''}
+                        </option>
+                      ))}
+                      <option value="all">Unlimited / All Rows ({workingData.length} rows)</option>
+                    </select>
+                  </div>
+
                   <button
                     type="button"
                     className="btn-predict-batch-primary"
                     onClick={() => {
-                      const batchRes = predictBatch(selectedBestModel || pipelineResults.bestModel, workingData, problemInfo.problemType, pipelineResults.classes);
+                      const targetRows = batchPredictRowCount === 'all'
+                        ? workingData
+                        : workingData.slice(0, parseInt(batchPredictRowCount, 10));
+                      const batchRes = predictBatch(selectedBestModel || pipelineResults.bestModel, targetRows, problemInfo.problemType, pipelineResults.classes);
                       setBatchPredictions(batchRes);
                       if (batchRes && batchRes.length > 0) {
                         const cols = Object.keys(batchRes[0]).filter(
@@ -2035,7 +2127,9 @@ export default function AutoMLEngineModal({ isOpen, onClose, data = [], headers 
                     }}
                   >
                     <Cpu size={16} />
-                    <span>Run Batch Prediction on Current Dataset ({workingData.length} rows)</span>
+                    <span>
+                      Run Batch Prediction on Current Dataset ({batchPredictRowCount === 'all' ? `All ${workingData.length}` : Math.min(parseInt(batchPredictRowCount, 10), workingData.length)} rows)
+                    </span>
                   </button>
 
                   {batchPredictions && (

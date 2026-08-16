@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import {
   BarChart3, Upload, Download, Layers, LogIn, LogOut, ShieldCheck, Sun, Moon,
   ArrowLeft, Menu, X, Database, Filter, Radio, Maximize2, Minimize2,
-  Folder, ChevronDown, Sparkles, Cpu, Zap
+  Folder, ChevronDown, Sparkles, Cpu, Zap, Brain, BookOpen
 } from 'lucide-react';
 
 export default function Header({
@@ -30,7 +30,9 @@ export default function Header({
   onLogout,
   theme = 'dark',
   onToggleTheme,
-  onOpenAutoML
+  onOpenAutoML,
+  onOpenDLExecutive,
+  onOpenDLStudio
 }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isAppFullScreen, setIsAppFullScreen] = useState(false);
@@ -124,13 +126,17 @@ export default function Header({
         {/* UNIQUE ADVANCED FOLDER-LIKE AUTOML ENGINE BUTTON */}
         <div className="automl-folder-btn-container">
           <button
+            id="header-btn-automl"
             type="button"
             className="btn header-folder-btn automl-header-folder-btn"
-            onClick={() => {
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
               if (onOpenAutoML) onOpenAutoML();
               closeMobileMenu();
             }}
             title="Open AI-Powered AutoML Model Selection & Prediction Platform"
+            aria-label="Open AI-Powered AutoML Model Selection & Prediction Platform"
           >
             <Folder size={18} className="folder-icon text-cyan-400" />
             <span>AutoML Engine</span>
@@ -139,6 +145,30 @@ export default function Header({
             </span>
           </button>
         </div>
+
+        {/* UNIQUE ADVANCED FOLDER-LIKE DEEP LEARNING PROJECT ANALYSIS STUDIO BUTTON */}
+        <div className="automl-folder-btn-container dl-studio-btn-container">
+          <button
+            id="header-btn-dl-studio"
+            type="button"
+            className="btn header-folder-btn dl-studio-header-btn"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              if (onOpenDLStudio) onOpenDLStudio();
+              closeMobileMenu();
+            }}
+            title="Open Deep Learning Project Analysis Studio (Real-Time Dataset Analysis, Training & Experimentation)"
+            aria-label="Open Deep Learning Project Analysis Studio"
+          >
+            <Folder size={18} className="folder-icon text-violet-400" />
+            <span>DL Studio</span>
+            <span className="automl-folder-ai-pill dl-studio-ai-pill">
+              <Brain size={10} className="inline mr-0.5 text-white" /> DEEP
+            </span>
+          </button>
+        </div>
+
 
         {/* CONSOLIDATED TOOLS FOLDER DROPDOWN MENU NEAR LOGOUT */}
         <div className="folder-menu-container" ref={folderRef} style={{ position: 'relative' }}>
@@ -254,6 +284,62 @@ export default function Header({
               </div>
 
               {/* System & Analytics Section */}
+              <div className="folder-section border-top">
+                <div className="folder-section-label">AI & DEEP LEARNING INTELLIGENCE</div>
+
+                <button
+                  type="button"
+                  className="folder-item-btn"
+                  onClick={() => {
+                    if (onOpenDLStudio) onOpenDLStudio();
+                    setIsFolderOpen(false);
+                    closeMobileMenu();
+                  }}
+                >
+                  <Sparkles size={16} style={{ color: '#a855f7' }} />
+                  <div className="folder-item-text">
+                    <span className="item-title">DL Project Analysis Studio</span>
+                    <span className="item-desc">Real-time deep learning pipeline & simulator</span>
+                  </div>
+                  <span className="folder-item-badge purple">PRO</span>
+                </button>
+
+                <button
+                  type="button"
+                  className="folder-item-btn"
+                  onClick={() => {
+                    if (onOpenDLExecutive) onOpenDLExecutive();
+                    setIsFolderOpen(false);
+                    closeMobileMenu();
+                  }}
+                >
+                  <Brain size={16} style={{ color: '#c084fc' }} />
+                  <div className="folder-item-text">
+                    <span className="item-title">DL Architecture & Summary</span>
+                    <span className="item-desc">Executive guide, matrix & checklists</span>
+                  </div>
+                  <span className="folder-item-badge purple">DOCS</span>
+                </button>
+
+                <button
+                  type="button"
+                  className="folder-item-btn"
+                  onClick={() => {
+                    if (onOpenAutoML) onOpenAutoML();
+                    setIsFolderOpen(false);
+                    closeMobileMenu();
+                  }}
+                >
+                  <Cpu size={16} style={{ color: '#38bdf8' }} />
+                  <div className="folder-item-text">
+                    <span className="item-title">AutoML Studio</span>
+                    <span className="item-desc">Interactive model training & SHAP</span>
+                  </div>
+                  <span className="folder-item-badge cyan">AI</span>
+                </button>
+              </div>
+
+              {/* System & Monitoring Section */}
               <div className="folder-section border-top">
                 <div className="folder-section-label">SYSTEM & MONITORING</div>
 

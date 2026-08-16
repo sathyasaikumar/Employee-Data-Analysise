@@ -6,7 +6,7 @@
     "role": "Executive Admin",
     "avatar": "CA",
     "loginType": "email",
-    "totalLogins": 303,
+    "totalLogins": 397,
     "registeredAt": "2026-07-13T06:00:07.404Z"
   },
   {
@@ -79,7 +79,29 @@
     "role": "Senior Data Lead",
     "avatar": "S",
     "loginType": "phone",
-    "totalLogins": 130,
+    "totalLogins": 197,
     "registeredAt": "2026-08-14T03:30:04.187Z"
+  },
+  {
+    "id": "usr_1786820073901",
+    "name": "SATHYASAIKUMAR",
+    "email": "sathya@gmail.com",
+    "phone": null,
+    "role": "Senior Data Lead",
+    "avatar": "S",
+    "loginType": "email",
+    "totalLogins": 24,
+    "registeredAt": "2026-08-15T18:54:34.531Z"
+  },
+  {
+    "id": "usr_google_1786888593003",
+    "name": "Alex Morgan",
+    "email": "alex.morgan@gmail.com",
+    "phone": null,
+    "role": "Senior Data Lead",
+    "avatar": "AM",
+    "loginType": "google",
+    "totalLogins": 7,
+    "registeredAt": "2026-08-16T13:56:33.628Z"
   }
 ]

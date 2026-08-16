@@ -1,5 +1,735 @@
 [
   {
+    "id": "ds_1786888720798_v0v8r",
+    "originalName": "churn.csv",
+    "savedName": "dataset_1786888720519_1cyao4_churn.csv",
+    "filePath": "uploads/datasets/dataset_1786888720519_1cyao4_churn.csv",
+    "uploadDate": "2026-08-16T13:58:40.798Z",
+    "uploadDateFormatted": "Aug 16, 2026, 7:28 PM",
+    "fileSize": "427.64 KB",
+    "fileSizeBytes": 437903,
+    "fileType": "csv",
+    "rowCount": 3333,
+    "columnCount": 21,
+    "columns": [
+      {
+        "name": "State",
+        "type": "categorical",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "Account Length",
+        "type": "numeric",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "Area Code",
+        "type": "numeric",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "Phone",
+        "type": "categorical",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "Int'l Plan",
+        "type": "categorical",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "VMail Plan",
+        "type": "categorical",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "VMail Message",
+        "type": "numeric",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "Day Mins",
+        "type": "numeric",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "Day Calls",
+        "type": "numeric",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "Day Charge",
+        "type": "numeric",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "Eve Mins",
+        "type": "numeric",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "Eve Calls",
+        "type": "numeric",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "Eve Charge",
+        "type": "numeric",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "Night Mins",
+        "type": "numeric",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "Night Calls",
+        "type": "numeric",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "Night Charge",
+        "type": "numeric",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "Intl Mins",
+        "type": "numeric",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "Intl Calls",
+        "type": "numeric",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "Intl Charge",
+        "type": "numeric",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "CustServ Calls",
+        "type": "numeric",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "Churn?",
+        "type": "categorical",
+        "missingCount": 0,
+        "nullRatio": 0
+      }
+    ],
+    "healthScore": 100,
+    "missingCells": 0,
+    "duplicateCount": 0,
+    "completenessScore": 100,
+    "status": "Active"
+  },
+  {
+    "id": "ds_1786886965608_drb7y",
+    "originalName": "churn.csv",
+    "savedName": "dataset_1786886965470_3z9zy0_churn.csv",
+    "filePath": "uploads/datasets/dataset_1786886965470_3z9zy0_churn.csv",
+    "uploadDate": "2026-08-16T13:29:25.608Z",
+    "uploadDateFormatted": "Aug 16, 2026, 6:59 PM",
+    "fileSize": "427.64 KB",
+    "fileSizeBytes": 437903,
+    "fileType": "csv",
+    "rowCount": 3333,
+    "columnCount": 21,
+    "columns": [
+      {
+        "name": "State",
+        "type": "categorical",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "Account Length",
+        "type": "numeric",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "Area Code",
+        "type": "numeric",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "Phone",
+        "type": "categorical",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "Int'l Plan",
+        "type": "categorical",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "VMail Plan",
+        "type": "categorical",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "VMail Message",
+        "type": "numeric",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "Day Mins",
+        "type": "numeric",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "Day Calls",
+        "type": "numeric",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "Day Charge",
+        "type": "numeric",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "Eve Mins",
+        "type": "numeric",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "Eve Calls",
+        "type": "numeric",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "Eve Charge",
+        "type": "numeric",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "Night Mins",
+        "type": "numeric",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "Night Calls",
+        "type": "numeric",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "Night Charge",
+        "type": "numeric",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "Intl Mins",
+        "type": "numeric",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "Intl Calls",
+        "type": "numeric",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "Intl Charge",
+        "type": "numeric",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "CustServ Calls",
+        "type": "numeric",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "Churn?",
+        "type": "categorical",
+        "missingCount": 0,
+        "nullRatio": 0
+      }
+    ],
+    "healthScore": 100,
+    "missingCells": 0,
+    "duplicateCount": 0,
+    "completenessScore": 100,
+    "status": "Active"
+  },
+  {
+    "id": "ds_1786886155269_ed73f",
+    "originalName": "churn.csv",
+    "savedName": "dataset_1786886154977_zu9a59_churn.csv",
+    "filePath": "uploads/datasets/dataset_1786886154977_zu9a59_churn.csv",
+    "uploadDate": "2026-08-16T13:15:55.269Z",
+    "uploadDateFormatted": "Aug 16, 2026, 6:45 PM",
+    "fileSize": "427.64 KB",
+    "fileSizeBytes": 437903,
+    "fileType": "csv",
+    "rowCount": 3333,
+    "columnCount": 21,
+    "columns": [
+      {
+        "name": "State",
+        "type": "categorical",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "Account Length",
+        "type": "numeric",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "Area Code",
+        "type": "numeric",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "Phone",
+        "type": "categorical",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "Int'l Plan",
+        "type": "categorical",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "VMail Plan",
+        "type": "categorical",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "VMail Message",
+        "type": "numeric",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "Day Mins",
+        "type": "numeric",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "Day Calls",
+        "type": "numeric",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "Day Charge",
+        "type": "numeric",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "Eve Mins",
+        "type": "numeric",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "Eve Calls",
+        "type": "numeric",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "Eve Charge",
+        "type": "numeric",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "Night Mins",
+        "type": "numeric",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "Night Calls",
+        "type": "numeric",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "Night Charge",
+        "type": "numeric",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "Intl Mins",
+        "type": "numeric",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "Intl Calls",
+        "type": "numeric",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "Intl Charge",
+        "type": "numeric",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "CustServ Calls",
+        "type": "numeric",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "Churn?",
+        "type": "categorical",
+        "missingCount": 0,
+        "nullRatio": 0
+      }
+    ],
+    "healthScore": 100,
+    "missingCells": 0,
+    "duplicateCount": 0,
+    "completenessScore": 100,
+    "status": "Active"
+  },
+  {
+    "id": "ds_1786819663729_nlz7q",
+    "originalName": "churn.csv",
+    "savedName": "dataset_1786819663273_h02ahw_churn.csv",
+    "filePath": "uploads/datasets/dataset_1786819663273_h02ahw_churn.csv",
+    "uploadDate": "2026-08-15T18:47:43.729Z",
+    "uploadDateFormatted": "Aug 16, 2026, 12:17 AM",
+    "fileSize": "427.64 KB",
+    "fileSizeBytes": 437903,
+    "fileType": "csv",
+    "rowCount": 3333,
+    "columnCount": 21,
+    "columns": [
+      {
+        "name": "State",
+        "type": "categorical",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "Account Length",
+        "type": "numeric",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "Area Code",
+        "type": "numeric",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "Phone",
+        "type": "categorical",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "Int'l Plan",
+        "type": "categorical",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "VMail Plan",
+        "type": "categorical",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "VMail Message",
+        "type": "numeric",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "Day Mins",
+        "type": "numeric",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "Day Calls",
+        "type": "numeric",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "Day Charge",
+        "type": "numeric",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "Eve Mins",
+        "type": "numeric",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "Eve Calls",
+        "type": "numeric",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "Eve Charge",
+        "type": "numeric",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "Night Mins",
+        "type": "numeric",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "Night Calls",
+        "type": "numeric",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "Night Charge",
+        "type": "numeric",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "Intl Mins",
+        "type": "numeric",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "Intl Calls",
+        "type": "numeric",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "Intl Charge",
+        "type": "numeric",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "CustServ Calls",
+        "type": "numeric",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "Churn?",
+        "type": "categorical",
+        "missingCount": 0,
+        "nullRatio": 0
+      }
+    ],
+    "healthScore": 100,
+    "missingCells": 0,
+    "duplicateCount": 0,
+    "completenessScore": 100,
+    "status": "Active"
+  },
+  {
+    "id": "ds_1786806948767_b0cm0",
+    "originalName": "churn.csv",
+    "savedName": "dataset_1786806948375_larwmw_churn.csv",
+    "filePath": "uploads/datasets/dataset_1786806948375_larwmw_churn.csv",
+    "uploadDate": "2026-08-15T15:15:48.767Z",
+    "uploadDateFormatted": "Aug 15, 2026, 8:45 PM",
+    "fileSize": "427.64 KB",
+    "fileSizeBytes": 437903,
+    "fileType": "csv",
+    "rowCount": 3333,
+    "columnCount": 21,
+    "columns": [
+      {
+        "name": "State",
+        "type": "categorical",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "Account Length",
+        "type": "numeric",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "Area Code",
+        "type": "numeric",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "Phone",
+        "type": "categorical",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "Int'l Plan",
+        "type": "categorical",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "VMail Plan",
+        "type": "categorical",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "VMail Message",
+        "type": "numeric",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "Day Mins",
+        "type": "numeric",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "Day Calls",
+        "type": "numeric",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "Day Charge",
+        "type": "numeric",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "Eve Mins",
+        "type": "numeric",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "Eve Calls",
+        "type": "numeric",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "Eve Charge",
+        "type": "numeric",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "Night Mins",
+        "type": "numeric",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "Night Calls",
+        "type": "numeric",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "Night Charge",
+        "type": "numeric",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "Intl Mins",
+        "type": "numeric",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "Intl Calls",
+        "type": "numeric",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "Intl Charge",
+        "type": "numeric",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "CustServ Calls",
+        "type": "numeric",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "Churn?",
+        "type": "categorical",
+        "missingCount": 0,
+        "nullRatio": 0
+      }
+    ],
+    "healthScore": 100,
+    "missingCells": 0,
+    "duplicateCount": 0,
+    "completenessScore": 100,
+    "status": "Active"
+  },
+  {
     "id": "ds_1786763581096_ljfu7",
     "originalName": "churn.csv",
     "savedName": "dataset_1786763580876_4bjgcx_churn.csv",

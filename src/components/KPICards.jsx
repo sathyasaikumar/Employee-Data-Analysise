@@ -229,6 +229,7 @@ export default function KPICards({
           </div>
         );
 
+
       case 'currency':
         return <GlobalCurrencyChecker key="currency" onCurrencyChange={(info) => setCurrencyState(info)} />;
 

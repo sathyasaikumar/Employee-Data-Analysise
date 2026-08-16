@@ -15,6 +15,8 @@ import UserProfileModal from './components/UserProfileModal';
 import CookieConsentBanner from './components/CookieConsentBanner';
 import MLPipelineModal from './components/MLPipelineModal';
 import AutoMLEngineModal from './components/AutoMLEngineModal';
+import DeepLearningExecutiveModal from './components/DeepLearningExecutiveModal';
+import DeepLearningStudioModal from './components/DeepLearningStudioModal';
 import { SAMPLE_DATASETS } from './utils/sampleData';
 import { getStoredUser, logoutUser } from './utils/auth';
 import { startSession, endActiveSession } from './utils/activityTracker';
@@ -72,6 +74,8 @@ export default function App() {
   // AutoML Model Intelligence Engine Modal State
   const [isAutoMLOpen, setIsAutoMLOpen] = useState(false);
   const [isMLPipelineOpen, setIsMLPipelineOpen] = useState(false);
+  const [isDLExecutiveOpen, setIsDLExecutiveOpen] = useState(false);
+  const [isDLStudioOpen, setIsDLStudioOpen] = useState(false);
 
   // Theme State ('dark' | 'light')
   const [theme, setTheme] = useState(() => {
@@ -482,6 +486,8 @@ export default function App() {
         onToggleTheme={handleToggleTheme}
         onOpenMLPipeline={() => setIsMLPipelineOpen(true)}
         onOpenAutoML={() => setIsAutoMLOpen(true)}
+        onOpenDLExecutive={() => setIsDLExecutiveOpen(true)}
+        onOpenDLStudio={() => setIsDLStudioOpen(true)}
       />
 
       <UserProfileModal
@@ -731,6 +737,24 @@ export default function App() {
         isOpen={isMLPipelineOpen}
         onClose={() => setIsMLPipelineOpen(false)}
         activeDatasetName={datasetName || 'Workforce Dataset'}
+      />
+
+      {/* Executive Summary & Deep Learning Architecture Intelligence Hub Modal */}
+      <DeepLearningExecutiveModal
+        isOpen={isDLExecutiveOpen}
+        onClose={() => setIsDLExecutiveOpen(false)}
+      />
+
+      {/* Deep Learning Project Analysis Studio (Real-Time Learning, Training & Simulator) */}
+      <DeepLearningStudioModal
+        isOpen={isDLStudioOpen}
+        onClose={() => setIsDLStudioOpen(false)}
+        data={pageData && pageData.length > 0 ? pageData : SAMPLE_DATASETS.workforce?.data}
+        headers={headers && headers.length > 0 ? headers : SAMPLE_DATASETS.workforce?.headers}
+        schema={schema}
+        datasetName={datasetName || 'Workforce Dataset'}
+        theme={theme}
+        onToggleTheme={handleToggleTheme}
       />
     </div>
   );
