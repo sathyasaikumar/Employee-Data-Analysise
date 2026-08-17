@@ -27,6 +27,8 @@ import {
   uploadDatasetFile,
   fetchDatasetById,
   deleteDatasetById,
+  deleteAllDatasets,
+  deleteDatasetsBulk,
   seedSampleDatasets
 } from './utils/api';
 import { LayoutDashboard, Sliders, Table as TableIcon, Calculator, GitCompare, Loader2, Filter, Radio } from 'lucide-react';
@@ -285,10 +287,36 @@ export default function App() {
   // Delete dataset from History by ID
   const handleDeleteHistoryDataset = async (id) => {
     try {
-      await deleteDatasetById(id);
+      const res = await deleteDatasetById(id);
       await refreshDatasetsHistory();
+      return res;
     } catch (err) {
-      alert(`Failed to delete dataset: ${err.message}`);
+      console.error(`Failed to delete dataset: ${err.message}`);
+      throw err;
+    }
+  };
+
+  // Delete all datasets from History & disk
+  const handleDeleteAllHistoryDatasets = async () => {
+    try {
+      const res = await deleteAllDatasets();
+      await refreshDatasetsHistory();
+      return res;
+    } catch (err) {
+      console.error(`Failed to delete all datasets: ${err.message}`);
+      throw err;
+    }
+  };
+
+  // Bulk delete selected datasets from History & disk
+  const handleDeleteBulkHistoryDatasets = async (ids) => {
+    try {
+      const res = await deleteDatasetsBulk(ids);
+      await refreshDatasetsHistory();
+      return res;
+    } catch (err) {
+      console.error(`Failed to bulk delete datasets: ${err.message}`);
+      throw err;
     }
   };
 
@@ -411,7 +439,7 @@ export default function App() {
   const isFiltered = filteredCount !== totalRows;
 
   // Render Full Page Login Page when unauthenticated or requested
-  if ((!currentUser && !isGuestMode) || isLoginOpen) {
+  if (!currentUser || isLoginOpen) {
     return (
       <LoginPage
         onLoginSuccess={(user) => {
@@ -420,10 +448,6 @@ export default function App() {
           startLiveTracking(user, (stats) => setLiveStats(stats));
           setIsLoginOpen(false);
           setIsGuestMode(false);
-        }}
-        onGuestAccess={() => {
-          setIsGuestMode(true);
-          setIsLoginOpen(false);
         }}
         theme={theme}
         onToggleTheme={handleToggleTheme}
@@ -503,6 +527,8 @@ export default function App() {
           handleSelectDataset(id);
         }}
         onDeleteDataset={handleDeleteHistoryDataset}
+        onDeleteAllDatasets={handleDeleteAllHistoryDatasets}
+        onDeleteBulkDatasets={handleDeleteBulkHistoryDatasets}
         onRefreshDatasets={refreshDatasetsHistory}
         onSeedSample={() => handleLoadSampleDataset('workforce')}
         onOpenUpload={() => {
@@ -573,6 +599,8 @@ export default function App() {
               datasets={datasetsList}
               onSelectDataset={handleSelectHistoryDataset}
               onDeleteDataset={handleDeleteHistoryDataset}
+              onDeleteAllDatasets={handleDeleteAllHistoryDatasets}
+              onDeleteBulkDatasets={handleDeleteBulkHistoryDatasets}
               onRefresh={refreshDatasetsHistory}
               onSeedSample={async () => {
                 await seedSampleDatasets();
@@ -633,31 +661,31 @@ export default function App() {
                   className={`tab-btn ${activeTab === 'dashboard' ? 'active' : ''}`}
                   onClick={() => setActiveTab('dashboard')}
                 >
-                  <LayoutDashboard size={16} /> Executive Dashboard
+                  <LayoutDashboard size={13} /> Executive Dashboard
                 </button>
                 <button
                   className={`tab-btn ${activeTab === 'builder' ? 'active' : ''}`}
                   onClick={() => setActiveTab('builder')}
                 >
-                  <Sliders size={16} /> Custom Visual Studio
+                  <Sliders size={13} /> Custom Visual Studio
                 </button>
                 <button
                   className={`tab-btn ${activeTab === 'table' ? 'active' : ''}`}
                   onClick={() => setActiveTab('table')}
                 >
-                  <TableIcon size={16} /> Data Explorer Table ({filteredCount.toLocaleString()})
+                  <TableIcon size={13} /> Data Explorer Table ({filteredCount.toLocaleString()})
                 </button>
                 <button
                   className={`tab-btn ${activeTab === 'stats' ? 'active' : ''}`}
                   onClick={() => setActiveTab('stats')}
                 >
-                  <Calculator size={16} /> Statistical Profiling
+                  <Calculator size={13} /> Statistical Profiling
                 </button>
                 <button
                   className={`tab-btn ${activeTab === 'comparison' ? 'active' : ''}`}
                   onClick={() => setActiveTab('comparison')}
                 >
-                  <GitCompare size={16} /> Comparison Analysis
+                  <GitCompare size={13} /> Comparison Analysis
                 </button>
               </div>
 

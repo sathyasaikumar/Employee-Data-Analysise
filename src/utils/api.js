@@ -84,6 +84,36 @@ export async function deleteDatasetById(id) {
 }
 
 /**
+ * Delete ALL physical dataset files and clear metadata
+ */
+export async function deleteAllDatasets() {
+  const res = await fetch(`${API_BASE}/datasets`, {
+    method: 'DELETE'
+  });
+  const json = await res.json();
+  if (!res.ok || !json.success) {
+    throw new Error(json.error || 'Failed to delete all datasets');
+  }
+  return json;
+}
+
+/**
+ * Bulk delete selected physical dataset files by IDs
+ */
+export async function deleteDatasetsBulk(ids = []) {
+  if (!ids || ids.length === 0) return { success: true, deletedCount: 0 };
+  const queryParam = ids.join(',');
+  const res = await fetch(`${API_BASE}/datasets?ids=${encodeURIComponent(queryParam)}`, {
+    method: 'DELETE'
+  });
+  const json = await res.json();
+  if (!res.ok || !json.success) {
+    throw new Error(json.error || 'Failed to delete selected datasets');
+  }
+  return json;
+}
+
+/**
  * Seed initial sample datasets if storage is empty
  */
 export async function seedSampleDatasets() {
@@ -135,12 +165,18 @@ export async function loginUserApi(userData) {
 /**
  * Record user logout in backend database
  */
-export async function logoutUserApi(sessionId, userId) {
+export async function logoutUserApi(sessionOrData, maybeUserId) {
   try {
+    let payload = {};
+    if (typeof sessionOrData === 'object' && sessionOrData !== null) {
+      payload = sessionOrData;
+    } else {
+      payload = { sessionId: sessionOrData, userId: maybeUserId };
+    }
     const res = await fetch(`${API_BASE}/auth/logout`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ sessionId, userId })
+      body: JSON.stringify(payload)
     });
     const json = await res.json();
     return json;
@@ -164,6 +200,22 @@ export async function sendHeartbeatApi(sessionId, userId, clientTabId) {
     return json;
   } catch (err) {
     console.warn('Heartbeat ping failed:', err.message);
+    return { success: false, error: err.message };
+  }
+}
+
+/**
+ * Force a specific user session offline (Admin Action)
+ */
+export async function forceSessionOfflineApi(sessionId) {
+  try {
+    const res = await fetch(`${API_BASE}/live-users/sessions/${sessionId}/logout`, {
+      method: 'POST'
+    });
+    const json = await res.json();
+    return json;
+  } catch (err) {
+    console.warn('Failed to force session offline:', err.message);
     return { success: false, error: err.message };
   }
 }

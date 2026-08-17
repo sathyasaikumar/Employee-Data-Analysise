@@ -144,9 +144,16 @@ export async function stopLiveTracking(user) {
 
   window.removeEventListener('beforeunload', handleUnload);
 
-  if (user || currentSessionId) {
+  const activeSessId = currentSessionId || sessionStorage.getItem('corporate_session_id');
+
+  if (user || activeSessId) {
     try {
-      const res = await logoutUserApi(currentSessionId, user?.id);
+      const res = await logoutUserApi({
+        sessionId: activeSessId,
+        userId: user?.id,
+        email: user?.email,
+        username: user?.name || user?.fullName
+      });
       if (res?.stats) {
         notifySubscribers(res.stats);
       }
@@ -157,6 +164,11 @@ export async function stopLiveTracking(user) {
 
   currentSessionId = null;
   sessionStorage.removeItem('corporate_session_id');
+
+  // Trigger immediate fresh live stats pull to update all open UI components
+  setTimeout(() => {
+    refreshLiveStatsNow();
+  }, 100);
 }
 
 /**

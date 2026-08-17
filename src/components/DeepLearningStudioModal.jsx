@@ -1446,7 +1446,7 @@ export default function DeepLearningStudioModal({
         <div className="dl-studio-header">
           <div className="dl-studio-brand">
             <div className="dl-studio-brand-icon">
-              <Brain size={22} />
+              <Brain size={16} />
             </div>
             <div>
               <div className="dl-studio-title">
@@ -1471,7 +1471,7 @@ export default function DeepLearningStudioModal({
               }}
               title="Launch training simulator epoch loop"
             >
-              <Play size={14} /> Train Model Now
+              <Play size={12} /> Train Model Now
             </button>
 
             <button
@@ -1483,7 +1483,7 @@ export default function DeepLearningStudioModal({
               }}
               title="Launch real-time event streaming inference"
             >
-              <Zap size={14} /> Live Streamer
+              <Zap size={12} /> Live Streamer
             </button>
 
             <button
@@ -1492,7 +1492,7 @@ export default function DeepLearningStudioModal({
               onClick={() => setActiveTab('eda')}
               title="Inspect dataset profiling and health metrics"
             >
-              <BarChart3 size={14} /> Data Audit & EDA
+              <BarChart3 size={12} /> Data Audit & EDA
             </button>
 
             <button
@@ -1501,12 +1501,12 @@ export default function DeepLearningStudioModal({
               onClick={() => setActiveTab('code')}
               title="View & copy production PyTorch 2.0 script"
             >
-              <Code size={14} /> PyTorch Code
+              <Code size={12} /> PyTorch Code
             </button>
 
             {/* Quick Upload CSV */}
             <label className="dl-action-btn dl-action-btn-secondary" style={{ cursor: 'pointer' }}>
-              <Upload size={14} /> Upload Data
+              <Upload size={12} /> Upload Data
               <input type="file" accept=".csv,.xlsx,.json" onChange={handleFileUpload} style={{ display: 'none' }} />
             </label>
 
@@ -1519,9 +1519,9 @@ export default function DeepLearningStudioModal({
               aria-label="Toggle Theme Mode"
             >
               {currentTheme === 'dark' ? (
-                <Sun size={16} style={{ color: '#fbbf24' }} />
+                <Sun size={14} style={{ color: '#fbbf24' }} />
               ) : (
-                <Moon size={16} style={{ color: '#6366f1' }} />
+                <Moon size={14} style={{ color: '#6366f1' }} />
               )}
             </button>
 
@@ -1532,7 +1532,7 @@ export default function DeepLearningStudioModal({
               onClick={() => setIsFullScreen(prev => !prev)}
               title={isFullScreen ? 'Exit Fullscreen' : 'Fullscreen'}
             >
-              {isFullScreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
+              {isFullScreen ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
             </button>
 
             <button
@@ -1541,7 +1541,7 @@ export default function DeepLearningStudioModal({
               onClick={onClose}
               title="Close DL Studio"
             >
-              <X size={18} />
+              <X size={15} />
             </button>
           </div>
         </div>
@@ -1567,7 +1567,7 @@ export default function DeepLearningStudioModal({
                 className={`dl-tab-btn ${isActive ? 'active' : ''}`}
                 onClick={() => setActiveTab(tab.id)}
               >
-                <Icon size={15} style={{ color: isActive ? '#a78bfa' : '#64748b' }} />
+                <Icon size={13} style={{ color: isActive ? '#a78bfa' : '#64748b' }} />
                 <span>{tab.label}</span>
                 <span className="dl-tab-badge">{tab.count}</span>
               </button>
@@ -1582,21 +1582,21 @@ export default function DeepLearningStudioModal({
 
           {/* TAB 1: PROJECTS HUB & DATASET PICKER */}
           {activeTab === 'hub' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
               <div className="dl-card dl-card-glow">
                 <div className="dl-card-header">
                   <div>
                     <h3 className="dl-card-title">
-                      <Folder size={18} style={{ color: '#8b5cf6' }} />
+                      <Folder size={15} style={{ color: '#8b5cf6' }} />
                       Real-World Enterprise Deep Learning Projects Library
                     </h3>
-                    <p style={{ fontSize: '0.82rem', color: '#94a3b8', marginTop: '0.2rem' }}>
+                    <p style={{ fontSize: '0.66rem', color: '#94a3b8', marginTop: '0.1rem' }}>
                       Select any curated domain project to instantly load its benchmark dataset, model architecture parameters, and real-time simulator.
                     </p>
                   </div>
-                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <div style={{ display: 'flex', gap: '0.4rem' }}>
                     <label className="dl-action-btn dl-action-btn-primary" style={{ cursor: 'pointer' }}>
-                      <Upload size={14} /> Upload Custom CSV / Excel
+                      <Upload size={12} /> Upload Custom CSV / Excel
                       <input type="file" accept=".csv,.xlsx,.json" onChange={handleFileUpload} style={{ display: 'none' }} />
                     </label>
                   </div>
@@ -1649,7 +1649,7 @@ export default function DeepLearningStudioModal({
                               handleSelectProject(proj);
                             }}
                           >
-                            <Play size={14} /> Launch Project & Data
+                            <Play size={12} /> Launch Project & Data
                           </button>
                         </div>
                       </div>
@@ -1662,12 +1662,12 @@ export default function DeepLearningStudioModal({
 
           {/* TAB 2: DATA AUDIT & INTERACTIVE EDA */}
           {activeTab === 'eda' && (
-            <div style={{ display: 'grid', gridTemplateColumns: '320px 1fr', gap: '1.25rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '260px 1fr', gap: '0.65rem' }}>
               {/* Left Column: Health Score & Column Selector */}
               <div className="dl-card">
                 <div className="dl-card-header">
                   <h3 className="dl-card-title">
-                    <Activity size={18} style={{ color: '#06b6d4' }} /> Dataset Health
+                    <Activity size={14} style={{ color: '#06b6d4' }} /> Dataset Health
                   </h3>
                 </div>
 
@@ -1676,7 +1676,7 @@ export default function DeepLearningStudioModal({
                   <div className="dl-health-score-label">Data Quality Score</div>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', marginBottom: '0.85rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.35rem', marginBottom: '0.55rem' }}>
                   <div className="dl-metric-tile">
                     <span className="dl-metric-value">{datasetAnalysis.rowCount}</span>
                     <span className="dl-metric-label">Total Rows</span>
@@ -1688,9 +1688,9 @@ export default function DeepLearningStudioModal({
                 </div>
 
                 {/* SELECT ROW BATCH / DATA VOLUME SELECTOR */}
-                <label style={{ fontSize: '0.74rem', fontWeight: '700', color: '#94a3b8', marginBottom: '0.35rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <label style={{ fontSize: '0.66rem', fontWeight: '750', color: '#64748b', marginBottom: '0.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span>SELECT ROWS TO PROCESS:</span>
-                  <strong style={{ color: '#38bdf8' }}>
+                  <strong style={{ color: '#0284c7' }}>
                     {selectedRowCount === 'all' ? `All (${currentDatasetRows.length})` : `${selectedRowCount} Rows`}
                   </strong>
                 </label>
@@ -1698,7 +1698,18 @@ export default function DeepLearningStudioModal({
                   value={selectedRowCount}
                   onChange={(e) => setSelectedRowCount(e.target.value)}
                   className="dl-select-input"
-                  style={{ marginBottom: '0.85rem' }}
+                  style={{
+                    width: '100%',
+                    height: '38px',
+                    minHeight: '38px',
+                    fontSize: '13px',
+                    fontFamily: 'Arial, sans-serif',
+                    fontWeight: '600',
+                    padding: '6px 10px',
+                    lineHeight: 'normal',
+                    boxSizing: 'border-box',
+                    marginBottom: '0.65rem'
+                  }}
                 >
                   {[25, 50, 75, 100, 125, 150, 175, 200, 225, 250, 275, 300, 325, 350, 375, 400, 425, 450, 475, 500, 750, 1000].map(count => (
                     <option key={count} value={count}>
@@ -1708,25 +1719,36 @@ export default function DeepLearningStudioModal({
                   <option value="all">Unlimited / Full Dataset ({currentDatasetRows.length} rows)</option>
                 </select>
 
-                <label style={{ fontSize: '0.74rem', fontWeight: '700', color: '#94a3b8', marginBottom: '0.35rem', display: 'block' }}>
+                <label style={{ fontSize: '0.66rem', fontWeight: '750', color: '#64748b', marginBottom: '0.25rem', display: 'block' }}>
                   SELECT FEATURE COLUMN TO PROFILE:
                 </label>
                 <select
                   value={edaSelectedCol || ''}
                   onChange={(e) => setEdaSelectedCol(e.target.value)}
                   className="dl-select-input"
-                  style={{ marginBottom: '1rem' }}
+                  style={{
+                    width: '100%',
+                    height: '38px',
+                    minHeight: '38px',
+                    fontSize: '13px',
+                    fontFamily: 'Arial, sans-serif',
+                    fontWeight: '600',
+                    padding: '6px 10px',
+                    lineHeight: 'normal',
+                    boxSizing: 'border-box',
+                    marginBottom: '0.75rem'
+                  }}
                 >
                   {currentHeaders.map(h => (
                     <option key={h} value={h}>{h} {datasetAnalysis.numericalCols.includes(h) ? '(Numerical)' : '(Categorical)'}</option>
                   ))}
                 </select>
 
-                <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: '0.55rem' }}>
+                <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
                   <button
                     type="button"
                     className="dl-action-btn dl-action-btn-emerald"
-                    style={{ width: '100%', justifyContent: 'center', padding: '0.58rem 0.75rem' }}
+                    style={{ width: '100%', justifyContent: 'center', height: '26px', minHeight: '26px', fontSize: '0.66rem' }}
                     onClick={() => {
                       const results = effectiveRows.map((r, idx) => {
                         const score = +(Math.random() * 0.7 + 0.25).toFixed(4);
@@ -1744,17 +1766,17 @@ export default function DeepLearningStudioModal({
                       setShowBatchModal(true);
                     }}
                   >
-                    <Cpu size={15} style={{ flexShrink: 0 }} />
+                    <Cpu size={12} style={{ flexShrink: 0 }} />
                     <span>Run Batch Prediction ({datasetAnalysis.rowCount} rows)</span>
                   </button>
 
                   <button
                     type="button"
                     className="dl-action-btn dl-action-btn-primary"
-                    style={{ width: '100%', justifyContent: 'center' }}
+                    style={{ width: '100%', justifyContent: 'center', height: '26px', minHeight: '26px', fontSize: '0.66rem' }}
                     onClick={() => setActiveTab('architecture')}
                   >
-                    <ArrowRight size={14} /> Proceed to 12 DL Folders
+                    <ArrowRight size={12} /> Proceed to 12 DL Folders
                   </button>
                 </div>
               </div>
@@ -1763,27 +1785,42 @@ export default function DeepLearningStudioModal({
               <div className="dl-card">
                 <div className="dl-card-header">
                   <h3 className="dl-card-title">
-                    <BarChart3 size={18} style={{ color: '#a855f7' }} /> Feature Distribution & Statistical Summary
+                    <BarChart3 size={14} style={{ color: '#a855f7' }} /> Feature Distribution & Statistical Summary
                   </h3>
-                  <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Inspecting: <strong>{edaSelectedCol}</strong></span>
+                  <span style={{ fontSize: '0.66rem', color: '#94a3b8' }}>Inspecting: <strong style={{ color: '#38bdf8' }}>{edaSelectedCol}</strong></span>
                 </div>
 
                 {edaSelectedCol && datasetAnalysis.statsSummary[edaSelectedCol] && (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '0.75rem' }}>
-                      {Object.entries(datasetAnalysis.statsSummary[edaSelectedCol]).map(([key, val]) => (
-                        <div key={key} className="dl-metric-tile">
-                          <span className="dl-metric-value" style={{ fontSize: '1.1rem' }}>{String(val)}</span>
-                          <span className="dl-metric-label">{key}</span>
-                        </div>
-                      ))}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))', gap: '0.45rem' }}>
+                      {Object.entries(datasetAnalysis.statsSummary[edaSelectedCol]).map(([key, val]) => {
+                        const statLabels = {
+                          uniqueCount: 'Unique Count',
+                          topValues: 'Top Values',
+                          missingCount: 'Missing Count',
+                          mean: 'Mean Value',
+                          median: 'Median Value',
+                          std: 'Std Deviation',
+                          min: 'Min Value',
+                          max: 'Max Value',
+                          q25: '25th Percentile',
+                          q75: '75th Percentile'
+                        };
+                        const displayLabel = statLabels[key] || key.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase());
+                        return (
+                          <div key={key} className="dl-metric-tile">
+                            <span className="dl-metric-value" style={{ fontSize: '0.92rem', lineHeight: '1.2' }}>{String(val)}</span>
+                            <span className="dl-metric-label">{displayLabel}</span>
+                          </div>
+                        );
+                      })}
                     </div>
 
                     <div className="dl-eda-preview-box">
                       <h4 className="dl-eda-preview-title">
                         Feature Values Preview:
                       </h4>
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', maxHeight: '180px', overflowY: 'auto' }}>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem', maxHeight: '160px', overflowY: 'auto' }}>
                         {currentDatasetRows.slice(0, 20).map((r, idx) => (
                           <span key={idx} className="dl-eda-value-chip">
                             {String(r[edaSelectedCol])}
@@ -1799,7 +1836,7 @@ export default function DeepLearningStudioModal({
 
           {/* TAB 3: UNIQUE SPLIT-PANE CYBER ARCHITECTURE EXPLORER */}
           {activeTab === 'architecture' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
 
               {/* MASTER-DETAIL SPLIT PANE */}
               <div className="dl-arch-split-pane">
@@ -1808,7 +1845,7 @@ export default function DeepLearningStudioModal({
                 <div className="dl-folder-rack">
                   <div className="dl-rack-header">
                     <span>12 Architecture Families</span>
-                    <span style={{ fontSize: '0.68rem', color: '#38bdf8' }}>13 Folders</span>
+                    <span style={{ fontSize: '0.62rem', color: '#38bdf8' }}>13 Folders</span>
                   </div>
 
                   {DL_FOLDERS.map(f => {
@@ -1826,7 +1863,7 @@ export default function DeepLearningStudioModal({
                         }}
                       >
                         <div className="dl-rack-icon-box" style={{ background: isSelected ? 'linear-gradient(135deg, #7c3aed, #4f46e5)' : `${f.color}18`, borderColor: isSelected ? '#a78bfa' : `${f.color}40`, color: isSelected ? '#fff' : f.color }}>
-                          <IconComp size={16} />
+                          <IconComp size={13} />
                         </div>
                         <div className="dl-rack-text">
                           <div className="dl-rack-title">{f.title}</div>
@@ -1842,26 +1879,26 @@ export default function DeepLearningStudioModal({
 
                   {/* ACTIVE FOLDER BANNER */}
                   <div className="dl-folder-banner">
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
-                      <div className="dl-rack-icon-box" style={{ width: '42px', height: '42px', background: 'linear-gradient(135deg, #7c3aed, #4f46e5)', color: '#fff', boxShadow: '0 0 16px rgba(124, 58, 237, 0.4)' }}>
-                        {React.createElement(activeFolder.icon, { size: 20 })}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem' }}>
+                      <div className="dl-rack-icon-box" style={{ width: '28px', height: '28px', background: 'linear-gradient(135deg, #7c3aed, #4f46e5)', color: '#fff', boxShadow: '0 0 10px rgba(124, 58, 237, 0.4)' }}>
+                        {React.createElement(activeFolder.icon, { size: 14 })}
                       </div>
                       <div>
-                        <div style={{ fontSize: '1rem', fontWeight: '900', color: '#ffffff' }}>
+                        <div className="dl-folder-banner-title">
                           {activeFolder.title}
                         </div>
-                        <div style={{ fontSize: '0.74rem', color: '#94a3b8', marginTop: '0.15rem' }}>
+                        <div className="dl-folder-banner-desc">
                           {activeFolder.desc}
                         </div>
                       </div>
                     </div>
 
                     {/* Global / Folder Search Bar */}
-                    <div style={{ position: 'relative', minWidth: '240px' }}>
-                      <Search size={14} style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: '#64748b' }} />
+                    <div style={{ position: 'relative', minWidth: '200px' }}>
+                      <Search size={12} style={{ position: 'absolute', left: '0.6rem', top: '50%', transform: 'translateY(-50%)', color: '#64748b' }} />
                       <input
                         type="text"
-                        placeholder="Search models (ResNet, TabNet, VAE)..."
+                        placeholder="Search models..."
                         value={modelSearchQuery}
                         onChange={(e) => setModelSearchQuery(e.target.value)}
                         className="dl-search-input"
@@ -1871,7 +1908,7 @@ export default function DeepLearningStudioModal({
 
                   {/* MODELS CHIPS IN ACTIVE FOLDER */}
                   <div>
-                    <div style={{ fontSize: '0.74rem', fontWeight: '800', color: '#38bdf8', textTransform: 'uppercase', marginBottom: '0.4rem', letterSpacing: '0.04em' }}>
+                    <div style={{ fontSize: '0.64rem', fontWeight: '800', color: '#38bdf8', textTransform: 'uppercase', marginBottom: '0.25rem', letterSpacing: '0.04em' }}>
                       SELECT ARCHITECTURE TO INSPECT ({modelsInSelectedFolder.length} IN FOLDER):
                     </div>
                     <div className="dl-model-rack-buttons">
@@ -1884,7 +1921,7 @@ export default function DeepLearningStudioModal({
                             className={`dl-model-chip-btn ${isSelected ? 'active' : ''}`}
                             onClick={() => setVizModel(algo.id)}
                           >
-                            <Cpu size={15} style={{ color: isSelected ? '#ffffff' : '#a78bfa' }} />
+                            <Cpu size={12} style={{ color: isSelected ? '#ffffff' : '#a78bfa' }} />
                             <span>{algo.name}</span>
                           </button>
                         );
@@ -1893,50 +1930,53 @@ export default function DeepLearningStudioModal({
                   </div>
 
                   {/* ACTIVE ARCHITECTURE SHOWCASE CANVAS */}
-                  <div className="dl-card" style={{ padding: '1.25rem', gap: '1rem' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '0.85rem' }}>
+                  <div className="dl-card" style={{ padding: '0.85rem 1rem', gap: '0.75rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '0.55rem' }}>
                       <div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                          <h3 style={{ fontSize: '1.1rem', fontWeight: '900', color: '#ffffff' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+                          <h3 className="dl-arch-name-title">
                             {activeAlgorithm.name}
                           </h3>
-                          <span style={{ fontSize: '0.7rem', color: '#c084fc', background: 'rgba(192, 132, 252, 0.15)', padding: '0.15rem 0.5rem', borderRadius: '4px', border: '1px solid rgba(192, 132, 252, 0.3)', fontWeight: 'bold' }}>
+                          <span style={{ fontSize: '0.62rem', color: '#c084fc', background: 'rgba(192, 132, 252, 0.15)', padding: '0.1rem 0.45rem', borderRadius: '4px', border: '1px solid rgba(192, 132, 252, 0.3)', fontWeight: 'bold' }}>
                             {activeAlgorithm.folderName}
                           </span>
                         </div>
-                        <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '0.2rem' }}>
+                        <div className="dl-arch-meta-sub" style={{ fontSize: '0.68rem', color: '#94a3b8', marginTop: '0.15rem' }}>
                           Inference Latency: <strong style={{ color: '#38bdf8' }}>{activeAlgorithm.inferenceLatency}</strong> • Parameters: <strong style={{ color: '#34d399' }}>{activeAlgorithm.params}</strong> • Complexity: <strong style={{ color: '#fbbf24' }}>{activeAlgorithm.complexity}</strong>
                         </div>
                       </div>
 
                       {/* HERO ACTION BUTTONS */}
-                      <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap' }}>
                         <button
                           type="button"
                           className="dl-action-btn dl-action-btn-primary"
+                          style={{ height: '26px', minHeight: '26px', fontSize: '0.68rem', padding: '0 0.65rem' }}
                           onClick={() => {
                             setActiveTab('training');
                             setIsTraining(true);
                           }}
                         >
-                          <Play size={14} /> Train In Studio
+                          <Play size={12} /> Train In Studio
                         </button>
                         <button
                           type="button"
                           className="dl-action-btn dl-action-btn-amber"
+                          style={{ height: '26px', minHeight: '26px', fontSize: '0.68rem', padding: '0 0.65rem' }}
                           onClick={() => {
                             setActiveTab('streaming');
                             setSimRunning(true);
                           }}
                         >
-                          <Zap size={14} /> Live Stream Test
+                          <Zap size={12} /> Live Stream Test
                         </button>
                         <button
                           type="button"
                           className="dl-action-btn dl-action-btn-emerald"
+                          style={{ height: '26px', minHeight: '26px', fontSize: '0.68rem', padding: '0 0.65rem' }}
                           onClick={() => setActiveTab('code')}
                         >
-                          <Code size={14} /> PyTorch Code
+                          <Code size={12} /> PyTorch Code
                         </button>
                       </div>
                     </div>
@@ -1944,7 +1984,7 @@ export default function DeepLearningStudioModal({
                     {/* DYNAMIC FORWARD PASS TENSOR FLOW DIAGRAM */}
                     <div className="dl-flow-graph-container">
                       <div className="dl-flow-graph-title">
-                        <Layers3 size={15} style={{ color: '#a855f7' }} /> Forward Pass Tensor Computational Graph
+                        <Layers3 size={13} style={{ color: '#a855f7' }} /> Forward Pass Tensor Computational Graph
                       </div>
 
                       <div className="dl-flow-node-track">
@@ -1956,15 +1996,15 @@ export default function DeepLearningStudioModal({
                           const NodeIcon = node.icon || Cpu;
                           return (
                             <React.Fragment key={nIdx}>
-                              <div className="dl-layer-node" style={{ borderColor: node.color, flexShrink: 0, minWidth: '150px' }}>
-                                <NodeIcon size={18} style={{ color: node.color }} />
-                                <div>
+                              <div className="dl-layer-node" style={{ borderColor: node.color, flexShrink: 0, minWidth: '120px' }}>
+                                <NodeIcon size={14} style={{ color: node.color, flexShrink: 0 }} />
+                                <div style={{ overflow: 'hidden' }}>
                                   <div className="dl-layer-node-name">{node.name}</div>
                                   <div className="dl-layer-node-shape">{node.shape}</div>
                                 </div>
                               </div>
                               {nIdx < arr.length - 1 && (
-                                <ArrowRight size={18} style={{ color: '#64748b', flexShrink: 0 }} />
+                                <ArrowRight size={13} style={{ color: '#64748b', flexShrink: 0 }} />
                               )}
                             </React.Fragment>
                           );
@@ -1973,7 +2013,7 @@ export default function DeepLearningStudioModal({
                     </div>
 
                     {/* SPECIFICATIONS & FORMULATION DUAL GRID */}
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.65rem' }}>
                       <div className="dl-spec-card">
                         <div className="dl-spec-card-title-cyan">
                           Mathematical Mechanism & Concept
@@ -1991,10 +2031,10 @@ export default function DeepLearningStudioModal({
                           Performance Strengths & Ideal Datasets
                         </div>
                         <p className="dl-spec-card-text">
-                          <strong>Strengths:</strong> {activeAlgorithm.strengths}
+                          <strong style={{ color: '#059669' }}>Strengths:</strong> {activeAlgorithm.strengths}
                         </p>
-                        <p className="dl-spec-card-text" style={{ color: '#94a3b8' }}>
-                          <strong>Best Datasets:</strong> {activeAlgorithm.bestDataset}
+                        <p className="dl-spec-card-text" style={{ color: '#64748b', marginBottom: 0 }}>
+                          <strong style={{ color: '#0284c7' }}>Best Datasets:</strong> {activeAlgorithm.bestDataset}
                         </p>
                       </div>
                     </div>
@@ -2011,19 +2051,19 @@ export default function DeepLearningStudioModal({
                 <div className="dl-pipeline-header-bar">
                   <div className="dl-pipeline-title-group">
                     <h4>
-                      <Workflow size={20} style={{ color: '#38bdf8' }} />
+                      <Workflow size={16} style={{ color: '#38bdf8' }} />
                       Intelligent End-to-End CSV Model-Selection & Execution Pipeline
                     </h4>
                     <p>
                       Automated decision engine and neural compiler transforming raw CSV tabular data into optimized, quantized PyTorch 2.0 / ONNX production models.
                     </p>
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
-                    <span style={{ fontSize: '0.74rem', background: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8', padding: '0.3rem 0.75rem', borderRadius: '9999px', border: '1px solid rgba(56, 189, 248, 0.4)', fontWeight: '800', display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
-                      <Zap size={13} /> 14 Active Autonomous Stages
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', flexWrap: 'wrap' }}>
+                    <span style={{ fontSize: '0.66rem', background: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8', padding: '0.2rem 0.55rem', borderRadius: '9999px', border: '1px solid rgba(56, 189, 248, 0.4)', fontWeight: '800', display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}>
+                      <Zap size={11} /> 14 Active Autonomous Stages
                     </span>
-                    <span style={{ fontSize: '0.74rem', background: 'rgba(16, 185, 129, 0.15)', color: '#34d399', padding: '0.3rem 0.75rem', borderRadius: '9999px', border: '1px solid rgba(16, 185, 129, 0.4)', fontWeight: '800', display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
-                      <CheckCircle2 size={13} /> PyTorch 2.0 Ready
+                    <span style={{ fontSize: '0.66rem', background: 'rgba(16, 185, 129, 0.15)', color: '#34d399', padding: '0.2rem 0.55rem', borderRadius: '9999px', border: '1px solid rgba(16, 185, 129, 0.4)', fontWeight: '800', display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}>
+                      <CheckCircle2 size={11} /> PyTorch 2.0 Ready
                     </span>
                   </div>
                 </div>
@@ -2037,7 +2077,7 @@ export default function DeepLearningStudioModal({
                         className="dl-pipeline-btn-primary"
                         onClick={handleStartPipelineSim}
                       >
-                        <Play size={15} />
+                        <Play size={13} />
                         {pipelineSimStep === 0 ? '▶ Run Autonomous AI Pipeline' : '▶ Resume Simulation'}
                       </button>
                     ) : (
@@ -2047,7 +2087,7 @@ export default function DeepLearningStudioModal({
                         style={{ background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)', borderColor: 'rgba(245, 158, 11, 0.6)' }}
                         onClick={handlePausePipelineSim}
                       >
-                        <Pause size={15} /> Pause Pipeline
+                        <Pause size={13} /> Pause Pipeline
                       </button>
                     )}
 
@@ -2057,7 +2097,7 @@ export default function DeepLearningStudioModal({
                       onClick={handleResetPipelineSim}
                       title="Reset Pipeline to Initial State"
                     >
-                      <RotateCcw size={14} /> Reset
+                      <RotateCcw size={12} /> Reset
                     </button>
 
                     <div className="dl-pipeline-speed-box">
@@ -2083,7 +2123,7 @@ export default function DeepLearningStudioModal({
                       onClick={() => setPipelineShowLogs(!pipelineShowLogs)}
                       style={{ color: pipelineShowLogs ? '#34d399' : '#cbd5e1' }}
                     >
-                      <Terminal size={14} /> {pipelineShowLogs ? 'Hide Logs' : 'Live Logs'}
+                      <Terminal size={12} /> {pipelineShowLogs ? 'Hide Logs' : 'Live Logs'}
                     </button>
                   </div>
 
@@ -2115,23 +2155,23 @@ export default function DeepLearningStudioModal({
                 {/* EXPANDABLE TERMINAL LOGS DRAWER */}
                 {pipelineShowLogs && (
                   <div className="dl-pipeline-terminal-box">
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.4rem', marginBottom: '0.4rem' }}>
-                      <span style={{ fontWeight: '800', color: '#38bdf8', display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.74rem' }}>
-                        <Terminal size={14} style={{ color: '#38bdf8' }} /> AUTONOMOUS AI PIPELINE TELEMETRY CONSOLE
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.35rem', marginBottom: '0.35rem' }}>
+                      <span style={{ fontWeight: '800', color: '#38bdf8', display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.68rem' }}>
+                        <Terminal size={12} style={{ color: '#38bdf8' }} /> AUTONOMOUS AI PIPELINE TELEMETRY CONSOLE
                       </span>
-                      <span style={{ fontSize: '0.7rem', color: '#94a3b8', fontWeight: '600' }}>
+                      <span style={{ fontSize: '0.64rem', color: '#94a3b8', fontWeight: '600' }}>
                         {pipelineSimLogs.length} events logged
                       </span>
                     </div>
                     {pipelineSimLogs.length === 0 ? (
-                      <div style={{ color: '#94a3b8', fontStyle: 'italic', padding: '0.35rem 0' }}>
+                      <div style={{ color: '#94a3b8', fontStyle: 'italic', padding: '0.3rem 0', fontSize: '0.66rem' }}>
                         No events logged yet. Click "▶ Run Autonomous AI Pipeline" to stream live execution telemetry...
                       </div>
                     ) : (
                       pipelineSimLogs.map((log, idx) => (
                         <div key={idx} className={`dl-pipeline-terminal-line ${log.includes('Finished') ? 'success' : ''}`}>
-                          <ChevronRight size={13} style={{ flexShrink: 0, marginTop: '2px', color: '#38bdf8' }} />
-                          <span style={{ color: log.includes('Finished') ? '#34d399' : '#e2e8f0' }}>{log}</span>
+                          <ChevronRight size={11} style={{ flexShrink: 0, marginTop: '2px', color: '#38bdf8' }} />
+                          <span style={{ color: log.includes('Finished') ? '#34d399' : '#e2e8f0', fontSize: '0.66rem' }}>{log}</span>
                         </div>
                       ))
                     )}
@@ -2155,7 +2195,7 @@ export default function DeepLearningStudioModal({
                       onClick={() => setPipelinePhaseFilter(1)}
                       style={{ color: pipelinePhaseFilter === 1 ? '#10b981' : undefined }}
                     >
-                      <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#10b981', display: 'inline-block' }} />
+                      <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#10b981', display: 'inline-block' }} />
                       Phase 1: Ingestion & DNA (3)
                     </button>
                     <button
@@ -2164,7 +2204,7 @@ export default function DeepLearningStudioModal({
                       onClick={() => setPipelinePhaseFilter(2)}
                       style={{ color: pipelinePhaseFilter === 2 ? '#a78bfa' : undefined }}
                     >
-                      <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#8b5cf6', display: 'inline-block' }} />
+                      <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#8b5cf6', display: 'inline-block' }} />
                       Phase 2: Intelligence (4)
                     </button>
                     <button
@@ -2173,7 +2213,7 @@ export default function DeepLearningStudioModal({
                       onClick={() => setPipelinePhaseFilter(3)}
                       style={{ color: pipelinePhaseFilter === 3 ? '#fbbf24' : undefined }}
                     >
-                      <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#f59e0b', display: 'inline-block' }} />
+                      <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#f59e0b', display: 'inline-block' }} />
                       Phase 3: Training & Tuning (3)
                     </button>
                     <button
@@ -2182,7 +2222,7 @@ export default function DeepLearningStudioModal({
                       onClick={() => setPipelinePhaseFilter(4)}
                       style={{ color: pipelinePhaseFilter === 4 ? '#38bdf8' : undefined }}
                     >
-                      <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#38bdf8', display: 'inline-block' }} />
+                      <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#38bdf8', display: 'inline-block' }} />
                       Phase 4: Production & Edge (4)
                     </button>
                   </div>
@@ -2194,21 +2234,21 @@ export default function DeepLearningStudioModal({
                       className={`dl-pipeline-view-tab ${pipelineViewMode === 'dag' ? 'active' : ''}`}
                       onClick={() => setPipelineViewMode('dag')}
                     >
-                      <Network size={13} /> Flow DAG
+                      <Network size={12} /> Flow DAG
                     </button>
                     <button
                       type="button"
                       className={`dl-pipeline-view-tab ${pipelineViewMode === 'matrix' ? 'active' : ''}`}
                       onClick={() => setPipelineViewMode('matrix')}
                     >
-                      <Layers3 size={13} /> 4-Phase Matrix
+                      <Layers3 size={12} /> 4-Phase Matrix
                     </button>
                     <button
                       type="button"
                       className={`dl-pipeline-view-tab ${pipelineViewMode === 'inspector' ? 'active' : ''}`}
                       onClick={() => setPipelineViewMode('inspector')}
                     >
-                      <Code size={13} /> Deep Inspector
+                      <Code size={12} /> Deep Inspector
                     </button>
                   </div>
                 </div>
@@ -2252,20 +2292,20 @@ export default function DeepLearningStudioModal({
                                     color: st.phaseColor
                                   }}
                                 >
-                                  <IconComp size={16} />
+                                  <IconComp size={13} />
                                 </div>
                               </div>
 
-                              <div className="dl-pipeline-card-main-info" style={{ marginTop: '0.6rem' }}>
+                              <div className="dl-pipeline-card-main-info" style={{ marginTop: '0.4rem' }}>
                                 <div className="dl-pipeline-card-title">{st.title}</div>
                                 <div className="dl-pipeline-card-subtitle">{st.subtitle}</div>
                               </div>
 
-                              <div className="dl-pipeline-card-analogy" style={{ marginTop: '0.5rem' }}>
+                              <div className="dl-pipeline-card-analogy" style={{ marginTop: '0.35rem' }}>
                                 💡 {st.easyAnalogy}
                               </div>
 
-                              <div className="dl-pipeline-tech-tag-list" style={{ marginTop: '0.6rem' }}>
+                              <div className="dl-pipeline-tech-tag-list" style={{ marginTop: '0.4rem' }}>
                                 {st.techStack.slice(0, 3).map((tech, tIdx) => (
                                   <span key={tIdx} className="dl-pipeline-tech-tag">
                                     {tech}
@@ -2283,15 +2323,15 @@ export default function DeepLearningStudioModal({
                               >
                                 {isCompleted ? (
                                   <>
-                                    <CheckCircle2 size={12} style={{ color: '#34d399' }} /> Passed
+                                    <CheckCircle2 size={11} style={{ color: '#34d399' }} /> Passed
                                   </>
                                 ) : isSimActive ? (
                                   <>
-                                    <RefreshCw size={12} className="dl-spin" style={{ color: '#38bdf8' }} /> Running
+                                    <RefreshCw size={11} className="dl-spin" style={{ color: '#38bdf8' }} /> Running
                                   </>
                                 ) : (
                                   <>
-                                    <Clock size={12} /> Standby
+                                    <Clock size={11} /> Standby
                                   </>
                                 )}
                               </span>
@@ -2304,7 +2344,7 @@ export default function DeepLearningStudioModal({
                                   if (st.targetTab) setActiveTab(st.targetTab);
                                 }}
                               >
-                                Jump to Tab <MoveRight size={12} />
+                                Jump <MoveRight size={11} />
                               </button>
                             </div>
                           </div>
@@ -2406,12 +2446,12 @@ export default function DeepLearningStudioModal({
                   return (
                     <div className="dl-pipeline-inspector-card" style={{ borderTop: `2px solid ${activeStage.phaseColor}` }}>
                       <div className="dl-pipeline-inspector-header">
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem' }}>
                           <div
                             style={{
-                              width: '38px',
-                              height: '38px',
-                              borderRadius: '10px',
+                              width: '28px',
+                              height: '28px',
+                              borderRadius: '6px',
                               background: `${activeStage.phaseColor}20`,
                               border: `1px solid ${activeStage.phaseColor}50`,
                               color: activeStage.phaseColor,
@@ -2420,39 +2460,40 @@ export default function DeepLearningStudioModal({
                               justifyContent: 'center'
                             }}
                           >
-                            <IconComp size={20} />
+                            <IconComp size={14} />
                           </div>
                           <div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                              <span style={{ fontSize: '0.72rem', background: `${activeStage.phaseColor}25`, color: activeStage.phaseColor, padding: '0.15rem 0.5rem', borderRadius: '4px', fontWeight: '900' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+                              <span style={{ fontSize: '0.62rem', background: `${activeStage.phaseColor}25`, color: activeStage.phaseColor, padding: '0.1rem 0.4rem', borderRadius: '4px', fontWeight: '900' }}>
                                 STAGE {activeStage.num} OF 14
                               </span>
-                              <span style={{ fontSize: '0.72rem', color: '#94a3b8' }}>
+                              <span style={{ fontSize: '0.64rem', color: '#94a3b8' }}>
                                 {activeStage.phaseName}
                               </span>
                             </div>
-                            <h3 style={{ fontSize: '1.05rem', fontWeight: '900', color: '#ffffff', margin: '0.2rem 0 0 0' }}>
+                            <h3 className="dl-inspector-stage-title" style={{ margin: '0.15rem 0 0 0' }}>
                               {activeStage.title} — {activeStage.subtitle}
                             </h3>
                           </div>
                         </div>
 
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                           <button
                             type="button"
                             className="dl-pipeline-btn-primary"
+                            style={{ height: '26px', minHeight: '26px', fontSize: '0.68rem', padding: '0 0.65rem' }}
                             onClick={() => {
                               if (activeStage.targetTab) setActiveTab(activeStage.targetTab);
                             }}
                           >
-                            <Sparkles size={14} /> Jump to {activeStage.targetTab.toUpperCase()} Studio
+                            <Sparkles size={12} /> Jump to {activeStage.targetTab.toUpperCase()} Studio
                           </button>
                         </div>
                       </div>
 
                       <div className="dl-pipeline-inspector-grid">
                         {/* Left: Plain English Concept & Tensor Flow */}
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.55rem' }}>
                           <div>
                             <label className="dl-inspector-label">
                               💡 How It Works (In Plain English):
@@ -2466,8 +2507,8 @@ export default function DeepLearningStudioModal({
                             <label className="dl-inspector-label">
                               🧬 Input ➔ Transformation ➔ Output Tensor Flow:
                             </label>
-                            <div className="dl-pipeline-tensor-flow-box" style={{ marginTop: '0.35rem' }}>
-                              <Layers size={14} style={{ color: activeStage.phaseColor, flexShrink: 0 }} />
+                            <div className="dl-pipeline-tensor-flow-box" style={{ marginTop: '0.25rem' }}>
+                              <Layers size={13} style={{ color: activeStage.phaseColor, flexShrink: 0 }} />
                               <span>{activeStage.tensorFlow}</span>
                             </div>
                           </div>
@@ -2476,14 +2517,14 @@ export default function DeepLearningStudioModal({
                             <label className="dl-inspector-label">
                               ⚡ Real-Time Telemetry & Modern Tech Stack:
                             </label>
-                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem', marginTop: '0.35rem' }}>
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.25rem', marginTop: '0.25rem' }}>
                               {activeStage.techStack.map((t, idx) => (
                                 <span key={idx} className="dl-inspector-tech-pill">
                                   {t}
                                 </span>
                               ))}
                             </div>
-                            <div style={{ fontSize: '0.74rem', color: '#34d399', marginTop: '0.45rem', fontWeight: '700' }}>
+                            <div style={{ fontSize: '0.66rem', color: '#34d399', marginTop: '0.35rem', fontWeight: '700' }}>
                               📊 {activeStage.telemetry}
                             </div>
                           </div>
@@ -2491,7 +2532,7 @@ export default function DeepLearningStudioModal({
 
                         {/* Right: Production PyTorch / Python Code Snippet */}
                         <div>
-                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.35rem' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
                             <label className="dl-inspector-label">
                               💻 Under-The-Hood PyTorch 2.0 Logic:
                             </label>
@@ -2506,14 +2547,14 @@ export default function DeepLearningStudioModal({
                                 background: 'transparent',
                                 border: 'none',
                                 color: isCopied ? '#34d399' : '#94a3b8',
-                                fontSize: '0.7rem',
+                                fontSize: '0.66rem',
                                 display: 'inline-flex',
                                 alignItems: 'center',
                                 gap: '0.25rem',
                                 cursor: 'pointer'
                               }}
                             >
-                              {isCopied ? <Check size={12} /> : <Copy size={12} />} {isCopied ? 'Copied!' : 'Copy Snippet'}
+                              {isCopied ? <Check size={11} /> : <Copy size={11} />} {isCopied ? 'Copied!' : 'Copy Snippet'}
                             </button>
                           </div>
 

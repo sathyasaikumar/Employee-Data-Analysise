@@ -45,33 +45,33 @@ export default function SidebarFilters({
   return (
     <aside className={`sidebar ${isMobileOpen ? 'mobile-open' : ''}`}>
       {/* Sidebar Header */}
-      <div className="sidebar-header" style={{ paddingBottom: '0.85rem', borderBottom: '1px solid var(--border-color)', marginBottom: '1rem' }}>
-        <div className="sidebar-title" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 700, fontSize: '1rem', color: 'var(--text-bright)' }}>
-          <SlidersHorizontal size={18} className="text-blue-400" />
+      <div className="sidebar-header" style={{ paddingBottom: '0.65rem', borderBottom: '1px solid var(--border-color)', marginBottom: '0.75rem' }}>
+        <div className="sidebar-title" style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', fontWeight: 800, fontSize: '0.88rem', color: 'var(--text-bright)', fontFamily: 'Arial, sans-serif' }}>
+          <SlidersHorizontal size={15} className="text-blue-400" />
           <span>Filter Options</span>
           {activeFilterCount > 0 && (
             <span style={{ 
               background: 'rgba(245, 158, 11, 0.2)', 
               color: '#fbbf24', 
-              fontSize: '0.75rem', 
-              padding: '0.15rem 0.5rem', 
-              borderRadius: '10px',
-              fontWeight: 700 
+              fontSize: '0.65rem', 
+              padding: '0.1rem 0.4rem', 
+              borderRadius: '8px',
+              fontWeight: 800 
             }}>
               {activeFilterCount} Active
             </span>
           )}
         </div>
 
-        <div className="sidebar-header-actions" style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
+        <div className="sidebar-header-actions" style={{ display: 'flex', gap: '0.35rem', alignItems: 'center' }}>
           {activeFilterCount > 0 && (
             <button 
               className="btn btn-outline" 
-              style={{ padding: '0.25rem 0.6rem', fontSize: '0.75rem', color: 'var(--accent-rose)', borderColor: 'rgba(239,68,68,0.3)' }} 
+              style={{ padding: '0.2rem 0.5rem', fontSize: '0.68rem', color: 'var(--accent-rose)', borderColor: 'rgba(239,68,68,0.3)', borderRadius: '4px' }} 
               onClick={onResetFilters}
               title="Reset all filter options"
             >
-              <RotateCcw size={12} /> Clear All
+              <RotateCcw size={11} /> Clear All
             </button>
           )}
           {onCloseMobile && (
@@ -81,33 +81,33 @@ export default function SidebarFilters({
               title="Close filter panel"
               aria-label="Close filters"
             >
-              <X size={16} />
+              <X size={14} />
             </button>
           )}
         </div>
       </div>
 
       {/* Global Text Search */}
-      <div className="filter-group" style={{ marginBottom: '1.25rem' }}>
-        <label className="filter-label" style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600, marginBottom: '0.4rem', display: 'block' }}>
+      <div className="filter-group" style={{ marginBottom: '0.85rem' }}>
+        <label className="filter-label" style={{ fontSize: '0.68rem', color: 'var(--text-muted)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '0.3rem', display: 'block', fontFamily: 'Arial, sans-serif' }}>
           Global Text Search
         </label>
         <div style={{ position: 'relative' }}>
-          <Search size={14} style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+          <Search size={13} style={{ position: 'absolute', left: '0.65rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
           <input 
             type="text"
             className="filter-input"
             placeholder="Search keywords across all rows..."
             value={filters.search || ''}
             onChange={(e) => onFilterChange('search', e.target.value)}
-            style={{ paddingLeft: '2.2rem' }}
+            style={{ paddingLeft: '1.9rem', fontSize: '0.72rem', height: '28px', borderRadius: '5px' }}
           />
           {filters.search && (
             <button 
               onClick={() => onFilterChange('search', '')}
-              style={{ position: 'absolute', right: '0.6rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
+              style={{ position: 'absolute', right: '0.5rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
             >
-              <X size={14} />
+              <X size={13} />
             </button>
           )}
         </div>
@@ -128,27 +128,27 @@ export default function SidebarFilters({
         );
 
         return (
-          <div className="filter-group" key={header} style={{ marginBottom: '1.25rem' }}>
+          <div className="filter-group" key={header} style={{ marginBottom: '0.85rem' }}>
             <div 
               style={{ 
                 display: 'flex', 
-                justify: 'space-between', 
+                justifyContent: 'space-between', 
                 alignItems: 'center', 
                 cursor: 'pointer',
-                marginBottom: '0.4rem' 
+                marginBottom: '0.3rem' 
               }}
               onClick={() => toggleGroupCollapse(header)}
             >
-              <label className="filter-label" style={{ cursor: 'pointer', margin: 0 }}>
+              <label className="filter-label" style={{ cursor: 'pointer', margin: 0, fontSize: '0.68rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em', fontFamily: 'Arial, sans-serif' }}>
                 {header}
                 {selectedValues.length > 0 && (
-                  <span style={{ color: 'var(--accent-blue)', marginLeft: '0.35rem', fontSize: '0.75rem' }}>
+                  <span style={{ color: 'var(--accent-blue)', marginLeft: '0.3rem', fontSize: '0.68rem' }}>
                     ({selectedValues.length})
                   </span>
                 )}
               </label>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
                 {selectedValues.length > 0 && (
                   <button
                     type="button"
@@ -163,7 +163,7 @@ export default function SidebarFilters({
                       background: 'none',
                       border: 'none',
                       color: 'var(--text-muted)',
-                      fontSize: '0.7rem',
+                      fontSize: '0.65rem',
                       cursor: 'pointer',
                       textDecoration: 'underline'
                     }}
@@ -172,7 +172,7 @@ export default function SidebarFilters({
                     Clear
                   </button>
                 )}
-                {isCollapsed ? <ChevronRight size={15} /> : <ChevronDown size={15} />}
+                {isCollapsed ? <ChevronRight size={13} /> : <ChevronDown size={13} />}
               </div>
             </div>
 
@@ -186,20 +186,22 @@ export default function SidebarFilters({
                     onChange={(e) => setCategorySearch({ ...categorySearch, [header]: e.target.value })}
                     style={{
                       width: '100%',
-                      padding: '0.35rem 0.6rem',
-                      fontSize: '0.75rem',
+                      padding: '0.25rem 0.5rem',
+                      fontSize: '0.70rem',
+                      height: '26px',
                       background: 'var(--bg-glass)',
                       border: '1px solid var(--border-color)',
-                      borderRadius: '6px',
+                      borderRadius: '5px',
                       color: 'var(--text-bright)',
-                      marginBottom: '0.4rem'
+                      marginBottom: '0.35rem',
+                      boxSizing: 'border-box'
                     }}
                   />
                 )}
 
-                <div className="checkbox-group" style={{ maxHeight: '180px', overflowY: 'auto', paddingRight: '0.2rem' }}>
+                <div className="checkbox-group" style={{ maxHeight: '260px', overflowY: 'auto', paddingRight: '0.2rem' }}>
                   {/* Select All Checkbox Row */}
-                  <label className="checkbox-label select-all-row" style={{ fontSize: '0.8rem', padding: '0.25rem 0', borderBottom: '1px dashed var(--border-color)', marginBottom: '0.25rem', fontWeight: 700 }}>
+                  <label className="checkbox-label select-all-row" style={{ fontSize: '0.72rem', padding: '0.2rem 0', borderBottom: '1px dashed var(--border-color)', marginBottom: '0.2rem', fontWeight: 800, fontFamily: 'Arial, sans-serif' }}>
                     <input 
                       type="checkbox"
                       checked={selectedValues.length === categories.length && categories.length > 0}
@@ -210,8 +212,8 @@ export default function SidebarFilters({
                         });
                       }}
                     />
-                    <span style={{ color: 'var(--accent-blue)', fontWeight: 700 }}>Select All</span>
-                    <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)', marginLeft: 'auto', fontWeight: 700 }}>
+                    <span style={{ color: 'var(--accent-blue)', fontWeight: 800 }}>Select All</span>
+                    <span style={{ fontSize: '0.65rem', color: 'var(--text-dim)', marginLeft: 'auto', fontWeight: 800 }}>
                       ({categories.length})
                     </span>
                   </label>
@@ -219,7 +221,7 @@ export default function SidebarFilters({
                   {filteredCategories.map(cat => {
                     const isChecked = selectedValues.includes(cat);
                     return (
-                      <label className="checkbox-label" key={cat} style={{ fontSize: '0.8rem', padding: '0.25rem 0' }}>
+                      <label className="checkbox-label" key={cat} style={{ fontSize: '0.72rem', padding: '0.2rem 0', fontFamily: 'Arial, sans-serif' }}>
                         <input 
                           type="checkbox"
                           checked={isChecked}
@@ -234,10 +236,10 @@ export default function SidebarFilters({
                             });
                           }}
                         />
-                        <span style={{ color: isChecked ? 'var(--text-bright)' : 'var(--text-muted)', fontWeight: isChecked ? 600 : 400 }}>
+                        <span style={{ color: isChecked ? 'var(--text-bright)' : 'var(--text-muted)', fontWeight: isChecked ? 700 : 400 }}>
                           {cat}
                         </span>
-                        <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)', marginLeft: 'auto' }}>
+                        <span style={{ fontSize: '0.65rem', color: 'var(--text-dim)', marginLeft: 'auto' }}>
                           ({freqMap[cat]})
                         </span>
                       </label>
@@ -275,27 +277,27 @@ export default function SidebarFilters({
         };
 
         return (
-          <div className="filter-group" key={header} style={{ marginBottom: '1.25rem' }}>
+          <div className="filter-group" key={header} style={{ marginBottom: '0.85rem' }}>
             <div 
-              style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', marginBottom: '0.4rem' }}
+              style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', marginBottom: '0.3rem' }}
               onClick={() => toggleGroupCollapse(header)}
             >
-              <label className="filter-label" style={{ cursor: 'pointer', margin: 0 }}>
+              <label className="filter-label" style={{ cursor: 'pointer', margin: 0, fontSize: '0.68rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em', fontFamily: 'Arial, sans-serif' }}>
                 {header} Range
                 {!isAll && (
-                  <span style={{ color: 'var(--accent-amber)', marginLeft: '0.35rem', fontSize: '0.75rem' }}>
+                  <span style={{ color: 'var(--accent-amber)', marginLeft: '0.3rem', fontSize: '0.68rem' }}>
                     (Filtered)
                   </span>
                 )}
               </label>
 
-              {isCollapsed ? <ChevronRight size={15} /> : <ChevronDown size={15} />}
+              {isCollapsed ? <ChevronRight size={13} /> : <ChevronDown size={13} />}
             </div>
 
             {!isCollapsed && (
               <>
                 {/* Level Presets */}
-                <div className="level-presets-flex" style={{ marginBottom: '0.6rem' }}>
+                <div className="level-presets-flex" style={{ marginBottom: '0.45rem' }}>
                   <button
                     type="button"
                     className={`level-btn level-low ${isLow ? 'active' : ''}`}
@@ -340,18 +342,20 @@ export default function SidebarFilters({
                     value={currentRange[0]}
                     min={stat.min}
                     max={stat.max}
+                    style={{ fontSize: '0.72rem', height: '26px', padding: '0.2rem 0.45rem', borderRadius: '5px' }}
                     onChange={(e) => {
                       const val = Number(e.target.value);
                       setRange(val, currentRange[1]);
                     }}
                   />
-                  <span style={{ color: 'var(--text-muted)' }}>-</span>
+                  <span style={{ color: 'var(--text-muted)', fontSize: '0.72rem', fontWeight: 700 }}>-</span>
                   <input 
                     type="number"
                     className="filter-input"
                     value={currentRange[1]}
                     min={stat.min}
                     max={stat.max}
+                    style={{ fontSize: '0.72rem', height: '26px', padding: '0.2rem 0.45rem', borderRadius: '5px' }}
                     onChange={(e) => {
                       const val = Number(e.target.value);
                       setRange(currentRange[0], val);

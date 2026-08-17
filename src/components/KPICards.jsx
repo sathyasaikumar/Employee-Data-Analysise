@@ -190,13 +190,13 @@ export default function KPICards({
               <span className="kpi-label">Total Records</span>
               <div className="kpi-header-action-group">
                 <button type="button" className="currency-zoom-btn blue" onClick={() => handleOpenZoomCard('total')} title="Full Screen / Expand View">
-                  <Maximize2 size={13} />
+                  <Maximize2 size={11} />
                 </button>
-                <div className="kpi-icon-box"><Database size={18} className="text-blue-400" /></div>
+                <div className="kpi-icon-box"><Database size={13} className="text-blue-400" /></div>
               </div>
             </div>
             <div className="kpi-card-body"><span className="kpi-value">{safeTotal.toLocaleString()}</span></div>
-            <div className="kpi-card-footer"><span className="kpi-subtext text-blue"><Database size={12} /> Complete Dataset Size</span></div>
+            <div className="kpi-card-footer"><span className="kpi-subtext text-blue"><Database size={11} /> Complete Dataset Size</span></div>
           </div>
         );
 
@@ -207,9 +207,9 @@ export default function KPICards({
               <span className="kpi-label">Filtered Overview</span>
               <div className="kpi-header-action-group">
                 <button type="button" className="currency-zoom-btn cyan" onClick={() => handleOpenZoomCard('filtered')} title="Full Screen / Expand View">
-                  <Maximize2 size={13} />
+                  <Maximize2 size={11} />
                 </button>
-                <div className="kpi-icon-box"><Filter size={18} className="text-cyan-400" /></div>
+                <div className="kpi-icon-box"><Filter size={13} className="text-cyan-400" /></div>
               </div>
             </div>
             <div className="kpi-card-body filter-card-body">
@@ -221,14 +221,13 @@ export default function KPICards({
                 <button type="button" className={`kpi-h-pill all ${activeLevel === 'all' ? 'active' : ''}`} onClick={() => onLevelSelect && onLevelSelect('all')}>ALL</button>
               </div>
             </div>
-            <div className="kpi-card-footer" style={{ marginTop: '0.4rem', flexShrink: 0 }}>
+            <div className="kpi-card-footer" style={{ marginTop: 'auto', flexShrink: 0 }}>
               <span className="kpi-subtext text-cyan" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
-                <Filter size={12} /> {activePercentage}% Active Selection
+                <Filter size={11} /> {activePercentage}% Active Selection
               </span>
             </div>
           </div>
         );
-
 
       case 'currency':
         return <GlobalCurrencyChecker key="currency" onCurrencyChange={(info) => setCurrencyState(info)} />;
@@ -240,13 +239,13 @@ export default function KPICards({
               <span className="kpi-label">AVG {primaryNumeric ? primaryNumeric.toUpperCase() : 'REVENUE'}</span>
               <div className="kpi-header-action-group">
                 <button type="button" className="currency-zoom-btn rose" onClick={() => handleOpenZoomCard('revenue')} title="Full Screen / Expand View">
-                  <Maximize2 size={13} />
+                  <Maximize2 size={11} />
                 </button>
-                <div className="kpi-icon-box"><DollarSign size={18} className="text-rose-400" /></div>
+                <div className="kpi-icon-box"><DollarSign size={13} className="text-rose-400" /></div>
               </div>
             </div>
             <div className="kpi-card-body"><span className="kpi-value text-rose-highlight">{formattedAvgRevenue}</span></div>
-            <div className="kpi-card-footer"><span className="kpi-subtext text-emerald"><TrendingUp size={14} /> ↗ {currencySubtext}</span></div>
+            <div className="kpi-card-footer"><span className="kpi-subtext text-emerald"><TrendingUp size={11} /> ↗ {currencySubtext}</span></div>
           </div>
         );
 
@@ -257,13 +256,13 @@ export default function KPICards({
               <span className="kpi-label">MEDIAN {primaryNumeric ? primaryNumeric.toUpperCase() : 'SALARY'}</span>
               <div className="kpi-header-action-group">
                 <button type="button" className="currency-zoom-btn purple" onClick={() => handleOpenZoomCard('median')} title="Full Screen / Expand View">
-                  <Maximize2 size={13} />
+                  <Maximize2 size={11} />
                 </button>
-                <div className="kpi-icon-box"><Calculator size={18} className="text-purple-400" /></div>
+                <div className="kpi-icon-box"><Calculator size={13} className="text-purple-400" /></div>
               </div>
             </div>
             <div className="kpi-card-body"><span className="kpi-value text-purple">{formattedMedianRevenue}</span></div>
-            <div className="kpi-card-footer"><span className="kpi-subtext text-purple"><Calculator size={12} /> 50th Percentile Midpoint</span></div>
+            <div className="kpi-card-footer"><span className="kpi-subtext text-purple"><Calculator size={11} /> 50th Percentile Midpoint</span></div>
           </div>
         );
 
@@ -274,13 +273,13 @@ export default function KPICards({
               <span className="kpi-label">MINIMUM SALARY</span>
               <div className="kpi-header-action-group">
                 <button type="button" className="currency-zoom-btn cyan" onClick={() => handleOpenZoomCard('min')} title="Full Screen / Expand View">
-                  <Maximize2 size={13} />
+                  <Maximize2 size={11} />
                 </button>
-                <div className="kpi-icon-box"><ArrowDownCircle size={18} className="text-cyan-400" /></div>
+                <div className="kpi-icon-box"><ArrowDownCircle size={13} className="text-cyan-400" /></div>
               </div>
             </div>
             <div className="kpi-card-body"><span className="kpi-value text-cyan">{formattedMinRevenue}</span></div>
-            <div className="kpi-card-footer"><span className="kpi-subtext text-cyan"><ArrowDownCircle size={12} /> Lowest Recorded Boundary</span></div>
+            <div className="kpi-card-footer"><span className="kpi-subtext text-cyan"><ArrowDownCircle size={11} /> Lowest Recorded Boundary</span></div>
           </div>
         );
 
@@ -291,13 +290,13 @@ export default function KPICards({
               <span className="kpi-label">MAXIMUM SALARY</span>
               <div className="kpi-header-action-group">
                 <button type="button" className="currency-zoom-btn emerald" onClick={() => handleOpenZoomCard('max')} title="Full Screen / Expand View">
-                  <Maximize2 size={13} />
+                  <Maximize2 size={11} />
                 </button>
-                <div className="kpi-icon-box"><ArrowUpCircle size={18} className="text-emerald-400" /></div>
+                <div className="kpi-icon-box"><ArrowUpCircle size={13} className="text-emerald-400" /></div>
               </div>
             </div>
             <div className="kpi-card-body"><span className="kpi-value text-emerald">{formattedMaxRevenue}</span></div>
-            <div className="kpi-card-footer"><span className="kpi-subtext text-emerald"><ArrowUpCircle size={12} /> Highest Peak Boundary</span></div>
+            <div className="kpi-card-footer"><span className="kpi-subtext text-emerald"><ArrowUpCircle size={11} /> Highest Peak Boundary</span></div>
           </div>
         );
 
@@ -308,13 +307,13 @@ export default function KPICards({
               <span className="kpi-label">SALARY GROWTH</span>
               <div className="kpi-header-action-group">
                 <button type="button" className="currency-zoom-btn emerald" onClick={() => handleOpenZoomCard('growth')} title="Full Screen / Expand View">
-                  <Maximize2 size={13} />
+                  <Maximize2 size={11} />
                 </button>
-                <div className="kpi-icon-box"><TrendingUp size={18} className="text-emerald-400" /></div>
+                <div className="kpi-icon-box"><TrendingUp size={13} className="text-emerald-400" /></div>
               </div>
             </div>
             <div className="kpi-card-body"><span className="kpi-value text-emerald">{formattedGrowthDisplay}</span></div>
-            <div className="kpi-card-footer"><span className="kpi-subtext text-emerald"><TrendingUp size={12} /> Sequential Growth Rate</span></div>
+            <div className="kpi-card-footer"><span className="kpi-subtext text-emerald"><TrendingUp size={11} /> Sequential Growth Rate</span></div>
           </div>
         );
 
@@ -325,13 +324,13 @@ export default function KPICards({
               <span className="kpi-label">Missing Values Ratio</span>
               <div className="kpi-header-action-group">
                 <button type="button" className="currency-zoom-btn rose" onClick={() => handleOpenZoomCard('missing')} title="Full Screen / Expand View">
-                  <Maximize2 size={13} />
+                  <Maximize2 size={11} />
                 </button>
-                <div className="kpi-icon-box"><AlertTriangle size={18} className="text-rose-400" /></div>
+                <div className="kpi-icon-box"><AlertTriangle size={13} className="text-rose-400" /></div>
               </div>
             </div>
             <div className="kpi-card-body"><span className="kpi-value text-rose">{missingPercent}%</span></div>
-            <div className="kpi-card-footer"><span className="kpi-subtext text-rose"><AlertTriangle size={12} /> {missingCells.toLocaleString()} Blank Cells</span></div>
+            <div className="kpi-card-footer"><span className="kpi-subtext text-rose"><AlertTriangle size={11} /> {missingCells.toLocaleString()} Blank Cells</span></div>
           </div>
         );
 
@@ -342,13 +341,13 @@ export default function KPICards({
               <span className="kpi-label">Duplicate Records</span>
               <div className="kpi-header-action-group">
                 <button type="button" className="currency-zoom-btn amber" onClick={() => handleOpenZoomCard('duplicates')} title="Full Screen / Expand View">
-                  <Maximize2 size={13} />
+                  <Maximize2 size={11} />
                 </button>
-                <div className="kpi-icon-box"><Copy size={18} className="text-amber-400" /></div>
+                <div className="kpi-icon-box"><Copy size={13} className="text-amber-400" /></div>
               </div>
             </div>
             <div className="kpi-card-body"><span className="kpi-value text-amber">{dupPercent}%</span></div>
-            <div className="kpi-card-footer"><span className="kpi-subtext text-amber"><Copy size={12} /> {duplicateCount} Duplicate Rows</span></div>
+            <div className="kpi-card-footer"><span className="kpi-subtext text-amber"><Copy size={11} /> {duplicateCount} Duplicate Rows</span></div>
           </div>
         );
 
@@ -359,9 +358,9 @@ export default function KPICards({
               <span className="kpi-label">Data Completeness</span>
               <div className="kpi-header-action-group">
                 <button type="button" className="currency-zoom-btn blue" onClick={() => handleOpenZoomCard('completeness')} title="Full Screen / Expand View">
-                  <Maximize2 size={13} />
+                  <Maximize2 size={11} />
                 </button>
-                <div className="kpi-icon-box"><CheckCircle2 size={18} className="text-blue-400" /></div>
+                <div className="kpi-icon-box"><CheckCircle2 size={13} className="text-blue-400" /></div>
               </div>
             </div>
             <div className="kpi-card-body"><span className="kpi-value">{completenessScore}%</span></div>
@@ -444,11 +443,11 @@ export default function KPICards({
         <div className="anomalies-indicator-banner" onClick={() => setIsAnomaliesModalOpen(true)}>
           <div className="anomalies-banner-left">
             <div className="anomalies-warning-icon-box">
-              <AlertTriangle size={13} className="text-rose-400" />
+              <AlertTriangle size={12} className="text-rose-400" />
             </div>
             <div className="anomalies-text-group">
               <span className="anomalies-title">AUTOMATIC ANOMALY DETECTION</span>
-              <p className="anomalies-subheadline">
+              <p className="anomalies-subheadline" style={{ fontSize: '0.72rem' }}>
                 ⚠️ <strong>{anomalies.totalAnomalies} unusual revenue & data records detected</strong>
               </p>
             </div>
@@ -457,7 +456,7 @@ export default function KPICards({
           <div className="anomalies-banner-right">
             <span className="anomalies-count-pill">{anomalies.totalAnomalies} Affected Records</span>
             <button type="button" className="view-affected-records-btn">
-              <Eye size={12} />
+              <Eye size={11} />
               <span>View Affected Records</span>
             </button>
           </div>
@@ -468,8 +467,8 @@ export default function KPICards({
       <div className="kpi-folder-header-wrapper">
         <div className="kpi-overview-header">
           <div className="overview-title-group">
-            <h2 className="overview-title">
-              <FolderOpen size={18} className="text-blue-400" />
+            <h2 className="overview-title" style={{ fontSize: '0.82rem', fontWeight: 800, fontFamily: 'Arial, sans-serif' }}>
+              <FolderOpen size={15} className="text-blue-400" />
               METRICS DIRECTORY FOLDERS
             </h2>
           </div>
@@ -487,10 +486,10 @@ export default function KPICards({
                 const IconComp = currentTab.icon;
                 return (
                   <>
-                    <IconComp size={15} style={{ color: '#38bdf8' }} />
+                    <IconComp size={13} style={{ color: '#38bdf8' }} />
                     <span>{currentTab.label}</span>
                     <span className="folder-count-badge">{currentTab.count}</span>
-                    <ChevronDown size={14} className={`dropdown-chevron ${isFolderDropdownOpen ? 'rotate' : ''}`} />
+                    <ChevronDown size={12} className={`dropdown-chevron ${isFolderDropdownOpen ? 'rotate' : ''}`} />
                   </>
                 );
               })()}
@@ -499,7 +498,7 @@ export default function KPICards({
             {isFolderDropdownOpen && (
               <div className="kpi-folder-menu-dropdown">
                 <div className="dropdown-menu-header-title">
-                  <FolderOpen size={14} style={{ color: '#38bdf8' }} />
+                  <FolderOpen size={13} style={{ color: '#38bdf8' }} />
                   <span>METRIC DIRECTORY FOLDERS</span>
                 </div>
                 <div className="dropdown-options-list">
@@ -516,7 +515,7 @@ export default function KPICards({
                           setIsFolderDropdownOpen(false);
                         }}
                       >
-                        <TabIcon size={14} style={{ color: isActive ? '#38bdf8' : 'var(--text-muted)' }} />
+                        <TabIcon size={13} style={{ color: isActive ? '#38bdf8' : 'var(--text-muted)' }} />
                         <span className="option-label">{tab.label}</span>
                         <span className={`folder-count-badge ${isActive ? 'active-badge' : ''}`}>{tab.count}</span>
                       </button>
@@ -541,18 +540,18 @@ export default function KPICards({
               <div className="folder-box-header" onClick={() => toggleFolderCollapse(group.id)}>
                 <div className="folder-title-left">
                   <div className={`folder-icon-badge ${group.accentColor}`}>
-                    <GroupIcon size={16} />
+                    <GroupIcon size={14} />
                   </div>
-                  <h3 className="folder-box-title">{group.title}</h3>
-                  <span className="folder-metric-count-pill">{group.badge}</span>
+                  <h3 className="folder-box-title" style={{ fontSize: '0.82rem', fontWeight: 800, fontFamily: 'Arial, sans-serif' }}>{group.title}</h3>
+                  <span className="folder-metric-count-pill" style={{ fontSize: '0.62rem', fontWeight: 700 }}>{group.badge}</span>
                 </div>
 
                 <div className="folder-header-right">
-                  <span className="folder-status-text">
+                  <span className="folder-status-text" style={{ fontSize: '0.66rem' }}>
                     {isCollapsed ? 'Click to Expand' : 'Inside Folder'}
                   </span>
                   <button type="button" className="folder-collapse-btn">
-                    {isCollapsed ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
+                    {isCollapsed ? <ChevronDown size={14} /> : <ChevronUp size={14} />}
                   </button>
                 </div>
               </div>
@@ -575,12 +574,14 @@ export default function KPICards({
             className={`currency-zoom-modal-content anomalies-modal-content ${isModalFullScreen ? 'modal-fullscreen is-fullscreen' : ''}`}
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="modal-header">
-              <div className="modal-title-group">
-                <ShieldAlert size={24} className="text-amber-400" />
+            <div className="modal-header" style={{ padding: '0.55rem 0.85rem' }}>
+              <div className="modal-title-group" style={{ gap: '0.45rem' }}>
+                <ShieldAlert size={15} className="text-amber-400" />
                 <div>
-                  <h3 className="modal-title">Automatic Anomaly Detection & Affected Records</h3>
-                  <p className="modal-subtitle">
+                  <h3 className="modal-title" style={{ fontSize: '0.88rem', fontWeight: 800, fontFamily: 'Arial, sans-serif' }}>
+                    Automatic Anomaly Detection & Affected Records
+                  </h3>
+                  <p className="modal-subtitle" style={{ fontSize: '0.60rem', fontFamily: 'Arial, sans-serif', marginTop: '0.05rem' }}>
                     Identified {anomalies.totalAnomalies} anomalous records out of {safeTotal.toLocaleString()} total dataset entries
                   </p>
                 </div>
@@ -593,23 +594,24 @@ export default function KPICards({
                   className="currency-zoom-close-btn"
                   onClick={() => toggleModalFullScreen()}
                   title={isModalFullScreen ? "Restore Normal Size" : "Expand to Full Screen View"}
-                  style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
+                  style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '28px', height: '28px', borderRadius: '6px' }}
                 >
-                  {isModalFullScreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
+                  {isModalFullScreen ? <Minimize2 size={15} strokeWidth={2.2} /> : <Maximize2 size={15} strokeWidth={2.2} />}
                 </button>
 
                 <button
                   type="button"
-                  className="currency-zoom-close-btn"
+                  className="currency-zoom-close-btn close-danger"
                   onClick={() => setIsAnomaliesModalOpen(false)}
                   title="Close View"
+                  style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '28px', height: '28px', borderRadius: '6px' }}
                 >
-                  <X size={16} />
+                  <X size={15} strokeWidth={2.5} />
                 </button>
               </div>
             </div>
 
-            <div className="modal-body anomalies-modal-body">
+            <div className="modal-body anomalies-modal-body" style={{ padding: '0.65rem 0.85rem' }}>
               {/* Top Summary Cards */}
               <div className="anomalies-summary-grid">
                 <div className="anomalies-stat-card rose">
@@ -671,7 +673,7 @@ export default function KPICards({
                 </div>
 
                 <div className="anomalies-search-box">
-                  <Search size={14} className="search-icon" />
+                  <Search size={12} className="search-icon" />
                   <input
                     type="text"
                     placeholder="Search affected records..."
@@ -710,7 +712,7 @@ export default function KPICards({
                             <td style={{ fontWeight: 700, color: 'var(--text-muted)' }}>Row #{item.rowIndex}</td>
                             <td>
                               <span className="anomaly-type-badge">
-                                <AlertTriangle size={12} />
+                                <AlertTriangle size={11} />
                                 <span>{item.primaryAnomaly}</span>
                               </span>
                             </td>

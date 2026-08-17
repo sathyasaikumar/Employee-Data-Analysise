@@ -436,7 +436,7 @@ export default function AutoMLEngineModal({ isOpen, onClose, data = [], headers 
         <div className="automl-modal-header">
           <div className="automl-flex-row-left">
             <div className="automl-header-icon-box">
-              <Cpu size={24} className="text-purple-400" />
+              <Cpu size={16} className="text-purple-400" />
             </div>
             <div>
               <div className="automl-flex-row-left">
@@ -456,10 +456,10 @@ export default function AutoMLEngineModal({ isOpen, onClose, data = [], headers 
               onClick={() => setIsFullScreen(prev => !prev)}
               title={isFullScreen ? "Exit Fullscreen View" : "Fullscreen View Mode"}
             >
-              {isFullScreen ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
+              {isFullScreen ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
             </button>
             <button type="button" className="automl-close-btn" onClick={onClose} title="Close AutoML Engine">
-              <X size={20} />
+              <X size={15} />
             </button>
           </div>
         </div>
@@ -471,7 +471,7 @@ export default function AutoMLEngineModal({ isOpen, onClose, data = [], headers 
             className={`automl-tab-btn ${activeTab === 'pipeline' ? 'active' : ''}`}
             onClick={() => setActiveTab('pipeline')}
           >
-            <Sliders size={16} /> 1. Data & Model Setup
+            <Sliders size={13} /> 1. Data & Model Setup
           </button>
           <button
             type="button"
@@ -479,7 +479,7 @@ export default function AutoMLEngineModal({ isOpen, onClose, data = [], headers 
             onClick={() => setActiveTab('leaderboard')}
             disabled={!pipelineResults}
           >
-            <Award size={16} /> 2. Leaderboard & Metrics
+            <Award size={13} /> 2. Leaderboard & Metrics
           </button>
           <button
             type="button"
@@ -487,7 +487,7 @@ export default function AutoMLEngineModal({ isOpen, onClose, data = [], headers 
             onClick={() => setActiveTab('explainability')}
             disabled={!pipelineResults}
           >
-            <Activity size={16} /> 3. SHAP Explainability
+            <Activity size={13} /> 3. SHAP Explainability
           </button>
           <button
             type="button"
@@ -495,14 +495,14 @@ export default function AutoMLEngineModal({ isOpen, onClose, data = [], headers 
             onClick={() => setActiveTab('predict')}
             disabled={!pipelineResults}
           >
-            <Zap size={16} /> 4. Predict Studio
+            <Zap size={13} /> 4. Predict Studio
           </button>
           <button
             type="button"
             className={`automl-tab-btn ${activeTab === 'registry' ? 'active' : ''}`}
             onClick={() => setActiveTab('registry')}
           >
-            <Layers size={16} /> 5. Saved Models ({savedModelsList.length})
+            <Layers size={13} /> 5. Saved Models ({savedModelsList.length})
           </button>
         </div>
 
@@ -517,7 +517,7 @@ export default function AutoMLEngineModal({ isOpen, onClose, data = [], headers 
               {/* INFORMATIONAL STEP GUIDE BANNER */}
               <div className="automl-guide-callout">
                 <div className="automl-guide-icon">
-                  <HelpCircle size={20} />
+                  <HelpCircle size={15} />
                 </div>
                 <div>
                   <h4 className="automl-guide-title">Step 1: Dataset Profiling & Machine Learning Configuration</h4>
@@ -536,7 +536,7 @@ export default function AutoMLEngineModal({ isOpen, onClose, data = [], headers 
                 {profile && (
                   <div className="automl-sidebar-card">
                     <div className="automl-card-title-sm">
-                      <BarChart3 size={16} className="text-cyan-400" />
+                      <BarChart3 size={15} className="text-cyan-400 flex-shrink-0" />
                       <span>Dataset Quality Report</span>
                     </div>
 
@@ -567,17 +567,18 @@ export default function AutoMLEngineModal({ isOpen, onClose, data = [], headers 
                       </div>
                     </div>
 
-                    <div className="mt-2.5 pt-2.5 border-t border-slate-800/80">
-                      <div className="flex items-center justify-between mb-1.5">
-                        <span className="text-xxs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
-                          <Layers size={11} className="text-cyan-400" /> Select Rows to Process:
+                    <div className="automl-rows-process-section">
+                      <div className="automl-rows-process-header">
+                        <span className="rows-process-label">
+                          <Layers size={12} className="text-cyan-400 flex-shrink-0" />
+                          <span>Select Rows to Process:</span>
                         </span>
-                        <span className="text-xxs font-mono font-bold text-cyan-400">
+                        <span className="rows-process-badge">
                           {selectedRowLimit === 'all' ? `All (${rawSourceData.length})` : `${selectedRowLimit} Rows`}
                         </span>
                       </div>
                       <select
-                        className="automl-select-modern text-xs py-1.5"
+                        className="automl-select-modern text-xs"
                         value={selectedRowLimit}
                         onChange={(e) => handleRowLimitChange(e.target.value)}
                       >
@@ -590,37 +591,98 @@ export default function AutoMLEngineModal({ isOpen, onClose, data = [], headers 
                       </select>
                     </div>
 
-                    <div className="text-xxs text-muted mt-2 pt-2 border-t border-slate-800 flex justify-between">
-                      <span>Dataset: <strong className="text-slate-300">{datasetName}</strong></span>
-                      <span>Duplicates: {profile.duplicateRows}</span>
+                    <div className="automl-card-footer-info">
+                      <div className="footer-info-row">
+                        <div className="footer-key-group">
+                          <FileSpreadsheet size={12} className="text-cyan-400 flex-shrink-0" />
+                          <span className="info-key">Dataset:</span>
+                        </div>
+                        <span className="footer-dataset-chip truncate" title={datasetName}>
+                          {datasetName}
+                        </span>
+                      </div>
+
+                      <div className="footer-info-row">
+                        <div className="footer-key-group">
+                          <Layers size={12} className="text-slate-400 flex-shrink-0" />
+                          <span className="info-key">Duplicates:</span>
+                        </div>
+                        <span className={`footer-status-chip ${profile.duplicateRows > 0 ? 'warning' : 'clean'}`}>
+                          {profile.duplicateRows > 0 ? (
+                            <>
+                              <AlertCircle size={10} className="inline mr-1 text-amber-400" />
+                              {profile.duplicateRows} Found
+                            </>
+                          ) : (
+                            <>
+                              <CheckCircle2 size={10} className="inline mr-1 text-emerald-400" />
+                              0 (Clean)
+                            </>
+                          )}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 )}
 
                 {/* TARGET COLUMN SELECTOR */}
-                <div className="automl-sidebar-card">
-                  <div className="automl-card-title-sm">
-                    <Database size={16} className="text-purple-400" />
-                    <span>Select Target Column</span>
-                  </div>
+                {(() => {
+                  const recTarget = recommendTargetColumn(workingData, workingHeaders);
+                  const isRecSelected = targetCol === recTarget;
 
-                  <select
-                    className="automl-select-modern"
-                    value={targetCol}
-                    onChange={(e) => handleTargetChange(e.target.value)}
-                  >
-                    <option value="__unsupervised__">-- No Target / Unsupervised Mode --</option>
-                    {workingHeaders.map(h => (
-                      <option key={h} value={h}>
-                        {h} {recommendTargetColumn(workingData, workingHeaders) === h ? '★ (Recommended Target)' : ''}
-                      </option>
-                    ))}
-                  </select>
+                  return (
+                    <div className="automl-sidebar-card target-selector-card">
+                      <div className="target-card-header">
+                        <div className="automl-card-title-sm">
+                          <Target size={15} className="text-purple-400 flex-shrink-0" />
+                          <span>Select Target Column</span>
+                        </div>
+                        <span className="target-goal-badge">Y-Variable</span>
+                      </div>
 
-                  <div className="text-xxs text-purple-300 mt-2 flex items-center gap-1">
-                    <Sparkles size={12} /> Auto-recommended: <strong>{recommendTargetColumn(workingData, workingHeaders)}</strong>
-                  </div>
-                </div>
+                      <div className="target-select-wrapper">
+                        <select
+                          className="automl-select-modern target-dropdown-select"
+                          value={targetCol}
+                          onChange={(e) => handleTargetChange(e.target.value)}
+                        >
+                          <option value="__unsupervised__">-- No Target / Unsupervised Mode --</option>
+                          {workingHeaders.map(h => (
+                            <option key={h} value={h}>
+                              {h} {recTarget === h ? '★ (Recommended Target)' : ''}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {/* Unique AI Recommendation Callout Banner */}
+                      {recTarget && (
+                        <div className={`target-rec-banner ${isRecSelected ? 'active' : ''}`}>
+                          <div className="target-rec-left">
+                            <Sparkles size={13} className="text-purple-400 flex-shrink-0" />
+                            <span className="rec-title">Auto-Recommended:</span>
+                            <span className="target-name-pill" title={recTarget}>{recTarget}</span>
+                          </div>
+
+                          {isRecSelected ? (
+                            <span className="rec-active-pill">
+                              <Check size={11} className="inline mr-0.5" /> Selected
+                            </span>
+                          ) : (
+                            <button
+                              type="button"
+                              className="rec-apply-btn"
+                              onClick={() => handleTargetChange(recTarget)}
+                              title={`Set target column to ${recTarget}`}
+                            >
+                              Use Target
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
 
                 {/* DETECTED PROBLEM TYPE & OVERRIDE CARD */}
                 <div className="automl-problem-type-card">
@@ -1165,7 +1227,7 @@ export default function AutoMLEngineModal({ isOpen, onClose, data = [], headers 
               {/* INFORMATIONAL STEP GUIDE BANNER */}
               <div className="automl-guide-callout">
                 <div className="automl-guide-icon">
-                  <Award size={20} className="text-amber-400" />
+                  <Award size={15} className="text-amber-400" />
                 </div>
                 <div>
                   <h4 className="automl-guide-title">Step 2: Multi-Model Evaluation Leaderboard</h4>
@@ -1179,11 +1241,13 @@ export default function AutoMLEngineModal({ isOpen, onClose, data = [], headers 
               {selectedBestModel && (
                 <div className="best-model-banner">
                   <div className="automl-flex-row-left">
-                    <Award size={32} className="text-yellow-400 flex-shrink-0" />
+                    <div className="champion-badge-icon">
+                      <Award size={18} className="text-yellow-400 flex-shrink-0" />
+                    </div>
                     <div>
-                      <div className="text-xs font-semibold text-yellow-400 uppercase tracking-wider">★ Champion Best Performing Model</div>
-                      <h3 className="text-xl font-bold text-white">{selectedBestModel.name}</h3>
-                      <p className="text-xs text-slate-300">
+                      <div className="champion-tag-label">★ Champion Best Performing Model</div>
+                      <h3 className="champion-model-title">{selectedBestModel.name}</h3>
+                      <p className="champion-metric-desc">
                         Primary Metric Score: <strong className="text-emerald-400">{(selectedBestModel.primaryScore * 100).toFixed(1)}%</strong> | Training Time: {selectedBestModel.trainingTime}s
                       </p>
                     </div>
@@ -1196,118 +1260,141 @@ export default function AutoMLEngineModal({ isOpen, onClose, data = [], headers 
                       onClick={() => setActiveTab('predict')}
                     >
                       <span>Predict Studio</span>
-                      <ArrowRight size={14} />
+                      <ArrowRight size={13} />
                     </button>
                   </div>
                 </div>
               )}
 
               {/* Multi-Metric Algorithm Comparison Bar Chart */}
-              {pipelineResults.results && pipelineResults.results.length > 0 && (
-                <div className="automl-card">
-                  <div className="leaderboard-chart-header">
-                    <div className="leaderboard-chart-title">
-                      <BarChart3 size={20} className="text-cyan-400" />
-                      <span>Model Metric Performance Comparison Graph</span>
-                    </div>
-                    <span className="badge-benchmark-tag">Cross-Algorithm Benchmark</span>
-                  </div>
+              {pipelineResults.results && pipelineResults.results.length > 0 && (() => {
+                const isLight = typeof document !== 'undefined' && (document.documentElement.getAttribute('data-theme') === 'light' || document.body.getAttribute('data-theme') === 'light');
 
-                  <div className="p-2" style={{ height: '320px' }}>
-                    <Bar
-                      data={{
-                        labels: pipelineResults.results.map(r => r.name),
-                        datasets: problemInfo.problemType.includes('classification') ? [
-                          {
-                            label: 'Accuracy (%)',
-                            data: pipelineResults.results.map(r => (r.metrics.accuracy * 100).toFixed(1)),
-                            backgroundColor: 'rgba(6, 182, 212, 0.85)',
-                            borderColor: '#06b6d4',
-                            borderWidth: 2,
-                            borderRadius: 6,
-                            barPercentage: 0.55,
-                            categoryPercentage: 0.65
-                          },
-                          {
-                            label: 'F1 Score (%)',
-                            data: pipelineResults.results.map(r => (r.metrics.f1 * 100).toFixed(1)),
-                            backgroundColor: 'rgba(139, 92, 246, 0.85)',
-                            borderColor: '#8b5cf6',
-                            borderWidth: 2,
-                            borderRadius: 6,
-                            barPercentage: 0.55,
-                            categoryPercentage: 0.65
-                          },
-                          {
-                            label: 'ROC-AUC (%)',
-                            data: pipelineResults.results.map(r => (r.metrics.rocAuc * 100).toFixed(1)),
-                            backgroundColor: 'rgba(16, 185, 129, 0.85)',
-                            borderColor: '#10b981',
-                            borderWidth: 2,
-                            borderRadius: 6,
-                            barPercentage: 0.55,
-                            categoryPercentage: 0.65
-                          }
-                        ] : [
-                          {
-                            label: 'R² Score (%)',
-                            data: pipelineResults.results.map(r => (r.metrics.r2 * 100).toFixed(1)),
-                            backgroundColor: 'rgba(6, 182, 212, 0.85)',
-                            borderColor: '#06b6d4',
-                            borderWidth: 2,
-                            borderRadius: 6,
-                            barPercentage: 0.55,
-                            categoryPercentage: 0.65
-                          }
-                        ]
-                      }}
-                      options={{
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                          legend: { labels: { color: '#cbd5e1', font: { size: 12, weight: 'bold' } } },
-                          tooltip: { callbacks: { label: (ctx) => ` ${ctx.dataset.label}: ${ctx.raw}%` } }
-                        },
-                        scales: {
-                          x: { grid: { display: false }, ticks: { color: '#f8fafc', font: { weight: 'bold', size: 12 } } },
-                          y: {
-                            min: 0,
-                            max: 115,
-                            grid: { color: 'rgba(255, 255, 255, 0.06)' },
-                            ticks: { color: '#94a3b8', callback: v => `${v}%` }
-                          }
-                        }
-                      }}
-                      plugins={[{
-                        id: 'verticalBarValueLabels',
-                        afterDatasetsDraw(chart) {
-                          const { ctx } = chart;
-                          chart.data.datasets.forEach((dataset, i) => {
-                            const meta = chart.getDatasetMeta(i);
-                            meta.data.forEach((bar, index) => {
-                              const val = dataset.data[index];
-                              if (val !== null && val !== undefined) {
-                                ctx.save();
-                                ctx.fillStyle = '#ffffff';
-                                ctx.font = 'bold 11px monospace';
-                                ctx.textAlign = 'center';
-                                ctx.textBaseline = 'bottom';
-                                ctx.fillText(`${val}%`, bar.x, bar.y - 6);
-                                ctx.restore();
+                return (
+                  <div className="automl-card">
+                    <div className="leaderboard-chart-header">
+                      <div className="leaderboard-chart-title">
+                        <BarChart3 size={15} className="text-cyan-400" />
+                        <span>Model Metric Performance Comparison Graph</span>
+                      </div>
+                      <span className="badge-benchmark-tag">Cross-Algorithm Benchmark</span>
+                    </div>
+
+                    <div className="p-1" style={{ height: '200px' }}>
+                      <Bar
+                        data={{
+                          labels: pipelineResults.results.map(r => r.name),
+                          datasets: problemInfo.problemType.includes('classification') ? [
+                            {
+                              label: 'Accuracy (%)',
+                              data: pipelineResults.results.map(r => (r.metrics.accuracy * 100).toFixed(1)),
+                              backgroundColor: 'rgba(6, 182, 212, 0.85)',
+                              borderColor: '#06b6d4',
+                              borderWidth: 1.5,
+                              borderRadius: 4,
+                              barPercentage: 0.55,
+                              categoryPercentage: 0.65
+                            },
+                            {
+                              label: 'F1 Score (%)',
+                              data: pipelineResults.results.map(r => (r.metrics.f1 * 100).toFixed(1)),
+                              backgroundColor: 'rgba(139, 92, 246, 0.85)',
+                              borderColor: '#8b5cf6',
+                              borderWidth: 1.5,
+                              borderRadius: 4,
+                              barPercentage: 0.55,
+                              categoryPercentage: 0.65
+                            },
+                            {
+                              label: 'ROC-AUC (%)',
+                              data: pipelineResults.results.map(r => (r.metrics.rocAuc * 100).toFixed(1)),
+                              backgroundColor: 'rgba(16, 185, 129, 0.85)',
+                              borderColor: '#10b981',
+                              borderWidth: 1.5,
+                              borderRadius: 4,
+                              barPercentage: 0.55,
+                              categoryPercentage: 0.65
+                            }
+                          ] : [
+                            {
+                              label: 'R² Score (%)',
+                              data: pipelineResults.results.map(r => (r.metrics.r2 * 100).toFixed(1)),
+                              backgroundColor: 'rgba(6, 182, 212, 0.85)',
+                              borderColor: '#06b6d4',
+                              borderWidth: 1.5,
+                              borderRadius: 4,
+                              barPercentage: 0.55,
+                              categoryPercentage: 0.65
+                            }
+                          ]
+                        }}
+                        options={{
+                          responsive: true,
+                          maintainAspectRatio: false,
+                          plugins: {
+                            legend: {
+                              position: 'top',
+                              labels: {
+                                color: isLight ? '#0f172a' : '#cbd5e1',
+                                font: { size: 10, weight: 'bold', family: 'Arial' },
+                                boxWidth: 10,
+                                boxHeight: 10,
+                                padding: 8
                               }
+                            },
+                            tooltip: { callbacks: { label: (ctx) => ` ${ctx.dataset.label}: ${ctx.raw}%` } }
+                          },
+                          scales: {
+                            x: {
+                              grid: { display: false },
+                              ticks: {
+                                color: isLight ? '#0f172a' : '#f8fafc',
+                                font: { weight: 'bold', size: 10, family: 'Arial' }
+                              }
+                            },
+                            y: {
+                              min: 0,
+                              max: 115,
+                              grid: { color: isLight ? 'rgba(0, 0, 0, 0.06)' : 'rgba(255, 255, 255, 0.06)' },
+                              ticks: {
+                                color: isLight ? '#475569' : '#94a3b8',
+                                font: { size: 9, family: 'Arial' },
+                                callback: v => `${v}%`
+                              }
+                            }
+                          }
+                        }}
+                        plugins={[{
+                          id: 'verticalBarValueLabels',
+                          afterDatasetsDraw(chart) {
+                            const { ctx } = chart;
+                            chart.data.datasets.forEach((dataset, i) => {
+                              const meta = chart.getDatasetMeta(i);
+                              meta.data.forEach((bar, index) => {
+                                const val = dataset.data[index];
+                                if (val !== null && val !== undefined) {
+                                  ctx.save();
+                                  ctx.fillStyle = isLight ? '#0f172a' : '#ffffff';
+                                  ctx.font = 'bold 9px Arial';
+                                  ctx.textAlign = 'center';
+                                  ctx.textBaseline = 'bottom';
+                                  ctx.fillText(`${val}%`, bar.x, bar.y - 4);
+                                  ctx.restore();
+                                }
+                              });
                             });
-                          });
-                        }
-                      }]}
-                    />
+                          }
+                        }]}
+                      />
+                    </div>
                   </div>
-                </div>
-              )}
+                );
+              })()}
 
               {/* Leaderboard Table */}
               <div className="automl-card">
                 <div className="automl-card-header">
-                  <Award size={18} className="text-yellow-400" />
+                  <Award size={14} className="text-yellow-400" />
                   <h3>Model Comparison Leaderboard</h3>
                 </div>
 
@@ -1315,7 +1402,7 @@ export default function AutoMLEngineModal({ isOpen, onClose, data = [], headers 
                   <table className="automl-table">
                     <thead>
                       <tr>
-                        <th>Rank</th>
+                        <th className="text-center">Rank</th>
                         <th>Model Name</th>
                         <th>Primary Score</th>
                         {problemInfo.problemType.includes('classification') && (
@@ -1335,22 +1422,29 @@ export default function AutoMLEngineModal({ isOpen, onClose, data = [], headers 
                         )}
                         <th>Training Time</th>
                         <th>Status</th>
-                        <th>Action</th>
+                        <th className="text-center">Action</th>
                       </tr>
                     </thead>
                     <tbody>
                       {pipelineResults.results.map((res, idx) => {
                         const isBest = res.modelId === selectedBestModel?.modelId;
                         return (
-                          <tr key={idx} className={isBest ? 'bg-purple-950/30' : ''}>
-                            <td className="font-bold text-center">
-                              {idx === 0 ? '🏆 1' : idx + 1}
+                          <tr key={idx} className={isBest ? 'is-champion-row' : ''}>
+                            <td className="text-center">
+                              <span className={`leaderboard-rank-pill rank-${idx + 1}`}>
+                                {idx === 0 ? '🏆 1' : idx + 1}
+                              </span>
                             </td>
-                            <td className="font-bold text-white">
-                              {res.name} {isBest && <span className="badge badge-amber ml-2 text-xxs">Best</span>}
+                            <td>
+                              <div className="leaderboard-model-name-cell">
+                                <span className="leaderboard-model-title">{res.name}</span>
+                                {isBest && <span className="leaderboard-best-pill">BEST</span>}
+                              </div>
                             </td>
-                            <td className="font-semibold text-emerald-400">
-                              {(res.primaryScore * 100).toFixed(1)}%
+                            <td>
+                              <span className="leaderboard-score-val">
+                                {(res.primaryScore * 100).toFixed(1)}%
+                              </span>
                             </td>
 
                             {problemInfo.problemType.includes('classification') && (
@@ -1371,18 +1465,23 @@ export default function AutoMLEngineModal({ isOpen, onClose, data = [], headers 
                             )}
 
                             <td>{res.trainingTime}s</td>
-                            <td><span className="badge badge-emerald">Completed</span></td>
                             <td>
+                              <span className="leaderboard-status-badge">
+                                <span className="status-dot"></span>
+                                COMPLETED
+                              </span>
+                            </td>
+                            <td className="text-center">
                               <button
                                 type="button"
-                                className="btn-action-cyan"
+                                className="btn-action-explain"
                                 onClick={() => {
                                   setSelectedBestModel(res);
                                   setActiveTab('explainability');
                                 }}
                                 title="Inspect SHAP Explainability & Feature Importance"
                               >
-                                <Activity size={13} className="text-cyan-400" />
+                                <Activity size={11} />
                                 <span>Explain</span>
                               </button>
                             </td>
@@ -1404,7 +1503,7 @@ export default function AutoMLEngineModal({ isOpen, onClose, data = [], headers 
               {/* INFORMATIONAL STEP GUIDE BANNER */}
               <div className="automl-guide-callout">
                 <div className="automl-guide-icon">
-                  <Activity size={20} className="text-cyan-400" />
+                  <Activity size={15} className="text-cyan-400" />
                 </div>
                 <div>
                   <h4 className="automl-guide-title">Step 3: SHAP (Shapley Additive exPlanations) Model Interpretability</h4>
@@ -1420,7 +1519,7 @@ export default function AutoMLEngineModal({ isOpen, onClose, data = [], headers 
                 <div className="shap-toolbar-header-row">
                   <div className="shap-title-box">
                     <div className="shap-icon-badge">
-                      <Activity size={22} className="text-cyan-400" />
+                      <Activity size={15} className="text-cyan-400" />
                     </div>
                     <div>
                       <h3 className="shap-title-text">Explainable AI (SHAP Analytics Studio)</h3>
@@ -1457,7 +1556,7 @@ export default function AutoMLEngineModal({ isOpen, onClose, data = [], headers 
                     className={`shap-view-pill ${shapViewMode === 'importance' ? 'active' : ''}`}
                     onClick={() => setShapViewMode('importance')}
                   >
-                    <BarChart2 size={15} />
+                    <BarChart2 size={13} />
                     <span>Feature Importance Bar</span>
                   </button>
                   <button
@@ -1465,7 +1564,7 @@ export default function AutoMLEngineModal({ isOpen, onClose, data = [], headers 
                     className={`shap-view-pill ${shapViewMode === 'waterfall' ? 'active' : ''}`}
                     onClick={() => setShapViewMode('waterfall')}
                   >
-                    <TrendingUp size={15} />
+                    <TrendingUp size={13} />
                     <span>Directional Impact Waterfall</span>
                   </button>
                   <button
@@ -1473,7 +1572,7 @@ export default function AutoMLEngineModal({ isOpen, onClose, data = [], headers 
                     className={`shap-view-pill ${shapViewMode === 'radar' ? 'active' : ''}`}
                     onClick={() => setShapViewMode('radar')}
                   >
-                    <PieChart size={15} />
+                    <PieChart size={13} />
                     <span>Multi-Model Radar</span>
                   </button>
                   <button
@@ -1481,7 +1580,7 @@ export default function AutoMLEngineModal({ isOpen, onClose, data = [], headers 
                     className={`shap-view-pill ${shapViewMode === 'beeswarm' ? 'active' : ''}`}
                     onClick={() => setShapViewMode('beeswarm')}
                   >
-                    <Activity size={15} />
+                    <Activity size={13} />
                     <span>Swarm Distribution</span>
                   </button>
                 </div>
@@ -1505,6 +1604,8 @@ export default function AutoMLEngineModal({ isOpen, onClose, data = [], headers 
                   { hex: '#f43f5e', bg: 'rgba(244, 63, 94, 0.85)', glow: 'rgba(244, 63, 94, 0.4)' }    // Rose
                 ];
 
+                const isLightTheme = typeof document !== 'undefined' && (document.documentElement.getAttribute('data-theme') === 'light' || document.body.getAttribute('data-theme') === 'light');
+
                 // Build ChartJS Data for View 1: Horizontal Bar Chart
                 const importanceChartData = {
                   labels: feats.map(f => f.name),
@@ -1514,9 +1615,9 @@ export default function AutoMLEngineModal({ isOpen, onClose, data = [], headers 
                       data: feats.map(f => (f.importance * 100).toFixed(1)),
                       backgroundColor: feats.map((_, i) => barColorPalette[i % barColorPalette.length].bg),
                       borderColor: feats.map((_, i) => barColorPalette[i % barColorPalette.length].hex),
-                      borderWidth: 2,
-                      borderRadius: 6,
-                      barThickness: 24
+                      borderWidth: 1.5,
+                      borderRadius: 4,
+                      barThickness: 13
                     }
                   ]
                 };
@@ -1535,13 +1636,13 @@ export default function AutoMLEngineModal({ isOpen, onClose, data = [], headers 
                   },
                   scales: {
                     x: {
-                      grid: { color: 'rgba(255, 255, 255, 0.06)' },
-                      ticks: { color: '#94a3b8', callback: (val) => `${val}%` },
-                      title: { display: true, text: 'Attribution Contribution Percentage (%)', color: '#64748b' }
+                      grid: { color: isLightTheme ? 'rgba(0, 0, 0, 0.06)' : 'rgba(255, 255, 255, 0.06)' },
+                      ticks: { color: isLightTheme ? '#64748b' : '#94a3b8', font: { size: 9 }, callback: (val) => `${val}%` },
+                      title: { display: true, text: 'Attribution Contribution Percentage (%)', color: isLightTheme ? '#64748b' : '#64748b', font: { size: 9 } }
                     },
                     y: {
                       grid: { display: false },
-                      ticks: { color: '#f8fafc', font: { weight: 'bold', size: 12 } }
+                      ticks: { color: isLightTheme ? '#0f172a' : '#f8fafc', font: { weight: 'bold', size: 10 } }
                     }
                   }
                 };
@@ -1560,9 +1661,9 @@ export default function AutoMLEngineModal({ isOpen, onClose, data = [], headers 
                       data: waterfallValues,
                       backgroundColor: waterfallValues.map(v => Number(v) >= 0 ? 'rgba(16, 185, 129, 0.85)' : 'rgba(244, 63, 94, 0.85)'),
                       borderColor: waterfallValues.map(v => Number(v) >= 0 ? '#10b981' : '#f43f5e'),
-                      borderWidth: 2,
-                      borderRadius: 6,
-                      barThickness: 24
+                      borderWidth: 1.5,
+                      borderRadius: 4,
+                      barThickness: 13
                     }
                   ]
                 };
@@ -1584,12 +1685,12 @@ export default function AutoMLEngineModal({ isOpen, onClose, data = [], headers 
                   },
                   scales: {
                     x: {
-                      grid: { color: 'rgba(255, 255, 255, 0.08)' },
-                      ticks: { color: '#94a3b8', callback: (val) => `${val}%` }
+                      grid: { color: isLightTheme ? 'rgba(0, 0, 0, 0.06)' : 'rgba(255, 255, 255, 0.08)' },
+                      ticks: { color: isLightTheme ? '#64748b' : '#94a3b8', font: { size: 9, family: 'Arial' }, callback: (val) => `${val}%` }
                     },
                     y: {
                       grid: { display: false },
-                      ticks: { color: '#f8fafc', font: { weight: 'bold', size: 12 } }
+                      ticks: { color: isLightTheme ? '#0f172a' : '#f8fafc', font: { weight: 'bold', size: 10, family: 'Arial' } }
                     }
                   }
                 };
@@ -1622,13 +1723,13 @@ export default function AutoMLEngineModal({ isOpen, onClose, data = [], headers 
                   responsive: true,
                   maintainAspectRatio: false,
                   plugins: {
-                    legend: { labels: { color: '#cbd5e1', font: { size: 12 } } }
+                    legend: { labels: { color: isLightTheme ? '#0f172a' : '#cbd5e1', font: { size: 10, weight: 'bold', family: 'Arial' } } }
                   },
                   scales: {
                     r: {
-                      angleLines: { color: 'rgba(255, 255, 255, 0.1)' },
-                      grid: { color: 'rgba(255, 255, 255, 0.1)' },
-                      pointLabels: { color: '#f1f5f9', font: { size: 11, weight: 'bold' } },
+                      angleLines: { color: isLightTheme ? 'rgba(0, 0, 0, 0.08)' : 'rgba(255, 255, 255, 0.1)' },
+                      grid: { color: isLightTheme ? 'rgba(0, 0, 0, 0.08)' : 'rgba(255, 255, 255, 0.1)' },
+                      pointLabels: { color: isLightTheme ? '#0f172a' : '#f1f5f9', font: { size: 10, weight: 'bold', family: 'Arial' } },
                       ticks: { display: false }
                     }
                   }
@@ -1645,11 +1746,11 @@ export default function AutoMLEngineModal({ isOpen, onClose, data = [], headers 
                         const val = dataset.data[index];
                         if (val !== null && val !== undefined) {
                           ctx.save();
-                          ctx.fillStyle = '#38bdf8';
-                          ctx.font = 'bold 12px sans-serif';
+                          ctx.fillStyle = isLightTheme ? '#0284c7' : '#38bdf8';
+                          ctx.font = 'bold 9px Arial';
                           ctx.textAlign = 'left';
                           ctx.textBaseline = 'middle';
-                          ctx.fillText(`${val}%`, bar.x + 8, bar.y);
+                          ctx.fillText(`${val}%`, bar.x + 6, bar.y);
                           ctx.restore();
                         }
                       });
@@ -1670,10 +1771,10 @@ export default function AutoMLEngineModal({ isOpen, onClose, data = [], headers 
                           const isPos = num >= 0;
                           ctx.save();
                           ctx.fillStyle = isPos ? '#10b981' : '#f43f5e';
-                          ctx.font = 'bold 11px sans-serif';
+                          ctx.font = 'bold 9px Arial';
                           ctx.textAlign = isPos ? 'left' : 'right';
                           ctx.textBaseline = 'middle';
-                          ctx.fillText(isPos ? `+${num}%` : `${num}%`, isPos ? bar.x + 8 : bar.x - 8, bar.y);
+                          ctx.fillText(isPos ? `+${num}%` : `${num}%`, isPos ? bar.x + 6 : bar.x - 6, bar.y);
                           ctx.restore();
                         }
                       });
@@ -1692,10 +1793,10 @@ export default function AutoMLEngineModal({ isOpen, onClose, data = [], headers 
                         if (val !== null && val !== undefined) {
                           ctx.save();
                           ctx.fillStyle = dataset.borderColor || '#06b6d4';
-                          ctx.font = 'bold 10px monospace';
+                          ctx.font = 'bold 9px monospace';
                           ctx.textAlign = 'center';
                           ctx.textBaseline = 'bottom';
-                          ctx.fillText(`${val}%`, point.x, point.y - 6);
+                          ctx.fillText(`${val}%`, point.x, point.y - 4);
                           ctx.restore();
                         }
                       });
@@ -1708,16 +1809,16 @@ export default function AutoMLEngineModal({ isOpen, onClose, data = [], headers 
 
                     {/* MAIN GRAPH CANVAS DISPLAY AREA */}
                     <div className="automl-card shap-graph-card">
-                      <div className="shap-graph-header flex justify-between items-center mb-4 pb-3 border-b border-slate-800">
-                        <div className="flex items-center gap-3">
+                      <div className="shap-graph-header">
+                        <div className="shap-graph-header-left">
                           <span className="shap-model-badge active-glow">{activeModel.name}</span>
-                          <span className="text-xs text-slate-300">
+                          <span className="shap-graph-subtitle">
                             Primary Metric Score: <strong className="text-emerald-400">{(activeModel.primaryScore * 100).toFixed(1)}%</strong> | Top Driver: <strong className="text-cyan-400">{topFeat.name}</strong> ({(topFeat.importance * 100).toFixed(1)}%)
                           </span>
                         </div>
-                        <div style={{ fontSize: '0.72rem', color: '#94a3b8', background: 'rgba(15, 23, 42, 0.9)', padding: '0.25rem 0.65rem', borderRadius: '9999px', border: '1px solid #334155', fontFamily: 'monospace' }}>
+                        <span className="shap-kernel-pill">
                           SHAP Kernel Explainer v2.4
-                        </div>
+                        </span>
                       </div>
 
                       {/* GRAPH RENDERING DEPENDING ON VIEW MODE */}
@@ -1726,7 +1827,7 @@ export default function AutoMLEngineModal({ isOpen, onClose, data = [], headers 
                           <div className="shap-importance-grid-layout">
                             {/* Main ChartJS Canvas Container */}
                             <div className="shap-canvas-card">
-                              <div className="shap-canvas-wrapper" style={{ height: '310px' }}>
+                              <div className="shap-canvas-wrapper" style={{ height: '190px' }}>
                                 <Bar data={importanceChartData} options={importanceOptions} plugins={[valueLabelsPlugin]} />
                               </div>
                             </div>
@@ -1734,7 +1835,7 @@ export default function AutoMLEngineModal({ isOpen, onClose, data = [], headers 
                             {/* Side Ranks Panel */}
                             <div className="shap-ranks-side-panel">
                               <div className="shap-ranks-panel-header">
-                                <Sparkles size={16} className="text-cyan-400" />
+                                <Sparkles size={14} className="text-cyan-400" />
                                 <span>Attribution Breakdown Ranks</span>
                               </div>
 
@@ -1782,11 +1883,11 @@ export default function AutoMLEngineModal({ isOpen, onClose, data = [], headers 
                           </div>
 
                           {/* Feature Business Insight Cards */}
-                          <div className="shap-insight-cards-grid mt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
+                          <div className="shap-insight-cards-grid">
                             <div className="shap-insight-card cyan">
-                              <div className="flex items-center gap-2 mb-1.5">
+                              <div className="shap-insight-header">
                                 <span className="shap-insight-icon-box cyan">
-                                  <Sparkles size={14} className="text-cyan-400" />
+                                  <Sparkles size={11} />
                                 </span>
                                 <h4 className="shap-insight-title">Top Driver 1: {topFeat.name} ({(topFeat.importance * 100).toFixed(1)}%)</h4>
                               </div>
@@ -1796,9 +1897,9 @@ export default function AutoMLEngineModal({ isOpen, onClose, data = [], headers 
                             </div>
 
                             <div className="shap-insight-card purple">
-                              <div className="flex items-center gap-2 mb-1.5">
+                              <div className="shap-insight-header">
                                 <span className="shap-insight-icon-box purple">
-                                  <TrendingUp size={14} className="text-purple-400" />
+                                  <TrendingUp size={11} />
                                 </span>
                                 <h4 className="shap-insight-title">Top 3 Cumulative Attribution: {feats.slice(0, 3).reduce((acc, f) => acc + f.importance * 100, 0).toFixed(1)}%</h4>
                               </div>
@@ -1813,18 +1914,29 @@ export default function AutoMLEngineModal({ isOpen, onClose, data = [], headers 
                       {shapViewMode === 'waterfall' && (
                         <div>
                           <div className="shap-waterfall-info-banner">
-                            <span><strong className="text-emerald-400">Green bars (+)</strong> push outcome HIGHER. <strong className="text-rose-400">Red bars (-)</strong> push outcome LOWER.</span>
-                            <span className="font-mono text-xs opacity-75">Baseline Impact: 0.0</span>
+                            <div className="shap-waterfall-legend-left">
+                              <span className="waterfall-legend-chip pos">
+                                <span className="legend-sign">+</span> Green bars push outcome HIGHER
+                              </span>
+                              <span className="waterfall-legend-chip neg">
+                                <span className="legend-sign">-</span> Red bars push outcome LOWER
+                              </span>
+                            </div>
+                            <span className="waterfall-baseline-badge">
+                              Baseline Impact: 0.0
+                            </span>
                           </div>
-                          <div className="shap-canvas-wrapper" style={{ height: '310px' }}>
-                            <Bar data={waterfallData} options={waterfallOptions} plugins={[waterfallValueLabelsPlugin]} />
+                          <div className="shap-canvas-card">
+                            <div className="shap-canvas-wrapper" style={{ height: '190px' }}>
+                              <Bar data={waterfallData} options={waterfallOptions} plugins={[waterfallValueLabelsPlugin]} />
+                            </div>
                           </div>
                         </div>
                       )}
 
                       {shapViewMode === 'radar' && (
                         <div>
-                          <div className="shap-radar-banner mb-2 py-2">
+                          <div className="shap-radar-banner mb-1.5 py-1">
                             <span className="shap-radar-banner-text">
                               Comparing Feature Attribution Weights across top algorithms: <strong>{top3Models.map(m => m.name).join(', ')}</strong>
                             </span>
@@ -1832,11 +1944,11 @@ export default function AutoMLEngineModal({ isOpen, onClose, data = [], headers 
 
                           <div
                             className="shap-radar-grid-layout"
-                            style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 350px', gap: '1.25rem', alignItems: 'start' }}
+                            style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 270px', gap: '0.75rem', alignItems: 'start' }}
                           >
                             {/* Left: Radar Chart Canvas */}
-                            <div className="shap-canvas-card flex justify-center items-center p-2">
-                              <div className="shap-canvas-wrapper w-full" style={{ height: '310px' }}>
+                            <div className="shap-canvas-card flex justify-center items-center p-1">
+                              <div className="shap-canvas-wrapper w-full" style={{ height: '190px' }}>
                                 <Radar data={radarData} options={radarOptions} plugins={[radarPointLabelsPlugin]} />
                               </div>
                             </div>
@@ -1973,12 +2085,19 @@ export default function AutoMLEngineModal({ isOpen, onClose, data = [], headers 
                     {/* SHAP SUMMARY & AI DECISION TRUST BOX */}
                     {pipelineResults.shapData && (
                       <div className="shap-summary-box">
-                        <div className="shap-summary-header flex items-center gap-2 mb-1.5">
-                          <Sparkles size={18} className="text-cyan-400" />
-                          <div>
-                            <h4 className="shap-summary-title">SHAP Global Explanation Summary & AI Insight</h4>
-                            <span className="shap-summary-sub">Automated model interpretability generated for active dataset</span>
+                        <div className="shap-summary-header">
+                          <div className="shap-summary-header-left">
+                            <div className="shap-summary-icon-box">
+                              <Sparkles size={12} className="text-cyan-400" />
+                            </div>
+                            <div>
+                              <h4 className="shap-summary-title">SHAP Global Explanation Summary & AI Insight</h4>
+                              <span className="shap-summary-sub">Automated model interpretability generated for active dataset</span>
+                            </div>
                           </div>
+                          <span className="shap-summary-badge">
+                            AI Interpretability & Trust
+                          </span>
                         </div>
                         <p className="shap-summary-text">{pipelineResults.shapData.explanationText}</p>
                       </div>
@@ -1999,7 +2118,7 @@ export default function AutoMLEngineModal({ isOpen, onClose, data = [], headers 
               {/* INFORMATIONAL STEP GUIDE BANNER */}
               <div className="automl-guide-callout">
                 <div className="automl-guide-icon">
-                  <Zap size={20} className="text-yellow-400" />
+                  <Zap size={15} className="text-yellow-400" />
                 </div>
                 <div>
                   <h4 className="automl-guide-title">Step 4: Real-Time Inference & Batch CSV Predictor</h4>
@@ -2012,7 +2131,7 @@ export default function AutoMLEngineModal({ isOpen, onClose, data = [], headers 
               {/* Single Prediction Form */}
               <div className="automl-card">
                 <div className="automl-card-header">
-                  <Zap size={18} className="text-yellow-400" />
+                  <Zap size={14} className="text-yellow-400" />
                   <h3>Single Row Real-Time Prediction</h3>
                 </div>
 
@@ -2033,7 +2152,7 @@ export default function AutoMLEngineModal({ isOpen, onClose, data = [], headers 
                   </div>
 
                   <button type="submit" className="btn-predict-cta">
-                    <Zap size={16} />
+                    <Zap size={13} />
                     <span>Generate Real-Time Prediction</span>
                   </button>
                 </form>
@@ -2069,73 +2188,74 @@ export default function AutoMLEngineModal({ isOpen, onClose, data = [], headers 
 
               {/* Batch Prediction Section */}
               <div className="automl-card batch-predict-hero-card">
-                <div className="batch-predict-header-flex flex items-center justify-between pb-3.5 mb-3.5 border-b border-slate-800/80">
-                  <div className="flex items-center gap-3">
-                    <div className="batch-icon-box p-2 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-400">
-                      <FileSpreadsheet size={20} />
+                <div className="batch-predict-header-flex">
+                  <div className="batch-header-title-group">
+                    <div className="batch-icon-box">
+                      <FileSpreadsheet size={13} className="text-cyan-400" />
                     </div>
-                    <div>
-                      <h3 className="text-sm font-bold text-white tracking-wide">Batch Prediction CSV Processor</h3>
-                      <p className="text-xs text-slate-400 mt-0.5">
+                    <div className="flex-1 min-w-0">
+                      <div className="batch-title-row">
+                        <h3 className="batch-header-title">Batch Prediction CSV Processor</h3>
+                        <span className="batch-inference-badge">
+                          High Performance Inference
+                        </span>
+                      </div>
+                      <p className="batch-header-subtitle">
                         Run active model against full dataset rows to append prediction columns and export ready-to-use CSV.
                       </p>
                     </div>
                   </div>
-                  <span className="text-xxs font-mono text-cyan-400 bg-cyan-950/80 px-3 py-1 rounded-full border border-cyan-800/60">
-                    High Performance Inference
-                  </span>
                 </div>
 
-                <div className="batch-predict-actions flex items-center gap-3 flex-wrap">
-                  {/* Select Row Count Options */}
-                  <div className="flex items-center gap-2">
-                    <label className="text-xs font-bold text-slate-300 flex items-center gap-1.5 whitespace-nowrap">
-                      <Layers size={14} className="text-cyan-400" />
-                      <span>Select Rows:</span>
-                    </label>
-                    <select
-                      value={batchPredictRowCount}
-                      onChange={(e) => setBatchPredictRowCount(e.target.value)}
-                      className="batch-row-select"
+                <div className="batch-predict-controls-layout">
+                  {/* Left: Selection and Run Button */}
+                  <div className="batch-controls-left">
+                    <div className="batch-select-row-box">
+                      <Layers size={12} className="text-cyan-400 flex-shrink-0" />
+                      <span className="batch-select-label">SELECT ROWS:</span>
+                      <select
+                        value={batchPredictRowCount}
+                        onChange={(e) => setBatchPredictRowCount(e.target.value)}
+                        className="batch-row-select"
+                      >
+                        {[25, 50, 75, 100, 125, 150, 175, 200, 225, 250, 275, 300, 325, 350, 375, 400, 425, 450, 475, 500, 750, 1000, 2000, 5000].map(count => (
+                          <option key={count} value={count}>
+                            {count} Rows {count >= workingData.length ? `(Full: ${workingData.length})` : ''}
+                          </option>
+                        ))}
+                        <option value="all">Unlimited / All Rows ({workingData.length} rows)</option>
+                      </select>
+                    </div>
+
+                    <button
+                      type="button"
+                      className="btn-predict-batch-primary"
+                      onClick={() => {
+                        const targetRows = batchPredictRowCount === 'all'
+                          ? workingData
+                          : workingData.slice(0, parseInt(batchPredictRowCount, 10));
+                        const batchRes = predictBatch(selectedBestModel || pipelineResults.bestModel, targetRows, problemInfo.problemType, pipelineResults.classes);
+                        setBatchPredictions(batchRes);
+                        if (batchRes && batchRes.length > 0) {
+                          const cols = Object.keys(batchRes[0]).filter(
+                            k => !k.startsWith('Predicted_') && !k.startsWith('Prediction_') && !k.startsWith('__AutoML_')
+                          );
+                          setVisibleTableCols(cols);
+                          setSelectedTableRows(new Set());
+                        }
+                        setShowBatchTable(true);
+                      }}
                     >
-                      {[25, 50, 75, 100, 125, 150, 175, 200, 225, 250, 275, 300, 325, 350, 375, 400, 425, 450, 475, 500, 750, 1000, 2000, 5000].map(count => (
-                        <option key={count} value={count}>
-                          {count} Rows {count >= workingData.length ? `(Full: ${workingData.length})` : ''}
-                        </option>
-                      ))}
-                      <option value="all">Unlimited / All Rows ({workingData.length} rows)</option>
-                    </select>
+                      <Cpu size={12} />
+                      <span>Run Batch Prediction ({batchPredictRowCount === 'all' ? `All ${workingData.length}` : Math.min(parseInt(batchPredictRowCount, 10), workingData.length)} rows)</span>
+                    </button>
                   </div>
 
-                  <button
-                    type="button"
-                    className="btn-predict-batch-primary"
-                    onClick={() => {
-                      const targetRows = batchPredictRowCount === 'all'
-                        ? workingData
-                        : workingData.slice(0, parseInt(batchPredictRowCount, 10));
-                      const batchRes = predictBatch(selectedBestModel || pipelineResults.bestModel, targetRows, problemInfo.problemType, pipelineResults.classes);
-                      setBatchPredictions(batchRes);
-                      if (batchRes && batchRes.length > 0) {
-                        const cols = Object.keys(batchRes[0]).filter(
-                          k => !k.startsWith('Predicted_') && !k.startsWith('Prediction_') && !k.startsWith('__AutoML_')
-                        );
-                        setVisibleTableCols(cols);
-                        setSelectedTableRows(new Set());
-                      }
-                      setShowBatchTable(true);
-                    }}
-                  >
-                    <Cpu size={16} />
-                    <span>
-                      Run Batch Prediction on Current Dataset ({batchPredictRowCount === 'all' ? `All ${workingData.length}` : Math.min(parseInt(batchPredictRowCount, 10), workingData.length)} rows)
-                    </span>
-                  </button>
-
+                  {/* Right: Results Action Group */}
                   {batchPredictions && (
-                    <div className="batch-results-action-group flex items-center gap-3 flex-wrap">
+                    <div className="batch-controls-right">
                       <div className="batch-status-badge">
-                        <CheckCircle2 size={15} />
+                        <CheckCircle2 size={12} />
                         <span>{batchPredictions.length} Rows Predicted</span>
                       </div>
 
@@ -2144,8 +2264,8 @@ export default function AutoMLEngineModal({ isOpen, onClose, data = [], headers 
                         className={`btn-view-predictions ${showBatchTable ? 'active' : ''}`}
                         onClick={() => setShowBatchTable(!showBatchTable)}
                       >
-                        <Eye size={15} />
-                        <span>{showBatchTable ? 'Hide Table Preview' : 'View Predictions Table'}</span>
+                        <Eye size={12} />
+                        <span>{showBatchTable ? 'Hide Table' : 'View Table'}</span>
                       </button>
 
                       <button
@@ -2176,8 +2296,8 @@ export default function AutoMLEngineModal({ isOpen, onClose, data = [], headers 
                         }}
                         title={selectedTableRows.size > 0 ? `Export ${selectedTableRows.size} selected rows to CSV` : 'Export all predicted rows to CSV'}
                       >
-                        <Download size={15} />
-                        <span>{selectedTableRows.size > 0 ? `Export Selected CSV (${selectedTableRows.size})` : 'Export Predicted CSV'}</span>
+                        <Download size={12} />
+                        <span>{selectedTableRows.size > 0 ? `Export (${selectedTableRows.size})` : 'Export CSV'}</span>
                       </button>
                     </div>
                   )}

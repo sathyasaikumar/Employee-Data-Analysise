@@ -209,40 +209,44 @@ for msg in consumer:
         onClick={(e) => e.stopPropagation()}
       >
         {/* MODAL HEADER */}
-        <div className="modal-header dl-modal-header">
-          <div className="modal-title-group">
-            <div className="dl-modal-header-icon-box">
-              <Brain size={22} className="text-purple-400" />
+        <div className="modal-header dl-modal-header" style={{ padding: '0.55rem 0.85rem' }}>
+          <div className="modal-title-group" style={{ gap: '0.45rem' }}>
+            <div className="dl-modal-header-icon-box" style={{ width: '30px', height: '30px', borderRadius: '6px' }}>
+              <Brain size={15} className="text-purple-400" />
             </div>
             <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-                <h3 className="modal-title dl-modal-title">Real-Time Deep Learning Intelligence Platform</h3>
-                <span className="dl-header-pill">Master Prompt Architecture & Execution Hub</span>
-                <span className="status-tag live">68 Core Modules</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
+                <h3 className="modal-title dl-modal-title" style={{ fontSize: '0.88rem', fontWeight: 800, fontFamily: 'Arial, sans-serif' }}>
+                  Real-Time Deep Learning Intelligence Platform
+                </h3>
+                <span className="dl-header-pill" style={{ fontSize: '0.58rem', padding: '0.1rem 0.4rem' }}>Master Prompt Architecture & Execution Hub</span>
+                <span className="status-tag live" style={{ fontSize: '0.58rem', padding: '0.1rem 0.4rem' }}>68 Core Modules</span>
               </div>
-              <p className="modal-subtitle dl-modal-subtitle">
+              <p className="modal-subtitle dl-modal-subtitle" style={{ fontSize: '0.60rem', fontFamily: 'Arial, sans-serif', marginTop: '0.05rem' }}>
                 Complete Real-World CSV → Preprocessing → Classical Baselines → Deep Learning → Serving → Streaming → MLOps Platform
               </p>
             </div>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
             <button
               type="button"
               className="currency-zoom-close-btn"
               onClick={() => setIsFullScreen(prev => !prev)}
               title={isFullScreen ? "Exit Full Screen" : "Full Screen View"}
+              style={{ width: '28px', height: '28px', borderRadius: '6px' }}
             >
-              {isFullScreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
+              {isFullScreen ? <Minimize2 size={15} strokeWidth={2.2} /> : <Maximize2 size={15} strokeWidth={2.2} />}
             </button>
 
             <button
               type="button"
-              className="currency-zoom-close-btn"
+              className="currency-zoom-close-btn close-danger"
               onClick={onClose}
               title="Close View"
+              style={{ width: '28px', height: '28px', borderRadius: '6px' }}
             >
-              <X size={16} />
+              <X size={15} strokeWidth={2.5} />
             </button>
           </div>
         </div>
@@ -253,7 +257,7 @@ for msg in consumer:
           {/* LEFT SIDEBAR NAVIGATION */}
           <aside className="dl-modal-sidebar">
             <div className="dl-sidebar-search-box">
-              <Search size={14} className="search-icon" />
+              <Search size={12} className="search-icon" />
               <input
                 type="text"
                 placeholder="Search 68 modules, templates..."
@@ -274,9 +278,9 @@ for msg in consumer:
                     className={`dl-nav-item-btn ${isActive ? 'active' : ''}`}
                     onClick={() => setActiveCategory(cat.id)}
                   >
-                    <IconComp size={15} className={`nav-icon ${isActive ? 'text-cyan-400' : 'text-muted'}`} />
+                    <IconComp size={13} className={`nav-icon ${isActive ? 'text-cyan-400' : 'text-muted'}`} />
                     <span className="nav-label">{cat.name}</span>
-                    <span className="folder-item-badge" style={{ fontSize: '0.62rem', padding: '0.1rem 0.35rem' }}>{cat.badge}</span>
+                    <span className="folder-item-badge" style={{ fontSize: '0.56rem', padding: '0.08rem 0.3rem' }}>{cat.badge}</span>
                   </button>
                 );
               })}

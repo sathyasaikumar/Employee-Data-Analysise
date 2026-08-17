@@ -386,34 +386,124 @@ export default function GlobalCurrencyChecker({ onCurrencyChange }) {
   return (
     <>
       {/* Standard Compact Card View */}
-      <div className="kpi-card kpi-emerald kpi-currency-card">
+      <div className="kpi-card kpi-emerald kpi-currency-card kpi-standard-card">
         <div className="kpi-card-header">
           <div className="currency-title-badge">
-            <span className="kpi-label">GLOBAL CURRENCY CHECKER</span>
+            <span className="kpi-label">GLOBAL CURRENCY</span>
             <div className="live-pill">
               <span className="live-dot"></span> LIVE
             </div>
           </div>
 
           <div className="kpi-header-action-group">
-            {/* Full Screen / Zoom In Button */}
             <button
               type="button"
               className="currency-zoom-btn"
               onClick={handleOpenZoom}
               title="Full Screen / Expand View"
             >
-              <Maximize2 size={14} />
+              <Maximize2 size={11} />
             </button>
-
             <div className="kpi-icon-box">
-              <Globe size={18} className="text-emerald-400" />
+              <Globe size={13} className="text-emerald-400" />
             </div>
           </div>
         </div>
 
-        <div className="currency-card-scroll-body">
-          {renderFormControls(false)}
+        {/* Compact Card Content - Unified Single Row Layout */}
+        <div className="currency-compact-body">
+          <div className="currency-mini-row">
+            {/* Country Selector Button */}
+            <div className="country-select-wrapper compact" ref={dropdownRef}>
+              <button
+                type="button"
+                className="country-dropdown-btn compact"
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                title={`Selected: ${selectedCountry.country} (${selectedCountry.code})`}
+              >
+                <span className="country-dropdown-flag">{selectedCountry.flag}</span>
+                <span className="country-dropdown-text">
+                  {selectedCountry.code}
+                </span>
+                <ChevronDown size={10} className={`chevron-icon ${isDropdownOpen ? 'open' : ''}`} />
+              </button>
+
+              {isDropdownOpen && (
+                <div className="country-dropdown-menu">
+                  <div className="country-search-box">
+                    <Search size={12} className="search-icon" />
+                    <input
+                      ref={searchInputRef}
+                      type="text"
+                      className="country-search-input"
+                      placeholder="Search country..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                  </div>
+                  <div className="country-options-list">
+                    {filteredCountries.length > 0 ? (
+                      filteredCountries.map((c) => (
+                        <div
+                          key={c.code + c.country}
+                          className={`country-option-item ${selectedCountry.code === c.code && selectedCountry.country === c.country ? 'selected' : ''}`}
+                          onClick={() => handleSelectCountry(c)}
+                        >
+                          <span className="option-flag">{c.flag}</span>
+                          <div className="option-details">
+                            <span className="option-country">{c.country}</span>
+                            <span className="option-currency">{c.name} ({c.symbol})</span>
+                          </div>
+                          <span className="option-code">{c.code}</span>
+                          {selectedCountry.code === c.code && selectedCountry.country === c.country && (
+                            <Check size={12} className="check-icon" />
+                          )}
+                        </div>
+                      ))
+                    ) : (
+                      <div className="no-countries-found">No match found</div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="currency-mini-amount-box">
+              <span className="currency-mini-symbol">{fromCurrency.symbol}</span>
+              <input
+                type="number"
+                min="0"
+                step="any"
+                className="currency-mini-input"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                placeholder="100"
+              />
+            </div>
+
+            <button
+              type="button"
+              className="currency-mini-swap-btn"
+              onClick={handleSwap}
+              title="Swap Currencies"
+            >
+              <ArrowRightLeft size={10} />
+            </button>
+
+            <div className="currency-mini-output-box">
+              <span className="currency-mini-output-val">
+                {toCurrency.symbol}{convertedValue !== null ? convertedValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00'}
+              </span>
+              <span className="currency-mini-output-code">{toCurrency.code}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Footer Rate Info */}
+        <div className="kpi-card-footer">
+          <span className="kpi-subtext text-emerald" style={{ fontSize: '0.56rem' }}>
+            <Clock size={10} /> 1 {fromCurrency.code} = {rate !== null ? (rate < 0.01 ? rate.toFixed(4) : rate.toFixed(2)) : '—'} {toCurrency.code}
+          </span>
         </div>
       </div>
 

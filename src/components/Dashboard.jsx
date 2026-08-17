@@ -49,7 +49,7 @@ export default function Dashboard({ dashboardMetrics, totalRows, filteredCount, 
     plugins: {
       legend: {
         position: 'top',
-        labels: { color: textColor, font: { family: 'Inter', size: 11 } }
+        labels: { boxWidth: 10, padding: 6, color: textColor, font: { family: 'Arial', size: 9.5, weight: 'bold' } }
       },
       tooltip: {
         backgroundColor: tooltipBg,
@@ -60,8 +60,8 @@ export default function Dashboard({ dashboardMetrics, totalRows, filteredCount, 
       }
     },
     scales: {
-      x: { ticks: { color: textColor, font: { family: 'Inter', size: 11 } }, grid: { color: gridColor } },
-      y: { ticks: { color: textColor, font: { family: 'Inter', size: 11 } }, grid: { color: gridColor } }
+      x: { ticks: { color: textColor, font: { family: 'Arial', size: 9.5 } }, grid: { color: gridColor } },
+      y: { ticks: { color: textColor, font: { family: 'Arial', size: 9.5 } }, grid: { color: gridColor } }
     }
   };
 
@@ -69,13 +69,13 @@ export default function Dashboard({ dashboardMetrics, totalRows, filteredCount, 
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
-      legend: { position: 'top', labels: { color: textColor, font: { family: 'Inter', size: 11 } } }
+      legend: { position: 'top', labels: { boxWidth: 10, padding: 6, color: textColor, font: { family: 'Arial', size: 9.5, weight: 'bold' } } }
     },
     scales: {
       r: {
         angleLines: { color: isLight ? 'rgba(0, 0, 0, 0.12)' : 'rgba(255, 255, 255, 0.1)' },
         grid: { color: isLight ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.08)' },
-        pointLabels: { color: textColor, font: { family: 'Inter', size: 11 } },
+        pointLabels: { color: textColor, font: { family: 'Arial', size: 9.5, weight: 'bold' } },
         ticks: { backdropColor: 'transparent', color: textColor }
       }
     }
@@ -85,7 +85,7 @@ export default function Dashboard({ dashboardMetrics, totalRows, filteredCount, 
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
-      legend: { position: 'right', labels: { color: textColor, font: { family: 'Inter', size: 11 } } }
+      legend: { position: 'right', labels: { boxWidth: 10, padding: 6, color: textColor, font: { family: 'Arial', size: 9.5, weight: 'bold' } } }
     }
   };
 
@@ -248,7 +248,7 @@ export default function Dashboard({ dashboardMetrics, totalRows, filteredCount, 
       <div className="chart-card">
         <div className="chart-header">
           <h3 className="chart-title">
-            <BarChart2 size={18} className="text-red-400" />
+            <BarChart2 size={13} className="text-red-400" />
             Distribution by {primaryCat}
           </h3>
         </div>
@@ -261,7 +261,7 @@ export default function Dashboard({ dashboardMetrics, totalRows, filteredCount, 
       <div className="chart-card">
         <div className="chart-header">
           <h3 className="chart-title">
-            <PieChart size={18} className="text-rose-400" />
+            <PieChart size={13} className="text-rose-400" />
             Breakdown by {secondaryCat}
           </h3>
         </div>
@@ -275,7 +275,7 @@ export default function Dashboard({ dashboardMetrics, totalRows, filteredCount, 
         <div className="chart-card">
           <div className="chart-header">
             <h3 className="chart-title">
-              <TrendingUp size={18} className="text-blue-400" />
+              <TrendingUp size={13} className="text-blue-400" />
               {primaryNum} Range & Quartiles vs. {secondaryCat}
             </h3>
           </div>
@@ -290,7 +290,7 @@ export default function Dashboard({ dashboardMetrics, totalRows, filteredCount, 
         <div className="chart-card">
           <div className="chart-header">
             <h3 className="chart-title">
-              <Grid size={18} className="text-purple-400" />
+              <Grid size={13} className="text-purple-400" />
               {secondaryNum} Distribution
             </h3>
           </div>
@@ -304,7 +304,7 @@ export default function Dashboard({ dashboardMetrics, totalRows, filteredCount, 
       <div className="chart-card">
         <div className="chart-header">
           <h3 className="chart-title">
-            <Activity size={18} className="text-cyan-400" />
+            <Activity size={13} className="text-cyan-400" />
             Timeline Volume Trend Analysis
           </h3>
         </div>
@@ -317,7 +317,7 @@ export default function Dashboard({ dashboardMetrics, totalRows, filteredCount, 
       <div className="chart-card">
         <div className="chart-header">
           <h3 className="chart-title">
-            <Layers size={18} className="text-amber-400" />
+            <Layers size={13} className="text-amber-400" />
             Multi-Dimensional Radar Profile
           </h3>
         </div>

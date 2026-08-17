@@ -4,7 +4,9 @@ import { X, Mail, User, Shield, Check, ArrowRight, KeyRound } from 'lucide-react
 const PRESET_ACCOUNTS = {
   Google: [
     { name: 'Alex Morgan', email: 'alex.morgan@gmail.com', role: 'Senior Data Lead', avatar: 'AM' },
+    { name: 'Sathya Sai Kumar', email: 'sathyasaikumar.dev@gmail.com', role: 'Executive Lead Developer', avatar: 'SK' },
     { name: 'Corporate Account', email: 'admin@corporate.com', role: 'Executive Admin', avatar: 'CA' },
+    { name: 'Sarah Jenkins', email: 'sarah.jenkins@gmail.com', role: 'Department Director', avatar: 'SJ' },
     { name: 'Dev Lead', email: 'developer@workspace.org', role: 'Data Engineer', avatar: 'DL' }
   ],
   'Microsoft 365': [
@@ -75,10 +77,10 @@ export default function OAuthPromptModal({ isOpen, provider, loginFn, onClose, o
         {/* Header */}
         <div className="oauth-prompt-header">
           <div className="oauth-prompt-brand">
-            <img src="/logo.png" alt="Sathya Logo" className="modal-gold-logo" style={{ height: '24px', objectFit: 'contain' }} />
+            <img src="/logo.png" alt="Sathya Logo" className="modal-gold-logo" style={{ height: '18px', objectFit: 'contain' }} />
             <div className="oauth-provider-badge">
               {provider === 'Google' && (
-                <svg width="20" height="20" viewBox="0 0 24 24">
+                <svg width="15" height="15" viewBox="0 0 24 24">
                   <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
                   <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
                   <path fill="#FBBC05" d="M5.84 14.1c-.22-.66-.35-1.36-.35-2.1s.13-1.44.35-2.1V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.62z"/>
@@ -86,7 +88,7 @@ export default function OAuthPromptModal({ isOpen, provider, loginFn, onClose, o
                 </svg>
               )}
               {provider === 'Microsoft 365' && (
-                <svg width="18" height="18" viewBox="0 0 23 23">
+                <svg width="14" height="14" viewBox="0 0 23 23">
                   <path fill="#f35325" d="M1 1h10v10H1z"/>
                   <path fill="#81bc06" d="M12 1h10v10H12z"/>
                   <path fill="#05a6f0" d="M1 12h10v10H1z"/>
@@ -94,17 +96,17 @@ export default function OAuthPromptModal({ isOpen, provider, loginFn, onClose, o
                 </svg>
               )}
               {provider === 'GitHub' && (
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
                 </svg>
               )}
-              {provider === 'Enterprise SAML SSO' && <KeyRound size={18} className="text-accent-cyan" />}
+              {provider === 'Enterprise SAML SSO' && <KeyRound size={14} className="text-accent-cyan" />}
               <span>{provider} Sign In</span>
             </div>
           </div>
 
-          <button type="button" className="auth-close-btn" onClick={onClose} title="Close prompt">
-            <X size={18} />
+          <button type="button" className="auth-close-btn" onClick={onClose} title="Close prompt" style={{ width: '24px', height: '24px' }}>
+            <X size={14} />
           </button>
         </div>
 
@@ -114,7 +116,7 @@ export default function OAuthPromptModal({ isOpen, provider, loginFn, onClose, o
         </p>
 
         {error && (
-          <div className="auth-alert auth-alert-error" style={{ marginBottom: '1rem' }}>
+          <div className="auth-alert auth-alert-error" style={{ marginBottom: '0.65rem' }}>
             <span>{error}</span>
           </div>
         )}
@@ -136,7 +138,7 @@ export default function OAuthPromptModal({ isOpen, provider, loginFn, onClose, o
                     <p className="account-email">{acc.email}</p>
                   </div>
                   <div className="account-radio">
-                    {isSelected && <Check size={16} className="text-accent-blue" />}
+                    {isSelected && <Check size={14} className="text-accent-blue" strokeWidth={2.5} />}
                   </div>
                 </div>
               );
@@ -147,14 +149,14 @@ export default function OAuthPromptModal({ isOpen, provider, loginFn, onClose, o
               onClick={() => setSelectedOption('custom')}
             >
               <div className="account-avatar custom-avatar">
-                <Mail size={16} />
+                <Mail size={13} />
               </div>
               <div className="account-info">
                 <h4 className="account-name">Use another account...</h4>
                 <p className="account-email">Enter custom email address</p>
               </div>
               <div className="account-radio">
-                {selectedOption === 'custom' && <Check size={16} className="text-accent-blue" />}
+                {selectedOption === 'custom' && <Check size={14} className="text-accent-blue" strokeWidth={2.5} />}
               </div>
             </div>
           </div>
@@ -164,7 +166,7 @@ export default function OAuthPromptModal({ isOpen, provider, loginFn, onClose, o
               <div className="auth-field-group">
                 <label className="auth-label">{provider} Email Address</label>
                 <div className="auth-input-wrapper">
-                  <Mail className="auth-input-icon" size={18} />
+                  <Mail className="auth-input-icon" size={14} />
                   <input
                     type="email"
                     className="auth-input"
@@ -176,10 +178,10 @@ export default function OAuthPromptModal({ isOpen, provider, loginFn, onClose, o
                 </div>
               </div>
 
-              <div className="auth-field-group" style={{ marginTop: '0.75rem' }}>
+              <div className="auth-field-group" style={{ marginTop: '0.45rem' }}>
                 <label className="auth-label">Account Name (Optional)</label>
                 <div className="auth-input-wrapper">
-                  <User className="auth-input-icon" size={18} />
+                  <User className="auth-input-icon" size={14} />
                   <input
                     type="text"
                     className="auth-input"
@@ -198,7 +200,7 @@ export default function OAuthPromptModal({ isOpen, provider, loginFn, onClose, o
             </button>
             <button type="submit" className="auth-submit-btn" disabled={isSubmitting}>
               <span>Continue to Workspace</span>
-              <ArrowRight size={16} />
+              <ArrowRight size={13} strokeWidth={2.2} />
             </button>
           </div>
         </form>

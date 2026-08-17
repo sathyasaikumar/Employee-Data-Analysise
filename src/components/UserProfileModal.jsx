@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { 
   User, Mail, Phone, Calendar, Award, ShieldCheck, Clock, History, 
@@ -29,6 +29,8 @@ export default function UserProfileModal({
   datasets = [],
   onSelectDataset,
   onDeleteDataset,
+  onDeleteAllDatasets,
+  onDeleteBulkDatasets,
   onRefreshDatasets,
   onSeedSample = () => {},
   onOpenUpload,
@@ -49,21 +51,29 @@ export default function UserProfileModal({
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [showPhotoPicker, setShowPhotoPicker] = useState(false);
   const [selectedPhoto, setSelectedPhoto] = useState(null);
+  const directFileInputRef = useRef(null);
 
   useEffect(() => {
     const handleFullscreenChange = () => {
-      const isFs = Boolean(document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement);
+      const isFs = Boolean(
+        document.fullscreenElement || 
+        document.webkitFullscreenElement || 
+        document.mozFullScreenElement || 
+        document.msFullscreenElement
+      );
       setIsFullScreen(isFs);
     };
 
     document.addEventListener('fullscreenchange', handleFullscreenChange);
     document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
-    document.addEventListener('msfullscreenchange', handleFullscreenChange);
+    document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+    document.addEventListener('MSFullscreenChange', handleFullscreenChange);
 
     return () => {
       document.removeEventListener('fullscreenchange', handleFullscreenChange);
       document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
-      document.removeEventListener('msfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('mozfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('MSFullscreenChange', handleFullscreenChange);
     };
   }, []);
 
@@ -74,14 +84,31 @@ export default function UserProfileModal({
     try {
       if (nextState) {
         const elem = document.documentElement;
-        if (elem.requestFullscreen) elem.requestFullscreen().catch(() => {});
-        else if (elem.webkitRequestFullscreen) elem.webkitRequestFullscreen().catch(() => {});
-        else if (elem.msRequestFullscreen) elem.msRequestFullscreen().catch(() => {});
+        if (elem.requestFullscreen) {
+          elem.requestFullscreen().catch(() => {});
+        } else if (elem.webkitRequestFullscreen) {
+          elem.webkitRequestFullscreen();
+        } else if (elem.mozRequestFullScreen) {
+          elem.mozRequestFullScreen();
+        } else if (elem.msRequestFullscreen) {
+          elem.msRequestFullscreen();
+        }
       } else {
-        if (document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement) {
-          if (document.exitFullscreen) document.exitFullscreen().catch(() => {});
-          else if (document.webkitExitFullscreen) document.webkitExitFullscreen().catch(() => {});
-          else if (document.msExitFullscreen) document.msExitFullscreen().catch(() => {});
+        if (
+          document.fullscreenElement || 
+          document.webkitFullscreenElement || 
+          document.mozFullScreenElement || 
+          document.msFullscreenElement
+        ) {
+          if (document.exitFullscreen) {
+            document.exitFullscreen().catch(() => {});
+          } else if (document.webkitExitFullscreen) {
+            document.webkitExitFullscreen();
+          } else if (document.mozCancelFullScreen) {
+            document.mozCancelFullScreen();
+          } else if (document.msExitFullscreen) {
+            document.msExitFullscreen();
+          }
         }
       }
     } catch (err) {
@@ -89,27 +116,22 @@ export default function UserProfileModal({
     }
   };
 
-  const userId = currentUser?.id || currentUser?.email || currentUser?.phone || 'guest';
-  const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'Local Timezone';
+  const userId = currentUser?.id || currentUser?.email || currentUser?.phone || 'admin';
+  const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
 
-  // Load profile data and session history
+  // Load and sync profile data
   useEffect(() => {
-    if (currentUser) {
-      ensureSampleLoginHistory(userId);
-      const loadedProfile = getUserProfile(currentUser);
-      setProfile(loadedProfile);
-      setEditForm(loadedProfile);
-      setSelectedPhoto(loadedProfile.photo || null);
-      refreshSessionData();
-    }
-  }, [currentUser, userId]);
+    if (!currentUser) return;
+    const initialProfile = getUserProfile(currentUser);
+    setProfile(initialProfile);
+    setEditForm(initialProfile);
+    setSelectedPhoto(initialProfile.photo);
 
-  // Refresh stats & history
-  const refreshSessionData = () => {
-    const calculatedStats = calculateSessionStats(userId);
-    setStats(calculatedStats);
-    setHistory(calculatedStats.history);
-  };
+    ensureSampleLoginHistory(userId);
+    const initialStats = calculateSessionStats(userId);
+    setStats(initialStats);
+    setHistory(initialStats.history);
+  }, [currentUser, userId, isOpen]);
 
   // Live seconds ticker for current session duration
   useEffect(() => {
@@ -162,23 +184,69 @@ export default function UserProfileModal({
     setShowPhotoPicker(false);
   };
 
-  const handleFileUpload = (e) => {
-    const file = e.target.files?.[0];
+  const compressAndSetPhoto = async (file) => {
     if (!file) return;
-
     if (!file.type.startsWith('image/')) {
-      alert('Please select a valid image file (PNG, JPG, WEBP, etc.).');
+      alert('Please select a valid image file (PNG, JPG, JPEG, WEBP, GIF, etc.).');
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const dataUrl = event.target?.result;
+    try {
+      const dataUrl = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const img = new Image();
+          img.onload = () => {
+            try {
+              const canvas = document.createElement('canvas');
+              const maxDim = 320;
+              let width = img.width;
+              let height = img.height;
+
+              if (width > height) {
+                if (width > maxDim) {
+                  height = Math.round((height * maxDim) / width);
+                  width = maxDim;
+                }
+              } else {
+                if (height > maxDim) {
+                  width = Math.round((width * maxDim) / height);
+                  height = maxDim;
+                }
+              }
+
+              canvas.width = width;
+              canvas.height = height;
+              const ctx = canvas.getContext('2d');
+              ctx.drawImage(img, 0, 0, width, height);
+              const compressed = canvas.toDataURL('image/jpeg', 0.88);
+              resolve(compressed);
+            } catch (canvasErr) {
+              resolve(e.target?.result);
+            }
+          };
+          img.onerror = () => resolve(e.target?.result);
+          img.src = e.target?.result;
+        };
+        reader.onerror = (err) => reject(err);
+        reader.readAsDataURL(file);
+      });
+
       if (dataUrl) {
         handleSelectPresetPhoto(dataUrl);
       }
-    };
-    reader.readAsDataURL(file);
+    } catch (err) {
+      console.error('Failed to process image:', err);
+      alert('Failed to process the selected image. Please try another image file.');
+    }
+  };
+
+  const handleFileUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      compressAndSetPhoto(file);
+    }
+    e.target.value = '';
   };
 
   const handleRemovePhoto = () => {
@@ -207,21 +275,17 @@ export default function UserProfileModal({
   };
 
   const handleDeleteSession = (sessionId) => {
-    if (window.confirm('Are you sure you want to delete this login session record?')) {
-      deleteLoginSession(userId, sessionId);
-      const updatedStats = calculateSessionStats(userId);
-      setStats(updatedStats);
-      setHistory(updatedStats.history);
-    }
+    deleteLoginSession(userId, sessionId);
+    const updatedStats = calculateSessionStats(userId);
+    setStats(updatedStats);
+    setHistory(updatedStats.history);
   };
 
   const handleClearAllHistory = () => {
-    if (window.confirm('Are you sure you want to clear all completed session history logs?')) {
-      clearLoginHistory(userId);
-      const updatedStats = calculateSessionStats(userId);
-      setStats(updatedStats);
-      setHistory(updatedStats.history);
-    }
+    clearLoginHistory(userId);
+    const updatedStats = calculateSessionStats(userId);
+    setStats(updatedStats);
+    setHistory(updatedStats.history);
   };
 
   // Filtered history records
@@ -246,7 +310,7 @@ export default function UserProfileModal({
         {/* Modal Top Header Bar */}
         <div className="profile-modal-header" onDoubleClick={() => toggleFullScreen()}>
           <div className="profile-modal-title">
-            <User size={22} className="text-indigo-400" />
+            <User size={15} className="text-indigo-400" />
             <div>
               <h2>Personal Profile & Login Activity System</h2>
               <p className="subtitle">Real-time session security, localized tracking, and profile management</p>
@@ -260,10 +324,10 @@ export default function UserProfileModal({
               onClick={() => toggleFullScreen()} 
               title={isFullScreen ? "Exit Full Screen" : "Full Screen View"}
             >
-              {isFullScreen ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
+              {isFullScreen ? <Minimize2 size={13} /> : <Maximize2 size={13} />}
             </button>
             <button type="button" className="profile-modal-close-btn" onClick={onClose} title="Close Profile Modal">
-              <X size={20} />
+              <X size={14} />
             </button>
           </div>
         </div>
@@ -277,37 +341,66 @@ export default function UserProfileModal({
               
               {/* Profile Photo / Avatar Header with interactive camera overlay */}
               <div className="profile-photo-container">
-                <div className="avatar-circle" title="Click camera to change profile photo">
+                <div 
+                  className="avatar-circle" 
+                  title="Click to upload or change profile photo"
+                  onClick={() => directFileInputRef.current?.click()}
+                  style={{ cursor: 'pointer', position: 'relative' }}
+                >
                   {profile.photo ? (
-                    <img src={profile.photo} alt={profile.fullName} className="avatar-img" />
-                  ) : (
-                    <span className="avatar-text">{profile.avatarInitials}</span>
-                  )}
+                    <img 
+                      src={profile.photo} 
+                      alt={profile.fullName} 
+                      className="avatar-img" 
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                        const fallbackEl = e.currentTarget.parentElement?.querySelector('.avatar-text-fallback');
+                        if (fallbackEl) fallbackEl.style.display = 'flex';
+                      }}
+                    />
+                  ) : null}
+                  <span 
+                    className="avatar-text avatar-text-fallback"
+                    style={{ display: profile.photo ? 'none' : 'flex' }}
+                  >
+                    {profile.avatarInitials}
+                  </span>
                   
                   {/* Camera Icon Overlay Trigger */}
                   <button 
                     type="button" 
                     className="avatar-camera-btn"
-                    onClick={() => setShowPhotoPicker(true)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      directFileInputRef.current?.click();
+                    }}
                     title="Choose / Upload Profile Picture"
                   >
-                    <Camera size={18} />
+                    <Camera size={11} />
                   </button>
 
                   <span className="avatar-online-badge" title="Status: Online & Verified"></span>
                 </div>
+
+                <input 
+                  type="file" 
+                  ref={directFileInputRef} 
+                  accept="image/*" 
+                  style={{ display: 'none' }} 
+                  onChange={handleFileUpload} 
+                />
 
                 <button 
                   type="button" 
                   className="btn-change-photo-link"
                   onClick={() => setShowPhotoPicker(true)}
                 >
-                  <Camera size={13} /> Change Profile Picture
+                  <Camera size={11} /> Change Profile Picture
                 </button>
 
                 <h3 className="profile-name">
                   {profile.fullName}
-                  <ShieldCheck size={18} className="text-emerald-400" title="Verified Corporate Identity" />
+                  <ShieldCheck size={13} className="text-emerald-400" title="Verified Corporate Identity" />
                 </h3>
                 <span className="profile-role-pill">{profile.role}</span>
               </div>
@@ -316,7 +409,7 @@ export default function UserProfileModal({
               {!isEditing ? (
                 <div className="profile-details-list">
                   <div className="detail-item">
-                    <Mail size={15} className="detail-icon" />
+                    <Mail size={12} className="detail-icon" />
                     <div>
                       <span className="detail-label">Email Address</span>
                       <span className="detail-value">{profile.email}</span>
@@ -324,7 +417,7 @@ export default function UserProfileModal({
                   </div>
 
                   <div className="detail-item">
-                    <Phone size={15} className="detail-icon" />
+                    <Phone size={12} className="detail-icon" />
                     <div>
                       <span className="detail-label">Mobile Phone</span>
                       <span className="detail-value">{profile.phone}</span>
@@ -332,7 +425,7 @@ export default function UserProfileModal({
                   </div>
 
                   <div className="detail-item">
-                    <Award size={15} className="detail-icon" />
+                    <Award size={12} className="detail-icon" />
                     <div>
                       <span className="detail-label">Department</span>
                       <span className="detail-value">{profile.department}</span>
@@ -340,7 +433,7 @@ export default function UserProfileModal({
                   </div>
 
                   <div className="detail-item">
-                    <Activity size={15} className="detail-icon" />
+                    <Activity size={12} className="detail-icon" />
                     <div>
                       <span className="detail-label">Account Status</span>
                       <span className="detail-value text-emerald">{profile.status}</span>
@@ -348,7 +441,7 @@ export default function UserProfileModal({
                   </div>
 
                   <div className="detail-item">
-                    <Calendar size={15} className="detail-icon" />
+                    <Calendar size={12} className="detail-icon" />
                     <div>
                       <span className="detail-label">Profile Created Date</span>
                       <span className="detail-value">{formatLocalTimestamp(profile.createdDate)}</span>
@@ -379,7 +472,7 @@ export default function UserProfileModal({
                     className="btn btn-secondary btn-edit-profile"
                     onClick={() => setIsEditing(true)}
                   >
-                    <Edit3 size={15} /> Edit Personal Details
+                    <Edit3 size={12} /> Edit Personal Details
                   </button>
                 </div>
               ) : (
@@ -443,7 +536,7 @@ export default function UserProfileModal({
 
                   <div className="form-actions-row">
                     <button type="submit" className="btn btn-primary btn-save">
-                      <Save size={15} /> Save Changes
+                      <Save size={12} /> Save Changes
                     </button>
                     <button type="button" className="btn btn-secondary" onClick={() => setIsEditing(false)}>
                       Cancel
@@ -471,7 +564,7 @@ export default function UserProfileModal({
                 </div>
               </div>
               <div className="session-timer-badge">
-                <Clock size={16} className="text-emerald-400 animate-pulse" />
+                <Clock size={13} className="text-emerald-400 animate-pulse" />
                 <span className="timer-text">{liveDuration}</span>
               </div>
             </div>
@@ -483,7 +576,7 @@ export default function UserProfileModal({
               <div className="dash-kpi-card card-blue">
                 <div className="dash-kpi-header">
                   <span className="dash-kpi-label">LAST LOGIN</span>
-                  <Clock size={16} className="dash-kpi-icon" />
+                  <Clock size={13} className="dash-kpi-icon" />
                 </div>
                 <div className="dash-kpi-value text-medium">
                   {stats?.lastLoginIso ? formatLocalTimestamp(stats.lastLoginIso) : 'Never'}
@@ -495,7 +588,7 @@ export default function UserProfileModal({
               <div className="dash-kpi-card card-emerald">
                 <div className="dash-kpi-header">
                   <span className="dash-kpi-label">CURRENT SESSION</span>
-                  <Activity size={16} className="dash-kpi-icon" />
+                  <Activity size={13} className="dash-kpi-icon" />
                 </div>
                 <div className="dash-kpi-value">
                   {liveDuration}
@@ -507,7 +600,7 @@ export default function UserProfileModal({
               <div className="dash-kpi-card card-purple">
                 <div className="dash-kpi-header">
                   <span className="dash-kpi-label">TOTAL LOGIN HOURS</span>
-                  <Award size={16} className="dash-kpi-icon" />
+                  <Award size={13} className="dash-kpi-icon" />
                 </div>
                 <div className="dash-kpi-value">
                   {stats?.totalHoursFloat || '0.0'} <span className="unit">hrs</span>
@@ -519,7 +612,7 @@ export default function UserProfileModal({
               <div className="dash-kpi-card card-cyan">
                 <div className="dash-kpi-header">
                   <span className="dash-kpi-label">LOGIN COUNT</span>
-                  <History size={16} className="dash-kpi-icon" />
+                  <History size={13} className="dash-kpi-icon" />
                 </div>
                 <div className="dash-kpi-value">
                   {stats?.loginCount || 0} <span className="unit">Sessions</span>
@@ -531,7 +624,7 @@ export default function UserProfileModal({
               <div className="dash-kpi-card card-rose">
                 <div className="dash-kpi-header">
                   <span className="dash-kpi-label">LAST LOGOUT</span>
-                  <LogOut size={16} className="dash-kpi-icon" />
+                  <LogOut size={13} className="dash-kpi-icon" />
                 </div>
                 <div className="dash-kpi-value text-medium">
                   {stats?.lastLogoutIso ? formatLocalTimestamp(stats.lastLogoutIso) : 'Active Session'}
@@ -542,7 +635,7 @@ export default function UserProfileModal({
             </div>
 
             {/* TAB SELECTOR BAR FOR LOGIN & DATASET HISTORY */}
-            <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.5rem', marginBottom: '1.25rem', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: '0.35rem', marginTop: '0.65rem', marginBottom: '0.55rem', flexWrap: 'wrap' }}>
               <button
                 type="button"
                 className={`profile-tab-pill ${activeTab === 'session_history' ? 'active' : ''}`}
@@ -550,11 +643,13 @@ export default function UserProfileModal({
                 style={{
                   display: 'inline-flex',
                   alignItems: 'center',
-                  gap: '0.45rem',
-                  padding: '0.65rem 1.15rem',
-                  borderRadius: '10px',
-                  fontSize: '0.875rem',
+                  gap: '0.35rem',
+                  padding: '0.25rem 0.65rem',
+                  height: '28px',
+                  borderRadius: '6px',
+                  fontSize: '0.70rem',
                   fontWeight: 700,
+                  fontFamily: 'Arial, sans-serif',
                   border: activeTab === 'session_history' ? '1.5px solid var(--accent-blue)' : '1px solid var(--border-color)',
                   background: activeTab === 'session_history' ? 'linear-gradient(135deg, #6366f1, #06b6d4)' : 'var(--bg-input)',
                   color: activeTab === 'session_history' ? '#ffffff' : 'var(--text-main)',
@@ -563,7 +658,7 @@ export default function UserProfileModal({
                   boxShadow: activeTab === 'session_history' ? '0 4px 15px rgba(99, 102, 241, 0.3)' : 'none'
                 }}
               >
-                <History size={16} style={{ color: activeTab === 'session_history' ? '#ffffff' : 'var(--accent-blue)' }} />
+                <History size={13} style={{ color: activeTab === 'session_history' ? '#ffffff' : 'var(--accent-blue)' }} />
                 <span>Automated Login & Session History</span>
               </button>
 
@@ -574,11 +669,13 @@ export default function UserProfileModal({
                 style={{
                   display: 'inline-flex',
                   alignItems: 'center',
-                  gap: '0.45rem',
-                  padding: '0.65rem 1.15rem',
-                  borderRadius: '10px',
-                  fontSize: '0.875rem',
+                  gap: '0.35rem',
+                  padding: '0.25rem 0.65rem',
+                  height: '28px',
+                  borderRadius: '6px',
+                  fontSize: '0.70rem',
                   fontWeight: 700,
+                  fontFamily: 'Arial, sans-serif',
                   border: activeTab === 'dataset_history' ? '1.5px solid var(--accent-blue)' : '1px solid var(--border-color)',
                   background: activeTab === 'dataset_history' ? 'linear-gradient(135deg, #6366f1, #06b6d4)' : 'var(--bg-input)',
                   color: activeTab === 'dataset_history' ? '#ffffff' : 'var(--text-main)',
@@ -587,14 +684,14 @@ export default function UserProfileModal({
                   boxShadow: activeTab === 'dataset_history' ? '0 4px 15px rgba(99, 102, 241, 0.3)' : 'none'
                 }}
               >
-                <Database size={16} style={{ color: activeTab === 'dataset_history' ? '#ffffff' : 'var(--accent-blue)' }} />
+                <Database size={13} style={{ color: activeTab === 'dataset_history' ? '#ffffff' : 'var(--accent-blue)' }} />
                 <span>Dataset History</span>
                 <span style={{
                   background: activeTab === 'dataset_history' ? 'rgba(255, 255, 255, 0.25)' : 'var(--border-color)',
                   color: activeTab === 'dataset_history' ? '#ffffff' : 'var(--text-muted)',
-                  padding: '0.15rem 0.55rem',
-                  borderRadius: '12px',
-                  fontSize: '0.75rem',
+                  padding: '0.08rem 0.35rem',
+                  borderRadius: '4px',
+                  fontSize: '0.60rem',
                   fontWeight: 800
                 }}>
                   {datasets.length}
@@ -609,11 +706,13 @@ export default function UserProfileModal({
                 style={{
                   display: 'inline-flex',
                   alignItems: 'center',
-                  gap: '0.45rem',
-                  padding: '0.65rem 1.15rem',
-                  borderRadius: '10px',
-                  fontSize: '0.875rem',
+                  gap: '0.35rem',
+                  padding: '0.25rem 0.65rem',
+                  height: '28px',
+                  borderRadius: '6px',
+                  fontSize: '0.70rem',
                   fontWeight: 700,
+                  fontFamily: 'Arial, sans-serif',
                   border: activeTab === 'live_users' ? '1.5px solid #10b981' : '1px solid var(--border-color)',
                   background: activeTab === 'live_users' ? 'linear-gradient(135deg, #059669, #10b981)' : 'var(--bg-input)',
                   color: activeTab === 'live_users' ? '#ffffff' : 'var(--text-main)',
@@ -622,14 +721,14 @@ export default function UserProfileModal({
                   boxShadow: activeTab === 'live_users' ? '0 4px 15px rgba(16, 185, 129, 0.3)' : 'none'
                 }}
               >
-                <Radio size={16} className={activeTab === 'live_users' ? 'animate-pulse' : ''} style={{ color: activeTab === 'live_users' ? '#ffffff' : '#10b981' }} />
+                <Radio size={13} className={activeTab === 'live_users' ? 'animate-pulse' : ''} style={{ color: activeTab === 'live_users' ? '#ffffff' : '#10b981' }} />
                 <span>Live Website Users</span>
                 <span style={{
                   background: activeTab === 'live_users' ? '#ffffff' : '#10b981',
                   color: activeTab === 'live_users' ? '#022c22' : '#ffffff',
-                  padding: '0.15rem 0.55rem',
-                  borderRadius: '12px',
-                  fontSize: '0.75rem',
+                  padding: '0.08rem 0.35rem',
+                  borderRadius: '4px',
+                  fontSize: '0.60rem',
                   fontWeight: 800
                 }}>
                   {liveStats?.liveUsers ?? 2}
@@ -639,7 +738,7 @@ export default function UserProfileModal({
 
             {/* CONDITIONAL TAB CONTENT */}
             {activeTab === 'live_users' ? (
-              <div style={{ background: 'var(--bg-card)', borderRadius: '16px', border: '1px solid var(--border-color)', padding: '1rem', overflow: 'hidden' }}>
+              <div style={{ width: '100%' }}>
                 <LiveUserTracker 
                   liveStats={liveStats}
                   currentUser={currentUser}
@@ -654,6 +753,8 @@ export default function UserProfileModal({
                     onClose();
                   }}
                   onDeleteDataset={onDeleteDataset}
+                  onDeleteAllDatasets={onDeleteAllDatasets}
+                  onDeleteBulkDatasets={onDeleteBulkDatasets}
                   onRefresh={onRefreshDatasets}
                   onSeedSample={onSeedSample}
                   onOpenUpload={() => {
@@ -668,10 +769,10 @@ export default function UserProfileModal({
               <div className="login-history-container">
                 <div className="history-table-header">
                   <div className="history-header-title">
-                    <History size={18} className="text-blue-400" />
+                    <History size={13} className="text-blue-400" />
                     <h3>Automated Login & Logout History</h3>
                     <span className="badge-security-lock">
-                      <Lock size={12} /> Read-Only Timestamp Tracking
+                      <Lock size={10} /> Read-Only Timestamp Tracking
                     </span>
                   </div>
 
@@ -703,7 +804,7 @@ export default function UserProfileModal({
                       onClick={handleExportHistoryCSV}
                       title="Export Login History CSV"
                     >
-                      <Download size={14} /> Export CSV
+                      <Download size={12} /> Export CSV
                     </button>
                     
                     {/* Clear All History */}
@@ -714,7 +815,7 @@ export default function UserProfileModal({
                       title="Delete completed session history logs"
                       style={{ color: 'var(--accent-rose)', borderColor: 'rgba(239, 68, 68, 0.3)', display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}
                     >
-                      <Trash2 size={14} /> Clear History
+                      <Trash2 size={12} /> Clear History
                     </button>
                   </div>
                 </div>

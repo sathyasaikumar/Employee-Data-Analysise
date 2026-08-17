@@ -143,6 +143,68 @@ export const registerWithPhone = async ({ name, countryCode, phone, role, otp })
   return newUser;
 };
 
+export const resetPassword = async ({ identifier, otp, newPassword }) => {
+  const cleanId = (identifier || '').trim().toLowerCase();
+  const cleanNum = cleanId.replace(/\D/g, '');
+
+  if (!cleanId) {
+    throw new Error('Please enter your registered email address or mobile number.');
+  }
+
+  if (!newPassword || newPassword.length < 6) {
+    throw new Error('New password must be at least 6 characters long.');
+  }
+
+  const registered = getRegisteredUsers();
+  let userIndex = registered.findIndex(u => 
+    (u.email && u.email.toLowerCase() === cleanId) || 
+    (u.phoneClean && u.phoneClean === cleanNum) ||
+    (u.phone && u.phone.includes(cleanNum))
+  );
+
+  if (userIndex !== -1) {
+    registered[userIndex].password = newPassword;
+    localStorage.setItem(REGISTERED_USERS_KEY, JSON.stringify(registered));
+    const sessionUser = { ...registered[userIndex] };
+    delete sessionUser.password;
+    setStoredUser(sessionUser);
+    return sessionUser;
+  }
+
+  // Check demo account
+  if (cleanId === DEMO_ACCOUNTS.email.identifier || cleanNum === DEMO_ACCOUNTS.phone.number) {
+    DEMO_ACCOUNTS.email.password = newPassword;
+    const user = {
+      id: 'usr_demo_reset',
+      name: DEMO_ACCOUNTS.email.name,
+      email: DEMO_ACCOUNTS.email.identifier,
+      role: DEMO_ACCOUNTS.email.role,
+      avatar: DEMO_ACCOUNTS.email.avatar,
+      loginType: 'email',
+      loginTime: new Date().toISOString()
+    };
+    setStoredUser(user);
+    return user;
+  }
+
+  // Auto-register for custom recovery
+  const isEmail = cleanId.includes('@');
+  const user = {
+    id: `usr_${Date.now()}`,
+    name: isEmail ? cleanId.split('@')[0].replace('.', ' ').replace(/\b\w/g, c => c.toUpperCase()) : `User ${cleanNum.slice(-4)}`,
+    email: isEmail ? cleanId : undefined,
+    phone: !isEmail ? `+1 ${cleanNum}` : undefined,
+    role: 'Verified Corporate User',
+    avatar: isEmail ? cleanId.substring(0, 2).toUpperCase() : 'CU',
+    loginType: isEmail ? 'email' : 'phone',
+    loginTime: new Date().toISOString()
+  };
+
+  saveRegisteredUser({ ...user, password: newPassword });
+  setStoredUser(user);
+  return user;
+};
+
 export const loginWithEmail = async (email, password) => {
   const cleanEmail = email.trim().toLowerCase();
   

@@ -6,7 +6,7 @@
     "role": "Executive Admin",
     "avatar": "CA",
     "loginType": "email",
-    "totalLogins": 397,
+    "totalLogins": 444,
     "registeredAt": "2026-07-13T06:00:07.404Z"
   },
   {
@@ -68,7 +68,7 @@
     "role": "Data Engineer",
     "avatar": "DL",
     "loginType": "google",
-    "totalLogins": 16,
+    "totalLogins": 17,
     "registeredAt": "2026-08-12T12:23:50.290Z"
   },
   {
@@ -90,7 +90,7 @@
     "role": "Senior Data Lead",
     "avatar": "S",
     "loginType": "email",
-    "totalLogins": 24,
+    "totalLogins": 31,
     "registeredAt": "2026-08-15T18:54:34.531Z"
   },
   {
@@ -101,7 +101,18 @@
     "role": "Senior Data Lead",
     "avatar": "AM",
     "loginType": "google",
-    "totalLogins": 7,
+    "totalLogins": 44,
     "registeredAt": "2026-08-16T13:56:33.628Z"
+  },
+  {
+    "id": "usr_google_1786961122674",
+    "name": "Sathya Sai Kumar",
+    "email": "sathyasaikumar.dev@gmail.com",
+    "phone": null,
+    "role": "Executive Lead Developer",
+    "avatar": "SS",
+    "loginType": "google",
+    "totalLogins": 1,
+    "registeredAt": "2026-08-17T10:05:23.293Z"
   }
 ]

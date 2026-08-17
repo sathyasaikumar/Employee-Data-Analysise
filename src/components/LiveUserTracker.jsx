@@ -18,7 +18,8 @@ import {
   CheckCircle2,
   AlertCircle,
   Trash2,
-  Trash
+  Trash,
+  LogOut
 } from 'lucide-react';
 import {
   Chart as ChartJS,
@@ -33,7 +34,7 @@ import {
   Filler
 } from 'chart.js';
 import { Line, Bar } from 'react-chartjs-2';
-import { deleteLiveSessionApi, clearLiveSessionsApi } from '../utils/api';
+import { deleteLiveSessionApi, clearLiveSessionsApi, forceSessionOfflineApi } from '../utils/api';
 
 ChartJS.register(
   CategoryScale,
@@ -61,24 +62,32 @@ export default function LiveUserTracker({ liveStats, onManualRefresh, currentUse
     setTimeout(() => setIsRefreshing(false), 500);
   };
 
+  const handleForceOffline = async (sessionId) => {
+    setIsRefreshing(true);
+    try {
+      await forceSessionOfflineApi(sessionId);
+      if (onManualRefresh) await onManualRefresh();
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
   const handleDeleteSingleSession = async (sessionId, username) => {
-    if (window.confirm(`Are you sure you want to delete the login session record for "${username || 'this user'}"?`)) {
-      setIsRefreshing(true);
+    setIsRefreshing(true);
+    try {
       await deleteLiveSessionApi(sessionId);
       if (onManualRefresh) await onManualRefresh();
+    } finally {
       setIsRefreshing(false);
     }
   };
 
   const handleClearSessions = async (mode = 'offline') => {
-    const confirmMsg = mode === 'offline' 
-      ? 'Are you sure you want to delete all offline user session logs?' 
-      : 'Are you sure you want to clear all user login activity logs?';
-    
-    if (window.confirm(confirmMsg)) {
-      setIsRefreshing(true);
+    setIsRefreshing(true);
+    try {
       await clearLiveSessionsApi(mode);
       if (onManualRefresh) await onManualRefresh();
+    } finally {
       setIsRefreshing(false);
     }
   };
@@ -158,18 +167,18 @@ export default function LiveUserTracker({ liveStats, onManualRefresh, currentUse
         backgroundColor: (context) => {
           const ctx = context.chart.ctx;
           const gradient = ctx.createLinearGradient(0, 0, 0, 300);
-          gradient.addColorStop(0, 'rgba(16, 185, 129, 0.45)');
+          gradient.addColorStop(0, 'rgba(16, 185, 129, 0.35)');
           gradient.addColorStop(1, 'rgba(16, 185, 129, 0.0)');
           return gradient;
         },
         fill: true,
         tension: 0.35,
-        borderWidth: 3,
+        borderWidth: 2,
         pointBackgroundColor: '#10b981',
         pointBorderColor: '#ffffff',
-        pointBorderWidth: 2,
-        pointRadius: 5,
-        pointHoverRadius: 7
+        pointBorderWidth: 1.5,
+        pointRadius: 3,
+        pointHoverRadius: 5
       }
     ]
   };
@@ -187,37 +196,39 @@ export default function LiveUserTracker({ liveStats, onManualRefresh, currentUse
         bodyColor: isLightTheme ? '#1e293b' : '#e2e8f0',
         borderColor: isLightTheme ? '#cbd5e1' : 'rgba(56, 189, 248, 0.3)',
         borderWidth: 1,
-        padding: 12,
-        boxPadding: 6,
-        usePointStyle: true
+        padding: 6,
+        boxPadding: 4,
+        usePointStyle: true,
+        titleFont: { family: "Arial, 'Helvetica Neue', Helvetica, sans-serif", size: 10, weight: 'bold' },
+        bodyFont: { family: "Arial, 'Helvetica Neue', Helvetica, sans-serif", size: 9.5 }
       }
     },
     scales: {
       x: {
-        grid: { color: isLightTheme ? 'rgba(0, 0, 0, 0.06)' : 'rgba(255, 255, 255, 0.05)' },
-        ticks: { color: isLightTheme ? '#475569' : '#94a3b8', font: { family: 'Inter, sans-serif', size: 12 } }
+        grid: { color: isLightTheme ? 'rgba(0, 0, 0, 0.04)' : 'rgba(255, 255, 255, 0.04)' },
+        ticks: { color: isLightTheme ? '#475569' : '#94a3b8', font: { family: "Arial, 'Helvetica Neue', Helvetica, sans-serif", size: 9.5, weight: 'bold' } }
       },
       y: {
-        grid: { color: isLightTheme ? 'rgba(0, 0, 0, 0.06)' : 'rgba(255, 255, 255, 0.05)' },
-        ticks: { color: isLightTheme ? '#475569' : '#94a3b8', font: { family: 'Inter, sans-serif', size: 12 }, precision: 0 },
+        grid: { color: isLightTheme ? 'rgba(0, 0, 0, 0.04)' : 'rgba(255, 255, 255, 0.04)' },
+        ticks: { color: isLightTheme ? '#475569' : '#94a3b8', font: { family: "Arial, 'Helvetica Neue', Helvetica, sans-serif", size: 9.5, weight: 'bold' }, precision: 0 },
         beginAtZero: true
       }
     }
   };
 
   return (
-    <div className="live-user-tracker-container animate-fade-in" style={{ padding: '1.5rem', width: '100%', maxWidth: '1400px', margin: '0 auto' }}>
+    <div className="live-user-tracker-container animate-fade-in" style={{ padding: '0.15rem 0', width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}>
       
       {/* Top Banner Header */}
-      <div className="tracker-header-card">
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
+      <div className="tracker-header-card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', flex: '1 1 300px', minWidth: 0 }}>
           <div className="tracker-header-icon-box">
-            <Radio size={30} style={{ color: '#10b981' }} className="animate-pulse" />
+            <Radio size={16} style={{ color: '#10b981' }} className="animate-pulse" />
             <span className="live-status-ping-dot" />
           </div>
 
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+          <div style={{ minWidth: 0, flex: 1 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', flexWrap: 'wrap' }}>
               <h1 className="tracker-main-title">
                 Live Website Login & User Activity Counter
               </h1>
@@ -227,18 +238,18 @@ export default function LiveUserTracker({ liveStats, onManualRefresh, currentUse
               </span>
             </div>
             <p className="tracker-main-subtitle">
-              Real-time user session status backend database engine • Automatic multi-tab deduplication • 5-minute inactivity heartbeat cleanup
+              Real-time user session status backend database engine • 8-hour active shift session duration • Automatic multi-tab deduplication • Instant offline logout status
             </p>
           </div>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', flexShrink: 0 }}>
           <button
             onClick={handleRefresh}
             disabled={isRefreshing}
             className="btn btn-secondary live-sync-btn"
           >
-            <RefreshCw size={16} className={isRefreshing ? 'animate-spin' : ''} />
+            <RefreshCw size={12} className={isRefreshing ? 'animate-spin' : ''} />
             {isRefreshing ? 'Syncing...' : 'Sync Live Engine'}
           </button>
         </div>
@@ -247,9 +258,9 @@ export default function LiveUserTracker({ liveStats, onManualRefresh, currentUse
       {/* MAIN FEATURE HIGHLIGHT CARD: LIVE USERS */}
       <div className="live-users-hero-card">
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', marginBottom: '0.5rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', marginBottom: '0.25rem' }}>
             <span className="hero-feature-badge">
-              <Radio size={12} className="animate-pulse" />
+              <Radio size={10} className="animate-pulse" />
               MAIN FEATURE CARD
             </span>
             <span className="hero-feature-subtag">• Backend Live State Sync</span>
@@ -262,13 +273,13 @@ export default function LiveUserTracker({ liveStats, onManualRefresh, currentUse
             Total number of verified unique users currently logged in and actively browsing on the website.
           </p>
 
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', marginTop: '1.25rem' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.45rem', marginTop: '0.65rem' }}>
             <div className="hero-pill-info">
-              <ShieldCheck size={14} style={{ color: '#34d399' }} />
+              <ShieldCheck size={12} style={{ color: '#34d399' }} />
               <span>Multi-Tab Deduplicated</span>
             </div>
             <div className="hero-pill-info">
-              <Clock size={14} style={{ color: '#38bdf8' }} />
+              <Clock size={12} style={{ color: '#38bdf8' }} />
               <span>Auto-Offline after {stats.inactivityTimeoutMinutes || 5} min inactivity</span>
             </div>
           </div>
@@ -277,7 +288,7 @@ export default function LiveUserTracker({ liveStats, onManualRefresh, currentUse
         <div className="live-users-hero-stat-box">
           <div className="hero-stat-top-bar" />
 
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.75rem' }}>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.45rem' }}>
             <span className="hero-stat-big-number">
               {stats.liveUsers}
             </span>
@@ -286,14 +297,14 @@ export default function LiveUserTracker({ liveStats, onManualRefresh, currentUse
 
           <div className="hero-stat-bottom-status">
             <span className="green-pulse-dot" />
-            <span>Updated live from backend websocket/SSE stream</span>
+            <span>Updated live from backend stream</span>
           </div>
         </div>
       </div>
 
       {/* 6 ADMIN DASHBOARD CARDS */}
       <h3 className="admin-metrics-section-title">
-        <Layers size={20} style={{ color: '#38bdf8' }} />
+        <Layers size={13} style={{ color: '#38bdf8' }} />
         ADMIN DASHBOARD METRICS
       </h3>
 
@@ -302,7 +313,7 @@ export default function LiveUserTracker({ liveStats, onManualRefresh, currentUse
         <div className="admin-metric-card border-blue">
           <div className="metric-card-header">
             <span className="metric-card-label">TOTAL USERS</span>
-            <Users size={20} style={{ color: '#38bdf8' }} />
+            <Users size={13} style={{ color: '#38bdf8' }} />
           </div>
           <div className="metric-card-number">
             {stats.totalUsers}
@@ -316,7 +327,7 @@ export default function LiveUserTracker({ liveStats, onManualRefresh, currentUse
         <div className="admin-metric-card border-emerald bg-emerald-tint">
           <div className="metric-card-header">
             <span className="metric-card-label emerald-text">ONLINE NOW</span>
-            <UserCheck size={20} style={{ color: '#10b981' }} />
+            <UserCheck size={13} style={{ color: '#10b981' }} />
           </div>
           <div className="metric-card-number emerald-number">
             {stats.onlineNow}
@@ -330,7 +341,7 @@ export default function LiveUserTracker({ liveStats, onManualRefresh, currentUse
         <div className="admin-metric-card border-purple">
           <div className="metric-card-header">
             <span className="metric-card-label">TOTAL LOGINS</span>
-            <LogIn size={20} style={{ color: '#c084fc' }} />
+            <LogIn size={13} style={{ color: '#c084fc' }} />
           </div>
           <div className="metric-card-number">
             {stats.totalLogins}
@@ -344,7 +355,7 @@ export default function LiveUserTracker({ liveStats, onManualRefresh, currentUse
         <div className="admin-metric-card border-amber">
           <div className="metric-card-header">
             <span className="metric-card-label">TODAY'S LOGINS</span>
-            <Calendar size={20} style={{ color: '#fb923c' }} />
+            <Calendar size={13} style={{ color: '#fb923c' }} />
           </div>
           <div className="metric-card-number">
             {stats.todaysLogins}
@@ -358,7 +369,7 @@ export default function LiveUserTracker({ liveStats, onManualRefresh, currentUse
         <div className="admin-metric-card border-cyan">
           <div className="metric-card-header">
             <span className="metric-card-label">ACTIVE USERS</span>
-            <Activity size={20} style={{ color: '#22d3ee' }} />
+            <Activity size={13} style={{ color: '#22d3ee' }} />
           </div>
           <div className="metric-card-number">
             {stats.activeUsers}
@@ -372,7 +383,7 @@ export default function LiveUserTracker({ liveStats, onManualRefresh, currentUse
         <div className="admin-metric-card border-gray">
           <div className="metric-card-header">
             <span className="metric-card-label">OFFLINE USERS</span>
-            <UserX size={20} style={{ color: '#94a3b8' }} />
+            <UserX size={13} style={{ color: '#94a3b8' }} />
           </div>
           <div className="metric-card-number">
             {stats.offlineUsers}
@@ -385,10 +396,10 @@ export default function LiveUserTracker({ liveStats, onManualRefresh, currentUse
 
       {/* LOGIN ACTIVITY CHARTS SECTION */}
       <div className="live-chart-container-box">
-        <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', marginBottom: '1.25rem' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '0.45rem', marginBottom: '0.45rem' }}>
           <div>
             <h3 className="section-card-heading">
-              <TrendingUp size={20} style={{ color: '#10b981' }} />
+              <TrendingUp size={12} style={{ color: '#10b981' }} />
               Login Activity Trends & Analytics
             </h3>
             <p className="section-card-subheading">
@@ -397,29 +408,33 @@ export default function LiveUserTracker({ liveStats, onManualRefresh, currentUse
           </div>
 
           <div className="chart-timeframe-toggle-wrap">
-            {['daily', 'weekly', 'monthly'].map(tf => (
+            {[
+              { id: 'daily', label: 'Daily' },
+              { id: 'weekly', label: 'Weekly' },
+              { id: 'monthly', label: 'Monthly' }
+            ].map(tf => (
               <button
-                key={tf}
-                onClick={() => setChartTimeframe(tf)}
-                className={`chart-timeframe-btn ${chartTimeframe === tf ? 'active' : ''}`}
+                key={tf.id}
+                onClick={() => setChartTimeframe(tf.id)}
+                className={`chart-timeframe-btn ${chartTimeframe === tf.id ? 'active' : ''}`}
               >
-                {tf} View
+                {tf.label}
               </button>
             ))}
           </div>
         </div>
 
-        <div style={{ height: '320px', width: '100%' }}>
+        <div style={{ height: '130px', width: '100%' }}>
           <Line data={chartData} options={chartOptions} />
         </div>
       </div>
 
       {/* RECENT LOGIN ACTIVITY LOGS TABLE */}
       <div className="live-logs-container-box">
-        <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', marginBottom: '1.25rem' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem', marginBottom: '0.65rem' }}>
           <div>
             <h3 className="section-card-heading">
-              <Clock size={20} style={{ color: '#38bdf8' }} />
+              <Clock size={13} style={{ color: '#38bdf8' }} />
               Recent User Login & Activity Log
             </h3>
             <p className="section-card-subheading">
@@ -427,10 +442,10 @@ export default function LiveUserTracker({ liveStats, onManualRefresh, currentUse
             </p>
           </div>
 
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', alignItems: 'center' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem', alignItems: 'center' }}>
             {/* Search Input */}
             <div style={{ position: 'relative' }}>
-              <Search size={16} className="search-input-icon" />
+              <Search size={12} className="search-input-icon" />
               <input
                 type="text"
                 placeholder="Search user, email, role..."
@@ -460,8 +475,8 @@ export default function LiveUserTracker({ liveStats, onManualRefresh, currentUse
               className="btn-clear-logs-action"
               title="Delete offline user login records"
             >
-              <Trash size={15} />
-              <span>Clear Offline Logs</span>
+              <Trash size={12} />
+              <span>Clear Offline</span>
             </button>
             <button
               type="button"
@@ -469,7 +484,7 @@ export default function LiveUserTracker({ liveStats, onManualRefresh, currentUse
               className="btn-clear-all-logs-action"
               title="Clear all login activity records"
             >
-              <Trash2 size={15} />
+              <Trash2 size={12} />
               <span>Clear All</span>
             </button>
           </div>
@@ -547,16 +562,42 @@ export default function LiveUserTracker({ liveStats, onManualRefresh, currentUse
                         {formatTime(log.lastActiveTime || log.loginTime)}
                       </td>
 
-                      {/* Delete Option */}
-                      <td style={{ textAlign: 'center' }}>
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteSingleSession(log.id, log.username)}
-                          className="delete-log-row-btn"
-                          title={`Delete session record for ${log.username}`}
-                        >
-                          <Trash2 size={15} />
-                        </button>
+                      {/* Action Options: Logout / Delete */}
+                      <td style={{ textAlign: 'center', whiteSpace: 'nowrap' }}>
+                        <div style={{ display: 'inline-flex', gap: '0.45rem', alignItems: 'center', justifyContent: 'center' }}>
+                          {isOnline && (
+                            <button
+                              type="button"
+                              onClick={() => handleForceOffline(log.id)}
+                              style={{
+                                background: 'rgba(239, 68, 68, 0.12)',
+                                border: '1px solid rgba(239, 68, 68, 0.35)',
+                                color: '#f87171',
+                                padding: '0.3rem 0.6rem',
+                                borderRadius: '6px',
+                                cursor: 'pointer',
+                                fontSize: '0.75rem',
+                                fontWeight: 700,
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '0.25rem',
+                                transition: 'all 0.2s ease'
+                              }}
+                              title={`Set session offline / Logout for ${log.username}`}
+                            >
+                              <LogOut size={13} />
+                              <span>Logout</span>
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteSingleSession(log.id, log.username)}
+                            className="delete-log-row-btn"
+                            title={`Delete session record for ${log.username}`}
+                          >
+                            <Trash2 size={15} />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );

@@ -1,30 +1,16 @@
 [
   {
-    "id": "sess_1786889939794_79kj",
-    "userId": "usr_admin_101",
-    "username": "Corporate Account",
-    "userEmail": "admin@corporate.com",
-    "userRole": "Executive Admin",
-    "avatar": "CA",
+    "id": "sess_1786961123295_btb4",
+    "userId": "usr_google_1786961122674",
+    "username": "Sathya Sai Kumar",
+    "userEmail": "sathyasaikumar.dev@gmail.com",
+    "userRole": "Executive Lead Developer",
+    "avatar": "SS",
     "loginType": "google",
-    "loginTime": "2026-08-16T14:18:59.794Z",
-    "logoutTime": null,
-    "status": "online",
-    "lastActiveTime": "2026-08-16T15:01:53.007Z",
-    "clientTabId": "tab_1786889939263_2rz73"
-  },
-  {
-    "id": "sess_1786889985198_00xx",
-    "userId": "usr_google_1786888593003",
-    "username": "Alex Morgan",
-    "userEmail": "alex.morgan@gmail.com",
-    "userRole": "Senior Data Lead",
-    "avatar": "AM",
-    "loginType": "google",
-    "loginTime": "2026-08-16T14:19:45.198Z",
-    "logoutTime": "2026-08-16T15:00:16.817Z",
+    "loginTime": "2026-08-17T10:05:23.295Z",
+    "logoutTime": "2026-08-17T10:05:50.076Z",
     "status": "offline",
-    "lastActiveTime": "2026-08-16T15:00:07.854Z",
-    "clientTabId": "tab_1786889984918_dg84k"
+    "lastActiveTime": "2026-08-17T10:05:50.076Z",
+    "clientTabId": "tab_1786960919274_ar7gr"
   }
 ]

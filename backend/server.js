@@ -481,7 +481,11 @@ app.delete('/api/datasets/:id', (req, res) => {
 
     // Delete physical file if exists
     if (fs.existsSync(fullFilePath)) {
-      fs.unlinkSync(fullFilePath);
+      try {
+        fs.unlinkSync(fullFilePath);
+      } catch (e) {
+        console.warn(`File unlink warning for ${fullFilePath}:`, e.message);
+      }
     }
 
     // Remove from metadata database
@@ -491,6 +495,54 @@ app.delete('/api/datasets/:id', (req, res) => {
     res.json({
       success: true,
       message: `Dataset '${ds.originalName}' deleted from disk and history.`
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 5b. DELETE /api/datasets - Delete ALL or multiple datasets from physical disk and metadata
+app.delete('/api/datasets', (req, res) => {
+  try {
+    const { ids } = req.query; // optional comma-separated list of IDs
+    const datasets = getMetadataList();
+    
+    let toDelete = [];
+    let toKeep = [];
+
+    if (ids) {
+      const idSet = new Set(ids.split(',').map(s => s.trim()));
+      toDelete = datasets.filter(d => idSet.has(d.id));
+      toKeep = datasets.filter(d => !idSet.has(d.id));
+    } else {
+      toDelete = [...datasets];
+      toKeep = [];
+    }
+
+    let deletedCount = 0;
+    toDelete.forEach(ds => {
+      if (ds.filePath) {
+        const fullFilePath = path.join(DATA_ROOT, ds.filePath);
+        if (fs.existsSync(fullFilePath)) {
+          try {
+            fs.unlinkSync(fullFilePath);
+          } catch (e) {
+            console.warn(`File unlink warning for ${fullFilePath}:`, e.message);
+          }
+        }
+      }
+      deletedCount++;
+    });
+
+    saveMetadataList(toKeep);
+
+    res.json({
+      success: true,
+      message: ids 
+        ? `Successfully deleted ${deletedCount} selected dataset(s) from disk and database.`
+        : `Successfully deleted all ${deletedCount} dataset(s) from server disk and database.`,
+      deletedCount,
+      remainingCount: toKeep.length
     });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
@@ -564,7 +616,7 @@ EMP-110,Meera Reddy,Engineering,QA Automation Lead,82000,On-Site,4.3,2023-02-14,
 // LIVE WEBSITE LOGIN & USER ACTIVITY COUNTER SYSTEM
 // ========================================================
 
-const INACTIVITY_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes configurable timeout
+const INACTIVITY_TIMEOUT_MS = 8 * 60 * 60 * 1000; // Minimum 8 hours active session duration (480 minutes)
 
 function getUsersList() {
   try {
@@ -612,7 +664,7 @@ function calculateLiveStats() {
   const sessions = getSessionsList();
   const now = Date.now();
 
-  // Determine online sessions (active heartbeat within INACTIVITY_TIMEOUT_MS)
+  // Determine online sessions (active within 8 hours timeout and not explicitly logged out)
   const onlineUserIds = new Set();
   const activeUserIds = new Set();
   
@@ -624,8 +676,9 @@ function calculateLiveStats() {
     const lastActive = new Date(sess.lastActiveTime || sess.loginTime).getTime();
     const loginDate = new Date(sess.loginTime);
     const isWithinTimeout = (now - lastActive) <= INACTIVITY_TIMEOUT_MS;
+    const isOnline = sess.status === 'online' && !sess.logoutTime && isWithinTimeout;
 
-    if (sess.status === 'online' && isWithinTimeout) {
+    if (isOnline) {
       onlineUserIds.add(sess.userId);
       activeUserIds.add(sess.userId);
     } else if (now - lastActive <= 24 * 60 * 60 * 1000) {
@@ -649,7 +702,7 @@ function calculateLiveStats() {
     .slice(0, 50)
     .map(sess => {
       const lastActive = new Date(sess.lastActiveTime || sess.loginTime).getTime();
-      const isOnline = sess.status === 'online' && (now - lastActive) <= INACTIVITY_TIMEOUT_MS;
+      const isOnline = sess.status === 'online' && !sess.logoutTime && (now - lastActive) <= INACTIVITY_TIMEOUT_MS;
       return {
         id: sess.id,
         userId: sess.userId,
@@ -659,7 +712,7 @@ function calculateLiveStats() {
         avatar: sess.avatar || 'US',
         loginType: sess.loginType || 'email',
         loginTime: sess.loginTime,
-        logoutTime: isOnline ? null : sess.logoutTime,
+        logoutTime: isOnline ? null : (sess.logoutTime || sess.lastActiveTime || new Date(lastActive).toISOString()),
         status: isOnline ? 'Online' : 'Offline',
         lastActiveTime: sess.lastActiveTime
       };
@@ -720,6 +773,7 @@ function calculateLiveStats() {
     activeUsers: activeUsersCount,
     offlineUsers: offlineUsersCount,
     inactivityTimeoutMinutes: Math.round(INACTIVITY_TIMEOUT_MS / 60000),
+    inactivityTimeoutHours: Math.round(INACTIVITY_TIMEOUT_MS / (60 * 60 * 1000)),
     recentLogs: recentActivityLogs,
     charts: {
       daily: { labels: dailyLabels, data: dailyCounts },
@@ -729,7 +783,7 @@ function calculateLiveStats() {
   };
 }
 
-// Background cleaner: runs every 10 seconds to auto-logout inactive sessions (> 5 mins)
+// Background cleaner: runs every 30 seconds to auto-logout sessions exceeding 8 hours
 setInterval(() => {
   const sessions = getSessionsList();
   const now = Date.now();
@@ -750,7 +804,7 @@ setInterval(() => {
     saveSessionsList(sessions);
     broadcastLiveStats();
   }
-}, 10000);
+}, 30000);
 
 // API Endpoints for Live Users & Session Management
 
@@ -813,6 +867,16 @@ app.post('/api/auth/login', (req, res) => {
     saveUsersList(users);
 
     const sessions = getSessionsList();
+    const nowIso = new Date().toISOString();
+
+    // Close any previous open/active sessions for this user to prevent orphaned duplicates
+    sessions.forEach(s => {
+      if ((s.userId === existingUser.id || (existingUser.email && s.userEmail === existingUser.email)) && s.status === 'online') {
+        s.status = 'offline';
+        s.logoutTime = nowIso;
+      }
+    });
+
     const newSession = {
       id: `sess_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
       userId: existingUser.id,
@@ -821,10 +885,10 @@ app.post('/api/auth/login', (req, res) => {
       userRole: existingUser.role,
       avatar: existingUser.avatar,
       loginType: loginType || 'email',
-      loginTime: new Date().toISOString(),
+      loginTime: nowIso,
       logoutTime: null,
       status: 'online',
-      lastActiveTime: new Date().toISOString(),
+      lastActiveTime: nowIso,
       clientTabId: clientTabId || `tab_${Date.now()}`
     };
     sessions.push(newSession);
@@ -844,27 +908,49 @@ app.post('/api/auth/login', (req, res) => {
   }
 });
 
-// POST /api/auth/logout - Record logout & update active count
+// POST /api/auth/logout - Record logout & IMMEDIATELY mark session as offline
 app.post('/api/auth/logout', (req, res) => {
   try {
-    const { sessionId, userId } = req.body;
+    const { sessionId, userId, email, username } = req.body;
     const sessions = getSessionsList();
+    const nowIso = new Date().toISOString();
     let updated = false;
 
     sessions.forEach(sess => {
-      if ((sessionId && sess.id === sessionId) || (!sessionId && userId && sess.userId === userId && sess.status === 'online')) {
+      const matchSession = sessionId && sess.id === sessionId;
+      const matchUser = userId && sess.userId === userId;
+      const matchEmail = email && sess.userEmail && sess.userEmail.toLowerCase() === email.toLowerCase();
+      const matchName = username && sess.username && sess.username.toLowerCase() === username.toLowerCase();
+
+      if ((matchSession || matchUser || matchEmail || matchName) && sess.status === 'online') {
         sess.status = 'offline';
-        sess.logoutTime = new Date().toISOString();
+        sess.logoutTime = nowIso;
+        sess.lastActiveTime = nowIso;
         updated = true;
       }
     });
+
+    // If specific sessionId was provided and not matched by online status
+    if (sessionId) {
+      const target = sessions.find(s => s.id === sessionId);
+      if (target && target.status === 'online') {
+        target.status = 'offline';
+        target.logoutTime = nowIso;
+        target.lastActiveTime = nowIso;
+        updated = true;
+      }
+    }
 
     if (updated) {
       saveSessionsList(sessions);
       broadcastLiveStats();
     }
 
-    res.json({ success: true, message: 'Logged out successfully.', stats: calculateLiveStats() });
+    res.json({ 
+      success: true, 
+      message: 'Logged out successfully. Session status is now OFFLINE.', 
+      stats: calculateLiveStats() 
+    });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
@@ -884,20 +970,41 @@ app.post('/api/auth/heartbeat', (req, res) => {
 
     if (!sess && userId) {
       // Find latest session for this user
-      sess = [...sessions].reverse().find(s => s.userId === userId);
+      sess = [...sessions].reverse().find(s => s.userId === userId && s.status === 'online');
     }
 
-    if (sess) {
+    if (sess && sess.status === 'online') {
       sess.lastActiveTime = nowIso;
-      if (sess.status === 'offline') {
-        sess.status = 'online';
-        sess.logoutTime = null;
-      }
       saveSessionsList(sessions);
       broadcastLiveStats();
     }
 
     res.json({ success: true, lastActiveTime: nowIso });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// POST /api/live-users/sessions/:id/logout - Force individual session offline (Admin Action)
+app.post('/api/live-users/sessions/:id/logout', (req, res) => {
+  try {
+    const { id } = req.params;
+    const sessions = getSessionsList();
+    const sess = sessions.find(s => s.id === id);
+
+    if (!sess) {
+      return res.status(404).json({ success: false, error: 'Session not found.' });
+    }
+
+    const nowIso = new Date().toISOString();
+    sess.status = 'offline';
+    sess.logoutTime = nowIso;
+    sess.lastActiveTime = nowIso;
+
+    saveSessionsList(sessions);
+    broadcastLiveStats();
+
+    res.json({ success: true, message: `Session for '${sess.username}' marked as OFFLINE.`, stats: calculateLiveStats() });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
