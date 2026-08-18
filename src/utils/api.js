@@ -51,6 +51,41 @@ export async function uploadDatasetFile(file) {
 }
 
 /**
+ * Upload multiple dataset files in batch to backend server storage
+ */
+export async function uploadMultipleDatasetFiles(files) {
+  const formData = new FormData();
+  Array.from(files).forEach(file => {
+    formData.append('files', file);
+  });
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout for batch
+
+  try {
+    const res = await fetch(`${API_BASE}/upload-multiple`, {
+      method: 'POST',
+      body: formData,
+      signal: controller.signal
+    });
+    clearTimeout(timeoutId);
+
+    const json = await res.json();
+    if (!res.ok || !json.success) {
+      throw new Error(json.error || 'Failed to upload dataset files.');
+    }
+
+    return json;
+  } catch (err) {
+    clearTimeout(timeoutId);
+    if (err.name === 'AbortError') {
+      throw new Error('Multiple file upload server connection timed out.');
+    }
+    throw err;
+  }
+}
+
+/**
  * Retrieve dataset by ID with full parsed rows and columns
  */
 export async function fetchDatasetById(id) {

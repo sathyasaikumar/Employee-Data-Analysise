@@ -2,11 +2,23 @@ import * as XLSX from 'xlsx';
 import Papa from 'papaparse';
 
 /**
+ * Format any dataset name to consistently end with .csv
+ */
+export function formatAsCsvName(filename) {
+  if (!filename) return 'dataset.csv';
+  const clean = filename.trim();
+  // Remove existing extension if any (.xlsx, .xls, .json, .txt, .tsv, .pdf, .csv, etc.)
+  const base = clean.replace(/\.[^/.]+$/, '');
+  return `${base}.csv`;
+}
+
+/**
  * Convert any supported data file (CSV, XLSX, XLS, JSON, TSV, TXT, PDF) into CSV text
  * or pass File object directly for non-blocking stream processing in the worker thread.
  */
 export async function convertFileToCsvContent(file) {
   const fileName = file.name.toLowerCase();
+  const normalizedDatasetName = formatAsCsvName(file.name);
 
   // 1. Excel Spreadsheets (.xlsx, .xls)
   if (fileName.endsWith('.xlsx') || fileName.endsWith('.xls')) {
@@ -16,7 +28,7 @@ export async function convertFileToCsvContent(file) {
       const firstSheetName = workbook.SheetNames[0];
       const firstSheet = workbook.Sheets[firstSheetName];
       const csvContent = XLSX.utils.sheet_to_csv(firstSheet);
-      return { csvContent, datasetName: file.name };
+      return { csvContent, datasetName: normalizedDatasetName };
     } catch (err) {
       throw new Error(`Failed to convert Excel spreadsheet "${file.name}". If the file is extremely large (50MB+), please export/save it as a CSV file for instant multi-million row stream processing.`);
     }
@@ -38,7 +50,7 @@ export async function convertFileToCsvContent(file) {
         }
       }
       const csvContent = Papa.unparse(parsedData);
-      return { csvContent, datasetName: file.name };
+      return { csvContent, datasetName: normalizedDatasetName };
     } catch (err) {
       throw new Error(`Failed to parse JSON file "${file.name}". Please ensure it contains a valid array of record objects.`);
     }
@@ -60,12 +72,12 @@ export async function convertFileToCsvContent(file) {
         };
       });
       const csvContent = Papa.unparse(mockRows);
-      return { csvContent, datasetName: file.name };
+      return { csvContent, datasetName: normalizedDatasetName };
     } catch (err) {
       throw new Error(`Failed to parse text from PDF file "${file.name}".`);
     }
   }
 
   // 4. Native CSV / TSV / TXT Files - Direct File Stream to Worker
-  return { file, datasetName: file.name };
+  return { file, datasetName: normalizedDatasetName };
 }

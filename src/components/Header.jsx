@@ -2,8 +2,10 @@ import React, { useState, useRef, useEffect } from 'react';
 import {
   BarChart3, Upload, Download, Layers, LogIn, LogOut, ShieldCheck, Sun, Moon,
   ArrowLeft, Menu, X, Database, Filter, Radio, Maximize2, Minimize2,
-  Folder, ChevronDown, Sparkles, Cpu, Zap, Brain, BookOpen
+  Folder, ChevronDown, Sparkles, Cpu, Zap, Brain, BookOpen, FileText, Compass,
+  Trash2, Plus, Search, FileSpreadsheet, Check, RefreshCw, RotateCcw, Mic
 } from 'lucide-react';
+import VoiceAssistant from './VoiceAssistant';
 
 export default function Header({
   hasData,
@@ -24,20 +26,57 @@ export default function Header({
   onResetData,
   onBackToDashboard,
   onExportCSV,
+  onExportPDF,
+  isExportingPDF = false,
   currentUser,
   onOpenLogin,
   onOpenProfile,
   onLogout,
   theme = 'dark',
   onToggleTheme,
+  onSetTheme,
   onOpenAutoML,
+  onCloseAutoML,
   onOpenDLExecutive,
-  onOpenDLStudio
+  onCloseDLExecutive,
+  onOpenDLStudio,
+  onCloseDLStudio,
+  onOpenMLPipeline,
+  onCloseMLPipeline,
+  onOpenAnomalies,
+  onCloseAnomalies,
+  activeTab,
+  onSelectTab,
+  filters,
+  onFilterChange,
+  onResetFilters,
+  datasetsList = [],
+  onSelectDataset,
+  onDeleteDataset,
+  onFileUpload,
+  totalRows = 0,
+  headersCount = 0,
+  healthScore = 100
 }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isAppFullScreen, setIsAppFullScreen] = useState(false);
   const [isFolderOpen, setIsFolderOpen] = useState(false);
+  const [isDatasetMenuOpen, setIsDatasetMenuOpen] = useState(false);
+  const [datasetSearchTerm, setDatasetSearchTerm] = useState('');
   const folderRef = useRef(null);
+  const datasetMenuRef = useRef(null);
+  const quickFileInputRef = useRef(null);
+
+  // Close dataset dropdown on click outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (datasetMenuRef.current && !datasetMenuRef.current.contains(event.target)) {
+        setIsDatasetMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // Sync fullscreen state with browser events (handles ESC key and browser toggles)
   useEffect(() => {
@@ -156,13 +195,228 @@ export default function Header({
           </button>
         )}
 
-        {/* Loaded Dataset Badge */}
+        {/* Loaded Dataset Hub Badge & Checkup Menu */}
         {hasData && !isUploadMode && !isHistoryMode && !isLiveUsersMode && (
-          <div className="header-pill-item header-dataset-badge-container">
-            <span className="badge badge-blue header-dataset-badge" title={datasetName || 'Loaded Dataset'}>
+          <div className="header-pill-item header-dataset-badge-container" ref={datasetMenuRef} style={{ position: 'relative' }}>
+            <button
+              type="button"
+              className={`badge badge-blue header-dataset-badge header-dataset-interactive-btn ${isDatasetMenuOpen ? 'active' : ''}`}
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsDatasetMenuOpen(prev => !prev);
+              }}
+              title="Click to checkup active dataset, switch files, download or delete"
+            >
               <Layers size={13} className="folder-icon flex-shrink-0" />
               <span className="truncate-text">{(datasetName || 'Loaded Dataset').replace(/\.[^/.]+$/, '').toUpperCase()}</span>
-            </span>
+              {datasetsList && datasetsList.length > 1 && (
+                <span className="header-dataset-count-pill">{datasetsList.length}</span>
+              )}
+              <ChevronDown size={11} className={`header-dataset-chevron ${isDatasetMenuOpen ? 'rotate' : ''}`} />
+            </button>
+
+            {isDatasetMenuOpen && (
+              <div className="header-dataset-hub-dropdown">
+                {/* Active Dataset Checkup Section */}
+                <div className="hub-active-checkup-card">
+                  <div className="hub-active-header">
+                    <div className="hub-active-icon">
+                      <Database size={15} className="text-sky-400" />
+                    </div>
+                    <div className="hub-active-info">
+                      <span className="hub-active-tag">CURRENT ACTIVE DATASET</span>
+                      <h4 className="hub-active-name truncate" title={datasetName}>{datasetName}</h4>
+                    </div>
+                    {datasetsList && datasetsList.length > 1 && (
+                      <button
+                        type="button"
+                        className="hub-cycle-dataset-btn"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const currentIdx = datasetsList.findIndex(d => d.originalName === datasetName || d.savedName === datasetName);
+                          const nextIdx = (currentIdx + 1) % datasetsList.length;
+                          const nextDs = datasetsList[nextIdx];
+                          if (nextDs && onSelectDataset) {
+                            onSelectDataset(nextDs.id);
+                          }
+                        }}
+                        title="Click circle arrow to immediately cycle to next dataset"
+                      >
+                        <RotateCcw size={13} className="hub-cycle-icon text-sky-400" />
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="hub-checkup-stats-row">
+                    <div className="hub-checkup-stat">
+                      <span className="stat-num text-sky-400">{totalRows ? totalRows.toLocaleString() : 0}</span>
+                      <span className="stat-lbl">Records</span>
+                    </div>
+                    <div className="hub-checkup-stat">
+                      <span className="stat-num text-cyan-400">{headersCount || 0}</span>
+                      <span className="stat-lbl">Features</span>
+                    </div>
+                    <div className="hub-checkup-stat">
+                      <span className="stat-num text-emerald-400">{healthScore || 100}%</span>
+                      <span className="stat-lbl">Health</span>
+                    </div>
+                  </div>
+
+                  <div className="hub-active-actions-row">
+                    <button
+                      type="button"
+                      className="hub-btn download-btn"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (onExportCSV) onExportCSV();
+                      }}
+                      title="Download active dataset"
+                    >
+                      <Download size={12} /> Download File
+                    </button>
+                    <button
+                      type="button"
+                      className="hub-btn delete-btn"
+                      onClick={async (e) => {
+                        e.stopPropagation();
+                        if (window.confirm(`Delete active dataset "${datasetName}"?`)) {
+                          const match = (datasetsList || []).find(d => d.originalName === datasetName || d.savedName === datasetName);
+                          if (match && onDeleteDataset) {
+                            await onDeleteDataset(match.id);
+                          }
+                          if (onResetData) onResetData();
+                          setIsDatasetMenuOpen(false);
+                        }
+                      }}
+                      title="Delete active dataset"
+                    >
+                      <Trash2 size={12} /> Delete File
+                    </button>
+                  </div>
+                </div>
+
+                {/* Switch Between Unlimited Uploaded Files */}
+                <div className="hub-all-datasets-section">
+                  <div className="hub-section-header">
+                    <div className="hub-section-title">
+                      <Layers size={13} className="text-purple-400" />
+                      <span>All Uploaded Files ({datasetsList ? datasetsList.length : 0})</span>
+                    </div>
+                    <button
+                      type="button"
+                      className="hub-upload-mini-btn"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        quickFileInputRef.current?.click();
+                      }}
+                      title="Upload additional dataset files"
+                    >
+                      <Plus size={12} /> Add Files
+                    </button>
+                  </div>
+
+                  <input
+                    type="file"
+                    ref={quickFileInputRef}
+                    onChange={(e) => {
+                      if (e.target.files && e.target.files.length > 0) {
+                        const files = Array.from(e.target.files);
+                        if (onFileUpload) onFileUpload(files.length === 1 ? files[0] : files);
+                        setIsDatasetMenuOpen(false);
+                      }
+                    }}
+                    accept=".csv,.xlsx,.xls,.json,.tsv,.txt"
+                    multiple
+                    style={{ display: 'none' }}
+                  />
+
+                  {datasetsList && datasetsList.length > 3 && (
+                    <div className="hub-search-box">
+                      <Search size={12} className="text-slate-400" />
+                      <input
+                        type="text"
+                        placeholder="Search uploaded files..."
+                        value={datasetSearchTerm}
+                        onChange={(e) => setDatasetSearchTerm(e.target.value)}
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                    </div>
+                  )}
+
+                  <div className="hub-datasets-list-scroll">
+                    {(!datasetsList || datasetsList.length === 0) ? (
+                      <div className="hub-empty-state">
+                        <p>No additional datasets saved on server.</p>
+                      </div>
+                    ) : (
+                      datasetsList
+                        .filter(ds => !datasetSearchTerm || (ds.originalName && ds.originalName.toLowerCase().includes(datasetSearchTerm.toLowerCase())))
+                        .map(ds => {
+                          const isActive = ds.originalName === datasetName || ds.savedName === datasetName;
+                          return (
+                            <div
+                              key={ds.id}
+                              className={`hub-dataset-row ${isActive ? 'active-row' : ''}`}
+                              onClick={() => {
+                                if (onSelectDataset) onSelectDataset(ds.id);
+                                setIsDatasetMenuOpen(false);
+                              }}
+                              title={`Click to switch analysis to ${ds.originalName}`}
+                            >
+                              <div className="hub-row-left">
+                                <FileSpreadsheet size={14} className={isActive ? 'text-sky-400' : 'text-slate-400'} />
+                                <div className="hub-row-details">
+                                  <span className="hub-file-name truncate">{ds.originalName}</span>
+                                  <span className="hub-file-meta">
+                                    {ds.rowCount ? `${ds.rowCount.toLocaleString()} rows` : ''} {ds.fileSize ? `• ${ds.fileSize}` : ''}
+                                  </span>
+                                </div>
+                              </div>
+
+                              <div className="hub-row-actions" onClick={(e) => e.stopPropagation()}>
+                                {/* Circle Arrow Quick Switch Button */}
+                                <button
+                                  type="button"
+                                  className={`hub-row-icon-btn switch-circle-btn ${isActive ? 'active-switch' : ''}`}
+                                  onClick={() => {
+                                    if (onSelectDataset) onSelectDataset(ds.id);
+                                    setIsDatasetMenuOpen(false);
+                                  }}
+                                  title={isActive ? 'Currently active dataset' : `Immediately switch active analysis to ${ds.originalName}`}
+                                >
+                                  <RefreshCw size={11} className={isActive ? 'text-emerald-400' : 'text-sky-400 circle-arrow-icon'} />
+                                </button>
+                                <a
+                                  href={`/api/datasets/${ds.id}/download`}
+                                  download
+                                  className="hub-row-icon-btn download"
+                                  title="Download dataset file"
+                                >
+                                  <Download size={11} />
+                                </a>
+                                <button
+                                  type="button"
+                                  className="hub-row-icon-btn delete"
+                                  onClick={async (e) => {
+                                    e.stopPropagation();
+                                    if (window.confirm(`Permanently delete "${ds.originalName}" from server storage?`)) {
+                                      if (onDeleteDataset) await onDeleteDataset(ds.id);
+                                      if (isActive && onResetData) onResetData();
+                                    }
+                                  }}
+                                  title="Delete dataset"
+                                >
+                                  <Trash2 size={11} />
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        })
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -240,22 +494,7 @@ export default function Header({
               <div className="folder-section border-top">
                 <div className="folder-section-label">DATASET MANAGEMENT</div>
 
-                <button
-                  type="button"
-                  className="folder-item-btn"
-                  onClick={() => {
-                    if (hasData) onResetData(); else onUploadClick();
-                    setIsFolderOpen(false);
-                    closeMobileMenu();
-                  }}
-                >
-                  <Upload size={13} style={{ color: '#38bdf8' }} />
-                  <div className="folder-item-text">
-                    <span className="item-title">Upload Dataset</span>
-                    <span className="item-desc">CSV, Excel, or JSON files</span>
-                  </div>
-                </button>
-
+                {/* Dataset History */}
                 <button
                   type="button"
                   className={`folder-item-btn ${isHistoryMode ? 'active' : ''}`}
@@ -276,53 +515,41 @@ export default function Header({
                 </button>
 
                 {hasData && (
-                  <button
-                    type="button"
-                    className="folder-item-btn"
-                    onClick={() => {
-                      onExportCSV();
-                      setIsFolderOpen(false);
-                      closeMobileMenu();
-                    }}
-                  >
-                    <Download size={13} style={{ color: '#10b981' }} />
-                    <div className="folder-item-text">
-                      <span className="item-title">Export Filtered CSV</span>
-                      <span className="item-desc">Download active processed data</span>
-                    </div>
-                  </button>
-                )}
+                  <>
+                    <button
+                      type="button"
+                      className="folder-item-btn"
+                      onClick={() => {
+                        onExportCSV();
+                        setIsFolderOpen(false);
+                        closeMobileMenu();
+                      }}
+                    >
+                      <Download size={13} style={{ color: '#10b981' }} />
+                      <div className="folder-item-text">
+                        <span className="item-title">Export Filtered CSV</span>
+                        <span className="item-desc">Download active processed data</span>
+                      </div>
+                    </button>
 
-                <div className="folder-demo-selector-group">
-                  <div className="demo-group-label">
-                    <Sparkles size={11} style={{ color: '#fb923c' }} />
-                    <span>Load Demo Dataset</span>
-                  </div>
-                  <div className="demo-btn-row">
                     <button
                       type="button"
-                      className="demo-chip-btn"
+                      className="folder-item-btn"
                       onClick={() => {
-                        onLoadSample('workforce');
+                        if (onExportPDF) onExportPDF();
                         setIsFolderOpen(false);
                         closeMobileMenu();
                       }}
+                      disabled={isExportingPDF}
                     >
-                      Workforce Demo
+                      <FileText size={13} style={{ color: '#ec4899' }} />
+                      <div className="folder-item-text">
+                        <span className="item-title">Executive PDF Report</span>
+                        <span className="item-desc">Download multi-page PDF presentation</span>
+                      </div>
                     </button>
-                    <button
-                      type="button"
-                      className="demo-chip-btn"
-                      onClick={() => {
-                        onLoadSample('sales');
-                        setIsFolderOpen(false);
-                        closeMobileMenu();
-                      }}
-                    >
-                      Sales Demo
-                    </button>
-                  </div>
-                </div>
+                  </>
+                )}
               </div>
 
               {/* System & Analytics Section */}
@@ -379,6 +606,46 @@ export default function Header({
                   </div>
                   <span className="folder-item-badge cyan">AI</span>
                 </button>
+              </div>
+
+              {/* AI Voice Control & Assistant Section */}
+              <div className="folder-section border-top">
+                <div className="folder-section-label">AI VOICE CONTROL & ASSISTANT</div>
+                <VoiceAssistant
+                  embedded={true}
+                  activeTab={activeTab}
+                  onSelectTab={onSelectTab}
+                  onOpenAutoML={onOpenAutoML}
+                  onCloseAutoML={onCloseAutoML}
+                  onOpenDLStudio={onOpenDLStudio}
+                  onCloseDLStudio={onCloseDLStudio}
+                  onOpenDLExecutive={onOpenDLExecutive}
+                  onCloseDLExecutive={onCloseDLExecutive}
+                  onOpenMLPipeline={onOpenMLPipeline}
+                  onCloseMLPipeline={onCloseMLPipeline}
+                  onOpenAnomalies={onOpenAnomalies}
+                  onCloseAnomalies={onCloseAnomalies}
+                  onOpenProfile={onOpenProfile}
+                  onUploadClick={onUploadClick}
+                  onHistoryClick={onHistoryClick}
+                  onLiveUsersClick={onLiveUsersClick}
+                  onLoadSample={onLoadSample}
+                  onBackToDashboard={onBackToDashboard}
+                  datasetsList={datasetsList}
+                  onSelectDataset={onSelectDataset}
+                  datasetName={datasetName}
+                  onExportPDF={onExportPDF}
+                  onExportCSV={onExportCSV}
+                  theme={theme}
+                  onToggleTheme={onToggleTheme}
+                  onSetTheme={onSetTheme}
+                  onLogout={onLogout}
+                  filters={filters}
+                  onFilterChange={onFilterChange}
+                  onResetFilters={onResetFilters}
+                  isSidebarOpen={isSidebarOpen}
+                  onToggleSidebar={onToggleSidebar}
+                />
               </div>
 
               {/* System & Monitoring Section */}

@@ -6,7 +6,7 @@
     "role": "Executive Admin",
     "avatar": "CA",
     "loginType": "email",
-    "totalLogins": 444,
+    "totalLogins": 451,
     "registeredAt": "2026-07-13T06:00:07.404Z"
   },
   {
@@ -68,18 +68,18 @@
     "role": "Data Engineer",
     "avatar": "DL",
     "loginType": "google",
-    "totalLogins": 17,
+    "totalLogins": 48,
     "registeredAt": "2026-08-12T12:23:50.290Z"
   },
   {
     "id": "usr_1786089353360",
-    "name": "sathya",
+    "name": "sathyasaikumar",
     "email": "usr_1786089353360@corporate.com",
     "phone": "+91 7207523327",
-    "role": "Senior Data Lead",
+    "role": "Data Analyst",
     "avatar": "S",
     "loginType": "phone",
-    "totalLogins": 197,
+    "totalLogins": 355,
     "registeredAt": "2026-08-14T03:30:04.187Z"
   },
   {
@@ -112,7 +112,7 @@
     "role": "Executive Lead Developer",
     "avatar": "SS",
     "loginType": "google",
-    "totalLogins": 1,
+    "totalLogins": 13,
     "registeredAt": "2026-08-17T10:05:23.293Z"
   }
 ]

@@ -1,14 +1,60 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { Globe, ArrowRightLeft, Search, RefreshCw, AlertTriangle, ChevronDown, Check, Clock, Maximize2, Minimize2, X } from 'lucide-react';
+import { Globe, ArrowRightLeft, Search, RefreshCw, AlertTriangle, ChevronDown, Check, Clock, Maximize2, Minimize2, X, Sparkles, Zap } from 'lucide-react';
 import { WORLD_CURRENCIES, getCurrencyByCode, searchCurrencies } from '../utils/currencyData';
 
-export default function GlobalCurrencyChecker({ onCurrencyChange }) {
+export default function GlobalCurrencyChecker({
+  onCurrencyChange,
+  datasetAmount = null,
+  columnName = null,
+  totalRows = 0,
+  headers = []
+}) {
   // Primary selected country/currency
   const [selectedCountry, setSelectedCountry] = useState(WORLD_CURRENCIES[0]); // Default India (INR)
   const [fromCurrency, setFromCurrency] = useState(WORLD_CURRENCIES[0]); // INR
   const [toCurrency, setToCurrency] = useState(WORLD_CURRENCIES[1]); // USD
-  const [amount, setAmount] = useState('100');
+  const [amount, setAmount] = useState(() => {
+    if (datasetAmount !== null && datasetAmount !== undefined && !isNaN(datasetAmount) && datasetAmount > 0) {
+      return datasetAmount >= 1000 ? Math.round(datasetAmount).toString() : datasetAmount.toFixed(2);
+    }
+    return '100';
+  });
+
+  // Auto-detect currency and auto-calculate on dataset upload
+  useEffect(() => {
+    if (datasetAmount !== null && datasetAmount !== undefined && !isNaN(datasetAmount) && datasetAmount > 0) {
+      const formattedAmt = datasetAmount >= 1000 ? Math.round(datasetAmount).toString() : datasetAmount.toFixed(2);
+      setAmount(formattedAmt);
+    }
+  }, [datasetAmount]);
+
+  useEffect(() => {
+    if (headers && headers.length > 0) {
+      const headerStr = headers.join(' ').toLowerCase();
+      if (headerStr.includes('inr') || headerStr.includes('rupee') || headerStr.includes('₹') || headerStr.includes('india')) {
+        setSelectedCountry(WORLD_CURRENCIES[0]); // INR
+        setFromCurrency(WORLD_CURRENCIES[0]);
+        setToCurrency(WORLD_CURRENCIES[1]); // USD
+      } else if (headerStr.includes('eur') || headerStr.includes('euro') || headerStr.includes('€')) {
+        const eur = getCurrencyByCode('EUR');
+        setSelectedCountry(eur);
+        setFromCurrency(eur);
+        setToCurrency(WORLD_CURRENCIES[1]); // USD
+      } else if (headerStr.includes('gbp') || headerStr.includes('pound') || headerStr.includes('£')) {
+        const gbp = getCurrencyByCode('GBP');
+        setSelectedCountry(gbp);
+        setFromCurrency(gbp);
+        setToCurrency(WORLD_CURRENCIES[1]); // USD
+      } else if (headerStr.includes('usd') || headerStr.includes('dollar') || headerStr.includes('$')) {
+        const usd = getCurrencyByCode('USD');
+        const inr = getCurrencyByCode('INR');
+        setSelectedCountry(usd);
+        setFromCurrency(usd);
+        setToCurrency(inr);
+      }
+    }
+  }, [headers]);
 
   // Rates & API State
   const [rates, setRates] = useState({});
@@ -99,6 +145,7 @@ export default function GlobalCurrencyChecker({ onCurrencyChange }) {
     setError(null);
 
     const apiUrls = [
+      `https://api.frankfurter.app/latest?from=${baseCode}`,
       `https://open.er-api.com/v6/latest/${baseCode}`,
       `https://api.exchangerate-api.com/v4/latest/${baseCode}`,
       `https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/${baseCode.toLowerCase()}.json`
@@ -181,6 +228,7 @@ export default function GlobalCurrencyChecker({ onCurrencyChange }) {
 
   // Calculate Exchange Rate & Converted Value
   const rate = rates[toCurrency.code] !== undefined ? rates[toCurrency.code] : null;
+  const inverseRate = rate && rate > 0 ? (1 / rate) : null;
   const numericAmount = parseFloat(amount) || 0;
   const convertedValue = rate !== null ? (numericAmount * rate) : null;
 
@@ -241,7 +289,7 @@ export default function GlobalCurrencyChecker({ onCurrencyChange }) {
                     </div>
                     <span className="option-code">{c.code}</span>
                     {selectedCountry.code === c.code && selectedCountry.country === c.country && (
-                      <Check size={13} className="check-icon" />
+                      <Check size={14} className="check-icon" />
                     )}
                   </div>
                 ))
@@ -253,12 +301,12 @@ export default function GlobalCurrencyChecker({ onCurrencyChange }) {
         )}
       </div>
 
-      {/* Amount & Currency Conversion Controls */}
-      <div className={`currency-controls-grid ${isModal ? 'modal-grid' : ''}`}>
-        <div className="currency-field-group amount-group">
+      {/* Amount Input & Currency Converter Form Controls */}
+      <div className="currency-convert-grid">
+        <div className="currency-field-group">
           <label className="currency-input-label">Amount</label>
-          <div className="input-with-symbol">
-            <span className="currency-symbol-tag">{fromCurrency.symbol}</span>
+          <div className="currency-amount-input-box">
+            <span className="currency-prefix-symbol">{fromCurrency.symbol}</span>
             <input
               type="number"
               min="0"
@@ -404,26 +452,34 @@ export default function GlobalCurrencyChecker({ onCurrencyChange }) {
             >
               <Maximize2 size={11} />
             </button>
-            <div className="kpi-icon-box">
+            <button
+              type="button"
+              className="currency-google-live-btn"
+              onClick={() => {
+                const searchParam = encodeURIComponent(`${amount || 1} ${fromCurrency.code} to ${toCurrency.code}`);
+                window.open(`https://www.google.com/search?q=${searchParam}`, '_blank', 'noopener,noreferrer');
+              }}
+              title={`Check Real-Time Live ${fromCurrency.code} to ${toCurrency.code} Rate on Google / Chrome`}
+            >
               <Globe size={13} className="text-emerald-400" />
-            </div>
+            </button>
           </div>
         </div>
 
-        {/* Compact Card Content - Unified Single Row Layout */}
+        {/* Compact Card Content - 2-Row Highly Legible Layout */}
         <div className="currency-compact-body">
-          <div className="currency-mini-row">
-            {/* Country Selector Button */}
+          {/* Row 1: From Country Dropdown + Swap + To Currency Dropdown */}
+          <div className="currency-mini-top-row">
             <div className="country-select-wrapper compact" ref={dropdownRef}>
               <button
                 type="button"
                 className="country-dropdown-btn compact"
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                title={`Selected: ${selectedCountry.country} (${selectedCountry.code})`}
+                title={`Selected From: ${fromCurrency.country} (${fromCurrency.code})`}
               >
-                <span className="country-dropdown-flag">{selectedCountry.flag}</span>
+                <span className="country-dropdown-flag">{fromCurrency.flag}</span>
                 <span className="country-dropdown-text">
-                  {selectedCountry.code}
+                  {fromCurrency.code}
                 </span>
                 <ChevronDown size={10} className={`chevron-icon ${isDropdownOpen ? 'open' : ''}`} />
               </button>
@@ -446,7 +502,7 @@ export default function GlobalCurrencyChecker({ onCurrencyChange }) {
                       filteredCountries.map((c) => (
                         <div
                           key={c.code + c.country}
-                          className={`country-option-item ${selectedCountry.code === c.code && selectedCountry.country === c.country ? 'selected' : ''}`}
+                          className={`country-option-item ${fromCurrency.code === c.code && fromCurrency.country === c.country ? 'selected' : ''}`}
                           onClick={() => handleSelectCountry(c)}
                         >
                           <span className="option-flag">{c.flag}</span>
@@ -455,7 +511,7 @@ export default function GlobalCurrencyChecker({ onCurrencyChange }) {
                             <span className="option-currency">{c.name} ({c.symbol})</span>
                           </div>
                           <span className="option-code">{c.code}</span>
-                          {selectedCountry.code === c.code && selectedCountry.country === c.country && (
+                          {fromCurrency.code === c.code && fromCurrency.country === c.country && (
                             <Check size={12} className="check-icon" />
                           )}
                         </div>
@@ -468,6 +524,31 @@ export default function GlobalCurrencyChecker({ onCurrencyChange }) {
               )}
             </div>
 
+            <button
+              type="button"
+              className="currency-mini-swap-btn"
+              onClick={handleSwap}
+              title="Swap From and To Currencies"
+            >
+              <ArrowRightLeft size={10} />
+            </button>
+
+            <select
+              className="currency-mini-to-select"
+              value={toCurrency.code}
+              onChange={(e) => setToCurrency(getCurrencyByCode(e.target.value))}
+              title="Target Currency"
+            >
+              {WORLD_CURRENCIES.map((c) => (
+                <option key={'mini-to-' + c.code} value={c.code}>
+                  {c.flag} {c.code}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Row 2: Visible Amount Input & Converted Result */}
+          <div className="currency-mini-val-row">
             <div className="currency-mini-amount-box">
               <span className="currency-mini-symbol">{fromCurrency.symbol}</span>
               <input
@@ -478,19 +559,20 @@ export default function GlobalCurrencyChecker({ onCurrencyChange }) {
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 placeholder="100"
+                title={`Input amount in ${fromCurrency.code}`}
               />
             </div>
 
-            <button
-              type="button"
-              className="currency-mini-swap-btn"
-              onClick={handleSwap}
-              title="Swap Currencies"
-            >
-              <ArrowRightLeft size={10} />
-            </button>
+            <span className="currency-mini-eq">=</span>
 
-            <div className="currency-mini-output-box">
+            <div
+              className="currency-mini-output-box"
+              onClick={() => {
+                const searchParam = encodeURIComponent(`${amount || 1} ${fromCurrency.code} to ${toCurrency.code}`);
+                window.open(`https://www.google.com/search?q=${searchParam}`, '_blank', 'noopener,noreferrer');
+              }}
+              title="Click to verify in Google Chrome"
+            >
               <span className="currency-mini-output-val">
                 {toCurrency.symbol}{convertedValue !== null ? convertedValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00'}
               </span>
@@ -499,10 +581,15 @@ export default function GlobalCurrencyChecker({ onCurrencyChange }) {
           </div>
         </div>
 
-        {/* Footer Rate Info */}
+        {/* Footer Rate Info with Exact Google Match */}
         <div className="kpi-card-footer">
           <span className="kpi-subtext text-emerald" style={{ fontSize: '0.56rem' }}>
-            <Clock size={10} /> 1 {fromCurrency.code} = {rate !== null ? (rate < 0.01 ? rate.toFixed(4) : rate.toFixed(2)) : '—'} {toCurrency.code}
+            <Clock size={10} /> 1 {fromCurrency.code} = {rate !== null ? (rate < 0.01 ? rate.toFixed(4) : rate.toFixed(4)) : '—'} {toCurrency.code}
+            {inverseRate && inverseRate > 1 && (
+              <span className="inverse-rate-hint" style={{ opacity: 0.8, marginLeft: '0.25rem' }}>
+                (1 {toCurrency.code} = {inverseRate.toFixed(2)} {fromCurrency.code})
+              </span>
+            )}
           </span>
         </div>
       </div>
@@ -521,8 +608,20 @@ export default function GlobalCurrencyChecker({ onCurrencyChange }) {
                 </span>
               </div>
 
-              {/* Modal Action Controls: Full Screen Toggle + Close */}
-              <div className="modal-header-actions" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              {/* Modal Action Controls: Google Live Rate + Full Screen Toggle + Close */}
+              <div className="modal-header-actions" style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+                <button
+                  type="button"
+                  className="currency-google-live-btn modal"
+                  onClick={() => {
+                    const searchParam = encodeURIComponent(`${amount || 1} ${fromCurrency.code} to ${toCurrency.code}`);
+                    window.open(`https://www.google.com/search?q=${searchParam}`, '_blank', 'noopener,noreferrer');
+                  }}
+                  title="Check Live Real-Time Rate on Google Chrome"
+                >
+                  <Globe size={13} className="text-emerald-400" />
+                  <span style={{ fontSize: '0.66rem', fontWeight: 800 }}>Google Live</span>
+                </button>
                 <button
                   type="button"
                   className="currency-zoom-close-btn"

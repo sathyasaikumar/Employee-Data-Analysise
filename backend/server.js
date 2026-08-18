@@ -190,6 +190,14 @@ function formatBytes(bytes) {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
 
+// Ensure all dataset filenames consistently format as .csv
+function formatAsCsvName(filename) {
+  if (!filename) return 'dataset.csv';
+  const ext = path.extname(filename);
+  const base = path.basename(filename, ext);
+  return `${base}.csv`;
+}
+
 // Configure multer storage with unique filenames
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -357,15 +365,16 @@ app.post('/api/upload', (req, res) => {
 
     try {
       const filePath = req.file.path;
-      const originalName = req.file.originalname;
+      const rawOriginalName = req.file.originalname;
+      const originalName = formatAsCsvName(rawOriginalName);
       const savedName = req.file.filename;
       const fileSizeBytes = req.file.size;
-      const ext = path.extname(originalName).toLowerCase().replace('.', '');
+      const ext = path.extname(rawOriginalName).toLowerCase().replace('.', '');
       let normalizedFileType = ext;
       if (ext === 'xlsx' || ext === 'xls') normalizedFileType = 'excel';
 
       // Perform fast analysis
-      const analysis = analyzeFileContent(filePath, originalName);
+      const analysis = analyzeFileContent(filePath, rawOriginalName);
 
       const now = new Date();
       const datasetId = `ds_${now.getTime()}_${Math.random().toString(36).substring(2, 7)}`;
@@ -410,6 +419,89 @@ app.post('/api/upload', (req, res) => {
         fs.unlinkSync(req.file.path);
       }
       res.status(500).json({ success: false, error: `Dataset analysis failed: ${parseErr.message}` });
+    }
+  });
+});
+
+// 2b. POST /api/upload-multiple - Upload multiple dataset files in batch
+app.post('/api/upload-multiple', (req, res) => {
+  upload.array('files', 100)(req, res, (err) => {
+    if (err) {
+      return res.status(400).json({ success: false, error: err.message });
+    }
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({ success: false, error: 'No files uploaded.' });
+    }
+
+    try {
+      const results = [];
+      const datasets = getMetadataList();
+
+      for (const file of req.files) {
+        try {
+          const filePath = file.path;
+          const rawOriginalName = file.originalname;
+          const originalName = formatAsCsvName(rawOriginalName);
+          const savedName = file.filename;
+          const fileSizeBytes = file.size;
+          const ext = path.extname(rawOriginalName).toLowerCase().replace('.', '');
+          let normalizedFileType = ext;
+          if (ext === 'xlsx' || ext === 'xls') normalizedFileType = 'excel';
+
+          const analysis = analyzeFileContent(filePath, rawOriginalName);
+          const now = new Date();
+          const datasetId = `ds_${now.getTime()}_${Math.random().toString(36).substring(2, 7)}`;
+
+          const newMetadata = {
+            id: datasetId,
+            originalName,
+            savedName,
+            filePath: path.relative(DATA_ROOT, filePath).replace(/\\/g, '/'),
+            uploadDate: now.toISOString(),
+            uploadDateFormatted: now.toLocaleString('en-US', {
+              dateStyle: 'medium',
+              timeStyle: 'short'
+            }),
+            fileSize: formatBytes(fileSizeBytes),
+            fileSizeBytes,
+            fileType: normalizedFileType,
+            rowCount: analysis.rowCount,
+            columnCount: analysis.columnCount,
+            columns: analysis.columns,
+            healthScore: analysis.healthScore,
+            missingCells: analysis.missingCells,
+            duplicateCount: analysis.duplicateCount,
+            completenessScore: analysis.completenessScore,
+            status: 'Active'
+          };
+
+          datasets.unshift(newMetadata);
+          results.push({
+            success: true,
+            dataset: newMetadata,
+            data: analysis.rows,
+            headers: analysis.headers
+          });
+        } catch (itemErr) {
+          console.warn(`Failed to parse file ${file.originalname}:`, itemErr.message);
+          results.push({
+            success: false,
+            fileName: file.originalname,
+            error: itemErr.message
+          });
+        }
+      }
+
+      saveMetadataList(datasets);
+
+      res.status(201).json({
+        success: true,
+        message: `Successfully processed ${results.filter(r => r.success).length} of ${req.files.length} datasets.`,
+        uploadedCount: results.filter(r => r.success).length,
+        results
+      });
+    } catch (batchErr) {
+      res.status(500).json({ success: false, error: `Batch upload failed: ${batchErr.message}` });
     }
   });
 });

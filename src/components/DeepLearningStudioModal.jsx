@@ -13,6 +13,7 @@ import {
   GitCommit, CheckCheck, PlayCircle, Layers3, MoveRight, ArrowLeft, Star, RotateCcw,
   Sun, Moon
 } from 'lucide-react';
+import HDScreenshotButton from './HDScreenshotButton';
 
 // ============================================================================
 // 12 PRELOADED REAL-WORLD PROJECT TEMPLATES
@@ -1524,6 +1525,14 @@ export default function DeepLearningStudioModal({
                 <Moon size={14} style={{ color: '#6366f1' }} />
               )}
             </button>
+
+            {/* 📸 CAMERA HD SCREENSHOT SUITE */}
+            <HDScreenshotButton
+              compact={true}
+              datasetName={`DeepLearning_${activeDatasetTitle || 'Project'}`}
+              targetSelector=".dl-studio-modal"
+              theme={currentTheme}
+            />
 
             {/* Window Controls */}
             <button

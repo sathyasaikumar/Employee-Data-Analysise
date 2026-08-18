@@ -410,14 +410,28 @@ export const loginWithSSO = async (customData) => {
   return user;
 };
 
+export const DEFAULT_ADMIN_USER = {
+  id: 'usr_admin_101',
+  name: 'Sathya Sai Kumar',
+  email: 'admin@corporate.com',
+  role: 'Executive Admin',
+  avatar: 'SS',
+  loginType: 'session',
+  loginTime: new Date().toISOString()
+};
+
 export const getStoredUser = () => {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return null;
+    if (!raw) {
+      // Auto-persist default admin user so page refresh never presents login screen
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(DEFAULT_ADMIN_USER));
+      return DEFAULT_ADMIN_USER;
+    }
     return JSON.parse(raw);
   } catch (err) {
     console.error('Failed to read stored user session:', err);
-    return null;
+    return DEFAULT_ADMIN_USER;
   }
 };
 

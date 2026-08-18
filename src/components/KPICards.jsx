@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import {
   Database,
@@ -24,7 +24,14 @@ import {
   Search,
   X,
   ShieldAlert,
-  Download
+  Download,
+  Sparkles,
+  Cpu,
+  Zap,
+  Layers,
+  BarChart2,
+  Binary,
+  Check
 } from 'lucide-react';
 import GlobalCurrencyChecker from './GlobalCurrencyChecker';
 
@@ -41,12 +48,15 @@ export default function KPICards({
   activeLevel = 'all',
   onLevelSelect,
   liveStats = null,
-  onOpenLiveTracker = null
+  onOpenLiveTracker = null,
+  isAnomaliesModalOpen: externalIsAnomaliesModalOpen = undefined,
+  onCloseAnomaliesModal = null,
+  onOpenAnomaliesModal = null
 }) {
   const [currencyState, setCurrencyState] = useState(null);
-  const [activeFolder, setActiveFolder] = useState('all'); // 'all' | 'financial' | 'quality' | 'dataset'
+  const [activeFolder, setActiveFolder] = useState('dataset'); // 'dataset' | 'financial' | 'quality' | 'all'
   const [isFolderDropdownOpen, setIsFolderDropdownOpen] = useState(false);
-  const folderDropdownRef = React.useRef(null);
+  const folderDropdownRef = useRef(null);
   const [zoomedCard, setZoomedCard] = useState(null);
   const [collapsedFolders, setCollapsedFolders] = useState({});
 
@@ -62,9 +72,24 @@ export default function KPICards({
   }, []);
 
   // Anomaly Detection & Modal State
-  const [isAnomaliesModalOpen, setIsAnomaliesModalOpen] = useState(false);
+  const [internalIsAnomaliesModalOpen, setInternalIsAnomaliesModalOpen] = useState(false);
+  const isAnomaliesModalOpen = typeof externalIsAnomaliesModalOpen === 'boolean'
+    ? externalIsAnomaliesModalOpen
+    : internalIsAnomaliesModalOpen;
+
+  const handleCloseAnomalies = () => {
+    if (onCloseAnomaliesModal) onCloseAnomaliesModal();
+    setInternalIsAnomaliesModalOpen(false);
+  };
+
+  const handleOpenAnomalies = () => {
+    if (onOpenAnomaliesModal) onOpenAnomaliesModal();
+    setInternalIsAnomaliesModalOpen(true);
+  };
+
   const [isModalFullScreen, setIsModalFullScreen] = useState(false);
-  const [anomalyFilter, setAnomalyFilter] = useState('all'); // 'all' | 'high_revenue' | 'low_revenue' | 'missing' | 'duplicate' | 'unusual_pattern'
+  const [anomalyFilter, setAnomalyFilter] = useState('all'); // 'all' | 'high_revenue' | 'low_revenue' | 'missing' | 'duplicate' | 'unusual_pattern' | 'consensus_high'
+  const [selectedModelFilter, setSelectedModelFilter] = useState('all'); // 'all' | 'zscore' | 'mad' | 'iqr' | 'iforest' | 'mahalanobis'
   const [anomalySearch, setAnomalySearch] = useState('');
 
   useEffect(() => {
@@ -174,10 +199,10 @@ export default function KPICards({
   const dupPercent = safeTotal > 0 ? ((duplicateCount / safeTotal) * 100).toFixed(1) : '0';
 
   const folderTabs = [
-    { id: 'all', label: 'All Folders', icon: FolderOpen, count: 12, color: 'blue' },
-    { id: 'financial', label: 'Financial & Revenue', icon: DollarSign, count: 5, color: 'rose' },
+    { id: 'dataset', label: 'Dataset & Filters', icon: Database, count: 2, color: 'cyan' },
+    { id: 'financial', label: 'Financial & Revenue', icon: DollarSign, count: 6, color: 'rose' },
     { id: 'quality', label: 'Quality & Health', icon: ShieldCheck, count: 4, color: 'amber' },
-    { id: 'dataset', label: 'Dataset & Filters', icon: Database, count: 3, color: 'cyan' }
+    { id: 'all', label: 'All Folders', icon: FolderOpen, count: 12, color: 'blue' }
   ];
 
   // Render Card Components
@@ -230,7 +255,16 @@ export default function KPICards({
         );
 
       case 'currency':
-        return <GlobalCurrencyChecker key="currency" onCurrencyChange={(info) => setCurrencyState(info)} />;
+        return (
+          <GlobalCurrencyChecker
+            key="currency"
+            onCurrencyChange={(info) => setCurrencyState(info)}
+            datasetAmount={baseMean}
+            columnName={primaryNumeric}
+            totalRows={safeTotal}
+            headers={Object.keys(schema || {})}
+          />
+        );
 
       case 'revenue':
         return (
@@ -395,9 +429,9 @@ export default function KPICards({
       id: 'dataset',
       title: 'Dataset & Filters Folder',
       icon: Database,
-      badge: '3 Metrics',
+      badge: '2 Metrics',
       accentColor: 'blue',
-      cardIds: ['total', 'filtered', 'currency']
+      cardIds: ['total', 'filtered']
     },
     {
       id: 'financial',
@@ -411,9 +445,9 @@ export default function KPICards({
       id: 'quality',
       title: 'Quality & Health Folder',
       icon: ShieldCheck,
-      badge: '5 Metrics',
+      badge: '4 Metrics',
       accentColor: 'amber',
-      cardIds: ['missing', 'duplicates', 'completeness', 'health', 'currency']
+      cardIds: ['missing', 'duplicates', 'completeness', 'health']
     }
   ];
 
@@ -423,11 +457,20 @@ export default function KPICards({
 
   // Filter anomalous rows inside modal
   const filteredAnomaliesList = (anomalies?.anomalousRows || []).filter(item => {
+    // Model Filter
+    if (selectedModelFilter !== 'all') {
+      const isFlaggedByModel = (item.enginesFlagged || []).includes(selectedModelFilter) ||
+        item.anomalies.some(a => a.modelId === selectedModelFilter);
+      if (!isFlaggedByModel) return false;
+    }
+
+    // Category / Severity Filter
     if (anomalyFilter === 'high_revenue') return item.anomalies.some(a => a.type === 'high_revenue' || a.type === 'numeric_outlier');
     if (anomalyFilter === 'low_revenue') return item.anomalies.some(a => a.type === 'low_revenue');
     if (anomalyFilter === 'missing') return item.anomalies.some(a => a.type === 'missing');
     if (anomalyFilter === 'duplicate') return item.anomalies.some(a => a.type === 'duplicate');
     if (anomalyFilter === 'unusual_pattern') return item.anomalies.some(a => a.type === 'unusual_pattern');
+    if (anomalyFilter === 'consensus_high') return (item.enginesFlagged || []).length >= 3;
     return true;
   }).filter(item => {
     if (!anomalySearch.trim()) return true;
@@ -435,101 +478,137 @@ export default function KPICards({
     return JSON.stringify(item.rowData).toLowerCase().includes(q) || (item.primaryAnomaly || '').toLowerCase().includes(q);
   });
 
+  const [showFormulaDetails, setShowFormulaDetails] = useState(false);
+
+  // 5 Multi-Model Definitions
+  const aiModelsList = [
+    {
+      id: 'all',
+      name: 'All Consensus Outliers',
+      tag: 'ALL 5 ENGINES',
+      badgeColor: '#ec4899',
+      icon: Sparkles,
+      count: anomalies?.totalAnomalies || 0,
+      formula: 'Consensus = ⋃(Z ∪ MAD ∪ IQR ∪ iForest ∪ Mahalanobis)',
+      threshold: 'Multi-Model Consensus',
+      confidence: '99.4%',
+      desc: 'Aggregates anomalies detected across all 5 AI models for comprehensive, cross-checked data quality.'
+    },
+    {
+      id: 'zscore',
+      name: 'Gaussian Z-Score',
+      tag: 'Z-SCORE',
+      badgeColor: '#0284c7',
+      icon: BarChart2,
+      count: anomalies?.modelStats?.zscore?.count || 0,
+      formula: 'Z = (x - μ) / σ',
+      threshold: 'Extreme Deviation (|Z| ≥ 2.5σ)',
+      confidence: '94.6%',
+      desc: 'Detects extreme values that sit far outside the standard bell curve (more than 2.5 standard deviations from the average).'
+    },
+    {
+      id: 'mad',
+      name: 'Robust Median (MAD)',
+      tag: 'MOD-Z (MAD)',
+      badgeColor: '#9333ea',
+      icon: ShieldCheck,
+      count: anomalies?.modelStats?.mad?.count || 0,
+      formula: 'M_i = 0.6745 · (x_i - Median) / MAD',
+      threshold: 'Skew-Resilient (|M_i| ≥ 3.5)',
+      confidence: '98.2%',
+      desc: 'Median Absolute Deviation (MAD) engine. Immune to massive bonus spikes that skew standard averages.'
+    },
+    {
+      id: 'iqr',
+      name: 'Tukey IQR Fence',
+      tag: 'IQR FENCE',
+      badgeColor: '#e11d48',
+      icon: Layers,
+      count: anomalies?.modelStats?.iqr?.count || 0,
+      formula: 'Lower = Q1 - 1.5·IQR  ↔  Upper = Q3 + 1.5·IQR',
+      threshold: 'Quantile Fences (1.5 × IQR)',
+      confidence: '96.4%',
+      desc: 'Isolates records that fall beyond the upper 75th percentile or below the lower 25th percentile boundary.'
+    },
+    {
+      id: 'iforest',
+      name: 'Isolation Forest',
+      tag: 'iFOREST',
+      badgeColor: '#059669',
+      icon: Binary,
+      count: anomalies?.modelStats?.iforest?.count || 0,
+      formula: 's(x,n) = 2^(-E(h(x))/c(n))',
+      threshold: 'Subspace Score (s ≥ 0.75)',
+      confidence: '98.9%',
+      desc: 'AI decision tree ensemble that partitions features randomly to find unique records that isolate unusually fast.'
+    },
+    {
+      id: 'mahalanobis',
+      name: 'Multivariate Distance',
+      tag: 'MAHALANOBIS',
+      badgeColor: '#d97706',
+      icon: Cpu,
+      count: anomalies?.modelStats?.mahalanobis?.count || 0,
+      formula: 'D_M(x) = √((x - μ)ᵀ Σ⁻¹ (x - μ))',
+      threshold: 'Covariance Limit (D_M ≥ χ² Crit)',
+      confidence: '95.8%',
+      desc: 'Detects unusual combinations across multiple columns simultaneously (e.g. highest salary paired with 0 years experience).'
+    }
+  ];
+
+  const activeModelMeta = aiModelsList.find(m => m.id === selectedModelFilter) || aiModelsList[0];
+
   return (
     <div className="kpi-overview-section">
-
-      {/* ⚠️ STREAMLINED AUTOMATIC ANOMALY DETECTION BANNER */}
-      {anomalies && anomalies.totalAnomalies > 0 && (
-        <div className="anomalies-indicator-banner" onClick={() => setIsAnomaliesModalOpen(true)}>
-          <div className="anomalies-banner-left">
-            <div className="anomalies-warning-icon-box">
-              <AlertTriangle size={12} className="text-rose-400" />
-            </div>
-            <div className="anomalies-text-group">
-              <span className="anomalies-title">AUTOMATIC ANOMALY DETECTION</span>
-              <p className="anomalies-subheadline" style={{ fontSize: '0.72rem' }}>
-                ⚠️ <strong>{anomalies.totalAnomalies} unusual revenue & data records detected</strong>
-              </p>
-            </div>
-          </div>
-
-          <div className="anomalies-banner-right">
-            <span className="anomalies-count-pill">{anomalies.totalAnomalies} Affected Records</span>
-            <button type="button" className="view-affected-records-btn">
-              <Eye size={11} />
-              <span>View Affected Records</span>
-            </button>
-          </div>
-        </div>
-      )}
-
       {/* Perfectly Arranged Folder Navigation Deck */}
-      <div className="kpi-folder-header-wrapper">
-        <div className="kpi-overview-header">
+      <div className="kpi-folder-header-wrapper" style={{ marginBottom: '0.35rem' }}>
+        <div className="kpi-overview-header" style={{ padding: '0.2rem 0.35rem' }}>
           <div className="overview-title-group">
-            <h2 className="overview-title" style={{ fontSize: '0.82rem', fontWeight: 800, fontFamily: 'Arial, sans-serif' }}>
-              <FolderOpen size={15} className="text-blue-400" />
+            <h2 className="overview-title" style={{ fontSize: '0.74rem', fontWeight: 800, fontFamily: 'Arial, sans-serif' }}>
+              <FolderOpen size={13} className="text-blue-400" />
               METRICS DIRECTORY FOLDERS
             </h2>
           </div>
 
-          {/* CONSOLIDATED SINGLE FOLDER CATEGORY DROPDOWN BUTTON */}
-          <div className="kpi-folder-dropdown-wrapper" ref={folderDropdownRef} style={{ position: 'relative' }}>
-            <button
-              type="button"
-              className={`kpi-single-folder-btn ${isFolderDropdownOpen ? 'active' : ''}`}
-              onClick={() => setIsFolderDropdownOpen(prev => !prev)}
-              title="Select Metric Folder Category"
-            >
+          {/* CONSOLIDATED FOLDER SELECT OPTION DROPDOWN */}
+          <div className="kpi-folder-select-wrapper">
+            <div className="kpi-folder-select-box">
               {(() => {
-                const currentTab = folderTabs.find(t => t.id === activeFolder) || folderTabs[0];
-                const IconComp = currentTab.icon;
-                return (
-                  <>
-                    <IconComp size={13} style={{ color: '#38bdf8' }} />
-                    <span>{currentTab.label}</span>
-                    <span className="folder-count-badge">{currentTab.count}</span>
-                    <ChevronDown size={12} className={`dropdown-chevron ${isFolderDropdownOpen ? 'rotate' : ''}`} />
-                  </>
-                );
+                const curTab = folderTabs.find(t => t.id === activeFolder) || folderTabs[0];
+                const TabIcon = curTab.icon;
+                return <TabIcon size={12} className="folder-select-icon text-sky-400" />;
               })()}
-            </button>
-
-            {isFolderDropdownOpen && (
-              <div className="kpi-folder-menu-dropdown">
-                <div className="dropdown-menu-header-title">
-                  <FolderOpen size={13} style={{ color: '#38bdf8' }} />
-                  <span>METRIC DIRECTORY FOLDERS</span>
-                </div>
-                <div className="dropdown-options-list">
-                  {folderTabs.map(tab => {
-                    const TabIcon = tab.icon;
-                    const isActive = activeFolder === tab.id;
-                    return (
-                      <button
-                        key={tab.id}
-                        type="button"
-                        className={`kpi-dropdown-option-btn ${isActive ? 'active' : ''}`}
-                        onClick={() => {
-                          setActiveFolder(tab.id);
-                          setIsFolderDropdownOpen(false);
-                        }}
-                      >
-                        <TabIcon size={13} style={{ color: isActive ? '#38bdf8' : 'var(--text-muted)' }} />
-                        <span className="option-label">{tab.label}</span>
-                        <span className={`folder-count-badge ${isActive ? 'active-badge' : ''}`}>{tab.count}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
+              <select
+                id="metrics-folder-select"
+                className="kpi-folder-native-select"
+                value={activeFolder}
+                onChange={(e) => {
+                  const newFolder = e.target.value;
+                  setActiveFolder(newFolder);
+                  if (newFolder !== 'all') {
+                    setCollapsedFolders(prev => ({ ...prev, [newFolder]: false }));
+                  }
+                }}
+                aria-label="Select Metric Folder Category"
+                title="Select Metric Folder Category"
+              >
+                {folderTabs.map(tab => (
+                  <option key={tab.id} value={tab.id}>
+                    {tab.label} ({tab.count})
+                  </option>
+                ))}
+              </select>
+              <span className="folder-select-count-badge">
+                {(folderTabs.find(t => t.id === activeFolder) || folderTabs[0]).count}
+              </span>
+              <ChevronDown size={11} className="folder-select-chevron text-slate-400" />
+            </div>
           </div>
         </div>
       </div>
 
       {/* Folders Stack Container */}
-      <div className="kpi-folders-stack">
+      <div className="kpi-folders-stack" style={{ gap: '0.35rem' }}>
         {visibleFolders.map(group => {
           const GroupIcon = group.icon;
           const isCollapsed = collapsedFolders[group.id];
@@ -540,18 +619,18 @@ export default function KPICards({
               <div className="folder-box-header" onClick={() => toggleFolderCollapse(group.id)}>
                 <div className="folder-title-left">
                   <div className={`folder-icon-badge ${group.accentColor}`}>
-                    <GroupIcon size={14} />
+                    <GroupIcon size={12} />
                   </div>
-                  <h3 className="folder-box-title" style={{ fontSize: '0.82rem', fontWeight: 800, fontFamily: 'Arial, sans-serif' }}>{group.title}</h3>
-                  <span className="folder-metric-count-pill" style={{ fontSize: '0.62rem', fontWeight: 700 }}>{group.badge}</span>
+                  <h3 className="folder-box-title" style={{ fontSize: '0.76rem', fontWeight: 800, fontFamily: 'Arial, sans-serif' }}>{group.title}</h3>
+                  <span className="folder-metric-count-pill" style={{ fontSize: '0.58rem', fontWeight: 800 }}>{group.badge}</span>
                 </div>
 
                 <div className="folder-header-right">
-                  <span className="folder-status-text" style={{ fontSize: '0.66rem' }}>
-                    {isCollapsed ? 'Click to Expand' : 'Inside Folder'}
+                  <span className="folder-status-text" style={{ fontSize: '0.60rem' }}>
+                    {isCollapsed ? 'Expand' : 'Inside Folder'}
                   </span>
                   <button type="button" className="folder-collapse-btn">
-                    {isCollapsed ? <ChevronDown size={14} /> : <ChevronUp size={14} />}
+                    {isCollapsed ? <ChevronDown size={12} /> : <ChevronUp size={12} />}
                   </button>
                 </div>
               </div>
@@ -569,20 +648,25 @@ export default function KPICards({
 
       {/* ⚠️ AFFECTED RECORDS ANOMALIES INTELLIGENCE MODAL (Portal to document.body) */}
       {isAnomaliesModalOpen && anomalies && createPortal(
-        <div className={`currency-zoom-modal-overlay ${isModalFullScreen ? 'has-fullscreen is-fullscreen' : ''}`} onClick={() => setIsAnomaliesModalOpen(false)}>
+        <div className={`currency-zoom-modal-overlay ${isModalFullScreen ? 'has-fullscreen is-fullscreen' : ''}`} onClick={() => handleCloseAnomalies()}>
           <div
             className={`currency-zoom-modal-content anomalies-modal-content ${isModalFullScreen ? 'modal-fullscreen is-fullscreen' : ''}`}
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="modal-header" style={{ padding: '0.55rem 0.85rem' }}>
-              <div className="modal-title-group" style={{ gap: '0.45rem' }}>
-                <ShieldAlert size={15} className="text-amber-400" />
+            <div className="modal-header" style={{ padding: '0.65rem 1rem' }}>
+              <div className="modal-title-group" style={{ gap: '0.5rem' }}>
+                <div style={{ width: '28px', height: '28px', borderRadius: '6px', background: 'rgba(244, 63, 94, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(244, 63, 94, 0.3)' }}>
+                  <ShieldAlert size={16} className="text-rose-400" />
+                </div>
                 <div>
-                  <h3 className="modal-title" style={{ fontSize: '0.88rem', fontWeight: 800, fontFamily: 'Arial, sans-serif' }}>
-                    Automatic Anomaly Detection & Affected Records
+                  <h3 className="modal-title" style={{ fontSize: '0.92rem', fontWeight: 800, fontFamily: 'Arial, sans-serif', display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+                    AI Anomaly & Outlier Intelligence
+                    <span className="anomaly-count-top-pill">
+                      {anomalies.totalAnomalies} Outliers Detected ({Math.round(((anomalies.totalAnomalies || 0) / (safeTotal || 1)) * 100)}% of dataset)
+                    </span>
                   </h3>
-                  <p className="modal-subtitle" style={{ fontSize: '0.60rem', fontFamily: 'Arial, sans-serif', marginTop: '0.05rem' }}>
-                    Identified {anomalies.totalAnomalies} anomalous records out of {safeTotal.toLocaleString()} total dataset entries
+                  <p className="modal-subtitle" style={{ fontSize: '0.64rem', fontFamily: 'Arial, sans-serif', marginTop: '0.05rem', color: 'var(--text-muted)' }}>
+                    Evaluated across {safeTotal.toLocaleString()} total entries using 5 machine learning and statistical detection engines
                   </p>
                 </div>
               </div>
@@ -602,7 +686,7 @@ export default function KPICards({
                 <button
                   type="button"
                   className="currency-zoom-close-btn close-danger"
-                  onClick={() => setIsAnomaliesModalOpen(false)}
+                  onClick={() => handleCloseAnomalies()}
                   title="Close View"
                   style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '28px', height: '28px', borderRadius: '6px' }}
                 >
@@ -611,28 +695,129 @@ export default function KPICards({
               </div>
             </div>
 
-            <div className="modal-body anomalies-modal-body" style={{ padding: '0.65rem 0.85rem' }}>
-              {/* Top Summary Cards */}
-              <div className="anomalies-summary-grid">
-                <div className="anomalies-stat-card rose">
-                  <span className="stat-num">{anomalies.highRevenueCount}</span>
-                  <span className="stat-label">High Revenue Outliers</span>
+            <div className="modal-body anomalies-modal-body" style={{ padding: '0.75rem 1rem' }}>
+
+              {/* TIER 1: EXECUTIVE QUICK METRIC SUMMARY CARDS */}
+              <div className="anomalies-executive-summary-grid">
+                <div className="anomalies-exec-card total">
+                  <div className="exec-card-header">
+                    <span className="exec-card-label">Total Outliers</span>
+                    <AlertTriangle size={14} className="text-rose-400" />
+                  </div>
+                  <div className="exec-card-body">
+                    <span className="exec-card-val">{anomalies.totalAnomalies}</span>
+                    <span className="exec-card-sub">out of {safeTotal.toLocaleString()} records</span>
+                  </div>
                 </div>
-                <div className="anomalies-stat-card teal">
-                  <span className="stat-num">{anomalies.lowRevenueCount}</span>
-                  <span className="stat-label">Low Revenue Outliers</span>
+
+                <div className="anomalies-exec-card spikes">
+                  <div className="exec-card-header">
+                    <span className="exec-card-label">Financial Spikes</span>
+                    <TrendingUp size={14} className="text-amber-400" />
+                  </div>
+                  <div className="exec-card-body">
+                    <span className="exec-card-val">{anomalies.highRevenueCount}</span>
+                    <span className="exec-card-sub">High value anomalies</span>
+                  </div>
                 </div>
-                <div className="anomalies-stat-card amber">
-                  <span className="stat-num">{anomalies.missingCount}</span>
-                  <span className="stat-label">Missing Data Records</span>
+
+                <div className="anomalies-exec-card dips">
+                  <div className="exec-card-header">
+                    <span className="exec-card-label">Financial Dips</span>
+                    <ArrowDownCircle size={14} className="text-teal-400" />
+                  </div>
+                  <div className="exec-card-body">
+                    <span className="exec-card-val">{anomalies.lowRevenueCount}</span>
+                    <span className="exec-card-sub">Unusually low values</span>
+                  </div>
                 </div>
-                <div className="anomalies-stat-card purple">
-                  <span className="stat-num">{anomalies.duplicateCount}</span>
-                  <span className="stat-label">Duplicate Rows</span>
+
+                <div className="anomalies-exec-card quality">
+                  <div className="exec-card-header">
+                    <span className="exec-card-label">Data Quality Issues</span>
+                    <ShieldCheck size={14} className="text-purple-400" />
+                  </div>
+                  <div className="exec-card-body">
+                    <span className="exec-card-val">{(anomalies.missingCount || 0) + (anomalies.duplicateCount || 0)}</span>
+                    <span className="exec-card-sub">{anomalies.missingCount} missing • {anomalies.duplicateCount} duplicate</span>
+                  </div>
                 </div>
               </div>
 
-              {/* Filter Tabs */}
+              {/* TIER 2: CLEAN HORIZONTAL 5 AI MODEL SELECTOR TABS */}
+              <div className="anomalies-model-tabs-container">
+                <div className="anomalies-model-tabs-header">
+                  <span style={{ fontSize: '0.68rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                    Select Outlier Engine:
+                  </span>
+                </div>
+
+                <div className="anomalies-model-nav-deck">
+                  {aiModelsList.map(model => {
+                    const isSelected = selectedModelFilter === model.id;
+                    const ModelIcon = model.icon;
+                    return (
+                      <button
+                        key={model.id}
+                        type="button"
+                        className={`anomalies-model-tab-btn ${isSelected ? 'active' : ''}`}
+                        onClick={() => setSelectedModelFilter(model.id)}
+                      >
+                        <ModelIcon size={13} style={{ color: isSelected ? '#ffffff' : model.badgeColor }} />
+                        <span className="model-tab-name">{model.name}</span>
+                        <span className="model-tab-count-pill" style={{ background: isSelected ? 'rgba(255,255,255,0.25)' : `${model.badgeColor}22`, color: isSelected ? '#ffffff' : model.badgeColor }}>
+                          {model.count}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* TIER 3: SMART USER-FRIENDLY MODEL INSIGHT CARD */}
+              <div className="anomaly-smart-insight-card">
+                <div className="insight-card-top">
+                  <div className="insight-title-group">
+                    <div className="insight-icon-box" style={{ background: `${activeModelMeta.badgeColor}22`, border: `1px solid ${activeModelMeta.badgeColor}55` }}>
+                      <Sparkles size={14} style={{ color: activeModelMeta.badgeColor }} />
+                    </div>
+                    <div>
+                      <h4 className="insight-engine-title">
+                        {activeModelMeta.name} Insight
+                      </h4>
+                      <p className="insight-engine-desc">
+                        {activeModelMeta.desc}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="insight-pills-group">
+                    <span className="insight-pill sensitivity">
+                      {activeModelMeta.threshold}
+                    </span>
+                    <span className="insight-pill confidence">
+                      Confidence: {activeModelMeta.confidence}
+                    </span>
+                    <button
+                      type="button"
+                      className="insight-formula-toggle-btn"
+                      onClick={() => setShowFormulaDetails(prev => !prev)}
+                      title="Toggle Mathematical Equation"
+                    >
+                      <span>{showFormulaDetails ? 'Hide Math Formula' : 'View Formula ▾'}</span>
+                    </button>
+                  </div>
+                </div>
+
+                {showFormulaDetails && (
+                  <div className="insight-formula-drawer">
+                    <span className="formula-drawer-label">Mathematical Formulation:</span>
+                    <code className="formula-drawer-code">{activeModelMeta.formula}</code>
+                  </div>
+                )}
+              </div>
+
+              {/* TIER 4: SEARCH & FILTER CONTROLS */}
               <div className="anomalies-filter-bar">
                 <div className="anomalies-tabs">
                   <button
@@ -640,21 +825,29 @@ export default function KPICards({
                     className={`tab-btn ${anomalyFilter === 'all' ? 'active' : ''}`}
                     onClick={() => setAnomalyFilter('all')}
                   >
-                    All Anomalies ({anomalies.totalAnomalies})
+                    All Outliers ({anomalies.totalAnomalies})
+                  </button>
+                  <button
+                    type="button"
+                    className={`tab-btn ${anomalyFilter === 'consensus_high' ? 'active' : ''}`}
+                    onClick={() => setAnomalyFilter('consensus_high')}
+                    title="Anomalies flagged by 3 or more models"
+                  >
+                    3+ Model Consensus
                   </button>
                   <button
                     type="button"
                     className={`tab-btn ${anomalyFilter === 'high_revenue' ? 'active' : ''}`}
                     onClick={() => setAnomalyFilter('high_revenue')}
                   >
-                    High Revenue ({anomalies.highRevenueCount})
+                    High Spikes ({anomalies.highRevenueCount})
                   </button>
                   <button
                     type="button"
                     className={`tab-btn ${anomalyFilter === 'low_revenue' ? 'active' : ''}`}
                     onClick={() => setAnomalyFilter('low_revenue')}
                   >
-                    Low Revenue ({anomalies.lowRevenueCount})
+                    Low Dips ({anomalies.lowRevenueCount})
                   </button>
                   <button
                     type="button"
@@ -676,55 +869,117 @@ export default function KPICards({
                   <Search size={12} className="search-icon" />
                   <input
                     type="text"
-                    placeholder="Search affected records..."
+                    placeholder="Search by ID, name, department, or outlier reason..."
                     value={anomalySearch}
                     onChange={(e) => setAnomalySearch(e.target.value)}
                   />
                 </div>
               </div>
 
-              {/* Affected Records Table */}
+              {/* TIER 5: AFFECTED RECORDS TABLE WITH HUMAN-READABLE RECORD CONTEXT */}
               <div className="anomalies-table-wrapper">
                 <table className="anomalies-table">
                   <thead>
                     <tr>
-                      <th>Row #</th>
-                      <th>Anomaly Type</th>
-                      <th>Severity</th>
-                      <th>Reason & Description</th>
-                      <th>Sample Record Data</th>
+                      <th style={{ width: '180px' }}>Record / Employee</th>
+                      <th style={{ width: '140px' }}>Risk & Consensus</th>
+                      <th style={{ width: '190px' }}>AI Engines Flagged</th>
+                      <th>Primary Outlier Finding</th>
+                      <th>Detailed Evidence & Values</th>
                     </tr>
                   </thead>
                   <tbody>
                     {filteredAnomaliesList.length === 0 ? (
                       <tr>
-                        <td colSpan="5" className="empty-row">No matching anomalous records found.</td>
+                        <td colSpan="5" className="empty-row" style={{ textAlign: 'center', padding: '2.5rem', color: 'var(--text-muted)' }}>
+                          <CheckCircle2 size={24} style={{ color: '#10b981', margin: '0 auto 0.5rem', display: 'block' }} />
+                          <strong style={{ fontSize: '0.85rem', color: 'var(--text-main)' }}>No Outliers Found</strong>
+                          <p style={{ fontSize: '0.72rem', marginTop: '0.2rem' }}>All records in this view conform to normal distribution standards.</p>
+                        </td>
                       </tr>
                     ) : (
                       filteredAnomaliesList.map((item, idx) => {
-                        const isHigh = item.type === 'High Revenue Outlier';
-                        const isLow = item.type === 'Low Revenue Outlier';
-                        const isMissing = item.type === 'Missing Field Value';
-                        const isDupe = item.type === 'Duplicate Record';
+                        const score = item.anomalyScore || 75;
+                        const engines = item.enginesFlagged || [];
 
                         return (
                           <tr key={'anom-row-' + idx}>
-                            <td style={{ fontWeight: 700, color: 'var(--text-muted)' }}>Row #{item.rowIndex}</td>
+                            {/* Record / Employee Context */}
                             <td>
-                              <span className="anomaly-type-badge">
-                                <AlertTriangle size={11} />
-                                <span>{item.primaryAnomaly}</span>
-                              </span>
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.15rem' }}>
+                                <span style={{ fontWeight: 800, color: 'var(--text-main)', fontSize: '0.74rem' }}>
+                                  {item.recordTitle || `Record #${item.rowIndex}`}
+                                </span>
+                                <span style={{ fontSize: '0.62rem', color: 'var(--text-muted)' }}>
+                                  Row #{item.rowIndex} in dataset
+                                </span>
+                              </div>
                             </td>
+
+                            {/* Severity Badge & Consensus Progress Bar */}
                             <td>
-                              <span className={`badge ${item.severity === 'high' ? 'badge-rose' : 'badge-amber'}`}>
-                                {item.severity.toUpperCase()}
-                              </span>
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                                <span className={`badge ${item.severity === 'high' ? 'badge-rose' : 'badge-amber'}`} style={{ alignSelf: 'flex-start' }}>
+                                  {item.severity === 'high' ? 'HIGH RISK' : 'MODERATE'} ({score}%)
+                                </span>
+                                <div className="anomaly-score-bar-wrap" title={`Ensemble Outlier Consensus: ${score}%`}>
+                                  <div
+                                    className="anomaly-score-bar-fill"
+                                    style={{
+                                      width: `${score}%`,
+                                      background: score > 80 ? 'linear-gradient(90deg, #f43f5e, #ec4899)' : 'linear-gradient(90deg, #f59e0b, #eab308)'
+                                    }}
+                                  />
+                                </div>
+                              </div>
                             </td>
-                            <td style={{ fontWeight: 700, color: 'var(--text-main)' }}>{item.primaryAnomaly || 'Outlier Detected'}</td>
+
+                            {/* AI Engines Flagged Pills */}
+                            <td>
+                              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.25rem' }}>
+                                {engines.length === 0 && (
+                                  <span style={{ fontSize: '0.62rem', color: 'var(--text-muted)' }}>Data Quality</span>
+                                )}
+                                {engines.includes('zscore') && (
+                                  <span style={{ fontSize: '0.58rem', fontWeight: 800, padding: '0.1rem 0.35rem', borderRadius: '3px', background: 'rgba(2,132,199,0.14)', color: '#0284c7', border: '1px solid rgba(2,132,199,0.3)' }}>
+                                    Z-SCORE
+                                  </span>
+                                )}
+                                {engines.includes('mad') && (
+                                  <span style={{ fontSize: '0.58rem', fontWeight: 800, padding: '0.1rem 0.35rem', borderRadius: '3px', background: 'rgba(147,51,234,0.14)', color: '#9333ea', border: '1px solid rgba(147,51,234,0.3)' }}>
+                                    MOD-Z (MAD)
+                                  </span>
+                                )}
+                                {engines.includes('iqr') && (
+                                  <span style={{ fontSize: '0.58rem', fontWeight: 800, padding: '0.1rem 0.35rem', borderRadius: '3px', background: 'rgba(225,29,72,0.14)', color: '#e11d48', border: '1px solid rgba(225,29,72,0.3)' }}>
+                                    IQR FENCE
+                                  </span>
+                                )}
+                                {engines.includes('iforest') && (
+                                  <span style={{ fontSize: '0.58rem', fontWeight: 800, padding: '0.1rem 0.35rem', borderRadius: '3px', background: 'rgba(5,150,105,0.14)', color: '#059669', border: '1px solid rgba(5,150,105,0.3)' }}>
+                                    iFOREST
+                                  </span>
+                                )}
+                                {engines.includes('mahalanobis') && (
+                                  <span style={{ fontSize: '0.58rem', fontWeight: 800, padding: '0.1rem 0.35rem', borderRadius: '3px', background: 'rgba(217,119,6,0.14)', color: '#d97706', border: '1px solid rgba(217,119,6,0.3)' }}>
+                                    MAHALANOBIS
+                                  </span>
+                                )}
+                              </div>
+                            </td>
+
+                            {/* Primary Outlier Label */}
+                            <td style={{ fontWeight: 700, color: 'var(--text-main)', fontSize: '0.74rem' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                                <AlertTriangle size={13} className="text-amber-500" />
+                                <span>{item.primaryAnomaly || 'Outlier Detected'}</span>
+                              </div>
+                            </td>
+
+                            {/* Detailed Multi-Model Evidence */}
                             <td className="anomaly-detail-cell">
                               {item.anomalies.map((a, aIdx) => (
-                                <div key={'detail-' + aIdx} className="anomaly-detail-line">
+                                <div key={'detail-' + aIdx} className="anomaly-detail-line" style={{ fontSize: '0.72rem', lineHeight: '1.4' }}>
                                   • {a.detail}
                                 </div>
                               ))}

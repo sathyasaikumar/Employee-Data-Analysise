@@ -1,6 +1,6 @@
 export const SAMPLE_DATASETS = {
   workforce: {
-    name: "Enterprise Workforce Intelligence",
+    name: "Enterprise_Workforce_Intelligence.csv",
     description: "Employee headcount, salary metrics, department breakdown, work mode, and attrition performance ratings.",
     csvContent: `Employee_ID,Department,Role,Salary,Work_Mode,Status,Performance_Rating,Years_At_Company,Satisfaction_Score
 EMP-1001,Engineering,Senior Software Engineer,125000,Remote,Active,5,4,4.8
@@ -36,7 +36,7 @@ EMP-1030,Sales,Enterprise Sales Rep,120000,Remote,Active,5,4,4.8
 `
   },
   sales: {
-    name: "Global E-Commerce Revenue & Sales",
+    name: "Global_ECommerce_Sales.csv",
     description: "Regional sales revenue, product categories, order volume, discounts, and customer ratings.",
     csvContent: `Order_ID,Region,Product_Category,Revenue,Units_Sold,Discount_Percent,Customer_Rating,Order_Date
 ORD-801,North America,Electronics,4500,15,5,4.8,2026-01-05

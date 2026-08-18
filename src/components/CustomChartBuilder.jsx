@@ -1,8 +1,160 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Bar, Line, Doughnut } from 'react-chartjs-2';
-import { Sparkles } from 'lucide-react';
+import {
+  Sparkles,
+  Download,
+  FileImage,
+  Camera,
+  FileSpreadsheet,
+  Copy,
+  Check
+} from 'lucide-react';
+
+function ChartExportMenu({ containerRef, chartData, chartTitle, theme = 'dark' }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const menuRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) {
+        setIsOpen(false);
+      }
+    };
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isOpen]);
+
+  const handleDownload = (format) => {
+    if (!containerRef.current) return;
+    const canvas = containerRef.current.querySelector('canvas');
+    if (!canvas) return;
+
+    const offCanvas = document.createElement('canvas');
+    offCanvas.width = canvas.width;
+    offCanvas.height = canvas.height;
+    const ctx = offCanvas.getContext('2d');
+
+    const isLight = theme === 'light';
+    ctx.fillStyle = isLight ? '#ffffff' : '#0f172a';
+    ctx.fillRect(0, 0, offCanvas.width, offCanvas.height);
+    ctx.drawImage(canvas, 0, 0);
+
+    const mimeType = format === 'jpeg' ? 'image/jpeg' : 'image/png';
+    const dataUrl = offCanvas.toDataURL(mimeType, 1.0);
+
+    const cleanTitle = (chartTitle || 'chart').replace(/[^a-zA-Z0-9_-]/g, '_');
+    const link = document.createElement('a');
+    link.download = `${cleanTitle}.${format === 'jpeg' ? 'jpg' : 'png'}`;
+    link.href = dataUrl;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    setIsOpen(false);
+  };
+
+  const handleCSVDownload = () => {
+    if (!chartData || !chartData.labels) return;
+    const labels = chartData.labels || [];
+    const datasets = chartData.datasets || [];
+
+    const headers = ['Category / Dimension', ...datasets.map(d => d.label || 'Value')];
+    const rows = labels.map((label, idx) => {
+      const rowVals = [
+        `"${label.toString().replace(/"/g, '""')}"`,
+        ...datasets.map(d => {
+          const v = d.data ? d.data[idx] : '';
+          return v !== undefined && v !== null ? v : '';
+        })
+      ];
+      return rowVals.join(',');
+    });
+
+    const csvContent = [headers.join(','), ...rows].join('\r\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const cleanTitle = (chartTitle || 'chart_data').replace(/[^a-zA-Z0-9_-]/g, '_');
+    const link = document.createElement('a');
+    link.download = `${cleanTitle}_data.csv`;
+    link.href = URL.createObjectURL(blob);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    setIsOpen(false);
+  };
+
+  const handleCopyImage = async () => {
+    if (!containerRef.current) return;
+    const canvas = containerRef.current.querySelector('canvas');
+    if (!canvas) return;
+
+    try {
+      const offCanvas = document.createElement('canvas');
+      offCanvas.width = canvas.width;
+      offCanvas.height = canvas.height;
+      const ctx = offCanvas.getContext('2d');
+      const isLight = theme === 'light';
+      ctx.fillStyle = isLight ? '#ffffff' : '#0f172a';
+      ctx.fillRect(0, 0, offCanvas.width, offCanvas.height);
+      ctx.drawImage(canvas, 0, 0);
+
+      offCanvas.toBlob(async (blob) => {
+        if (blob && navigator.clipboard && window.ClipboardItem) {
+          await navigator.clipboard.write([
+            new ClipboardItem({ 'image/png': blob })
+          ]);
+          setCopied(true);
+          setTimeout(() => {
+            setCopied(false);
+            setIsOpen(false);
+          }, 1500);
+        }
+      }, 'image/png');
+    } catch (err) {
+      console.warn('Clipboard copy failed:', err);
+    }
+  };
+
+  return (
+    <div className="chart-export-wrap" ref={menuRef}>
+      <button
+        type="button"
+        className={`chart-export-btn ${isOpen ? 'active' : ''}`}
+        onClick={() => setIsOpen(prev => !prev)}
+        title="Download / Export this Graph"
+      >
+        <Download size={11} />
+        <span>Export</span>
+      </button>
+
+      {isOpen && (
+        <div className="chart-export-dropdown">
+          <div className="export-dropdown-header">Export Graph</div>
+          <button type="button" className="export-dropdown-item" onClick={() => handleDownload('png')}>
+            <FileImage size={12} className="text-blue-400" />
+            <span>Download PNG (HD)</span>
+          </button>
+          <button type="button" className="export-dropdown-item" onClick={() => handleDownload('jpeg')}>
+            <Camera size={12} className="text-purple-400" />
+            <span>Download JPG Image</span>
+          </button>
+          <button type="button" className="export-dropdown-item" onClick={handleCSVDownload}>
+            <FileSpreadsheet size={12} className="text-emerald-400" />
+            <span>Export Data (CSV)</span>
+          </button>
+          <button type="button" className="export-dropdown-item" onClick={handleCopyImage}>
+            {copied ? <Check size={12} className="text-teal-400" /> : <Copy size={12} className="text-amber-400" />}
+            <span>{copied ? 'Copied to Clipboard!' : 'Copy to Clipboard'}</span>
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function CustomChartBuilder({ data = [], headers = [], schema = {}, theme = 'dark' }) {
+  const customChartRef = useRef(null);
   const categoricalHeaders = headers.filter(h => schema[h] === 'categorical' || schema[h] === 'datetime');
   const numericHeaders = headers.filter(h => schema[h] === 'numeric');
 
@@ -185,8 +337,14 @@ export default function CustomChartBuilder({ data = [], headers = [], schema = {
             <Sparkles size={18} className="text-amber-400" />
             Custom Visualization: {aggregation.toUpperCase()}({activeY}) grouped by {activeX}
           </h3>
+          <ChartExportMenu
+            containerRef={customChartRef}
+            chartData={chartData}
+            chartTitle={`Custom_${aggregation}_${activeY}_by_${activeX}`}
+            theme={theme}
+          />
         </div>
-        <div className="chart-container" style={{ height: '400px' }}>
+        <div className="chart-container" ref={customChartRef} style={{ height: '400px' }}>
           {chartType === 'bar' && <Bar data={chartData} options={chartOptions} />}
           {chartType === 'line' && <Line data={chartData} options={chartOptions} />}
           {chartType === 'doughnut' && <Doughnut data={chartData} options={chartOptions} />}

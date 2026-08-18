@@ -7,6 +7,7 @@ import {
   Workflow, BookOpen, AlertTriangle, Play, Pause, RefreshCw, Radio, Lock, Box,
   FileSpreadsheet, BarChart3, HelpCircle, Target, Sparkle
 } from 'lucide-react';
+import HDScreenshotButton from './HDScreenshotButton';
 
 const CATEGORIES = [
   { id: 'overview', name: 'Master Overview', icon: Sparkles, badge: 'Sec 1-4' },
@@ -228,7 +229,14 @@ for msg in consumer:
             </div>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+            {/* 📸 CAMERA HD SCREENSHOT SUITE */}
+            <HDScreenshotButton
+              compact={false}
+              datasetName="Deep_Learning_Executive_Platform"
+              targetSelector=".deeplearning-modal-container"
+            />
+
             <button
               type="button"
               className="currency-zoom-close-btn"

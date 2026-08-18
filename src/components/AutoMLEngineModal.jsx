@@ -22,6 +22,7 @@ import {
   Filler
 } from 'chart.js';
 import { Bar, Doughnut, Radar } from 'react-chartjs-2';
+import HDScreenshotButton from './HDScreenshotButton';
 
 import {
   analyzeDatasetProfile,
@@ -449,7 +450,13 @@ export default function AutoMLEngineModal({ isOpen, onClose, data = [], headers 
             </div>
           </div>
 
-          <div className="automl-flex-row-left">
+          <div className="automl-flex-row-left" style={{ gap: '0.45rem', alignItems: 'center' }}>
+            {/* 📸 CAMERA HD SCREENSHOT SUITE */}
+            <HDScreenshotButton
+              compact={false}
+              datasetName={`AutoML_${datasetName}`}
+              targetSelector=".automl-modal-container"
+            />
             <button
               type="button"
               className="automl-close-btn"

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Filter, RotateCcw, Search, CheckSquare, X, ChevronDown, ChevronRight, SlidersHorizontal, Sparkles } from 'lucide-react';
+import { Filter, RotateCcw, Search, CheckSquare, X, ChevronDown, ChevronRight, SlidersHorizontal, Sparkles, Upload, Database, Check } from 'lucide-react';
+import HDScreenshotButton from './HDScreenshotButton';
 
 export default function SidebarFilters({ 
   headers = [], 
@@ -9,10 +10,24 @@ export default function SidebarFilters({
   onFilterChange, 
   onResetFilters,
   isMobileOpen,
-  onCloseMobile
+  onCloseMobile,
+  datasetName = 'Dataset_Analytics',
+  theme = 'dark',
+  onUploadClick,
+  totalRows = 0,
+  hasData = true
 }) {
   const [categorySearch, setCategorySearch] = useState({});
-  const [collapsedGroups, setCollapsedGroups] = useState({});
+  const [collapsedGroups, setCollapsedGroups] = useState(() => {
+    const initial = {};
+    const catHeaders = headers.filter(h => schema[h] === 'categorical');
+    catHeaders.forEach((h, idx) => {
+      if (idx >= 2) {
+        initial[h] = true;
+      }
+    });
+    return initial;
+  });
 
   const categoricalHeaders = headers.filter(h => schema[h] === 'categorical');
   const numericHeaders = headers.filter(h => schema[h] === 'numeric');
@@ -44,6 +59,19 @@ export default function SidebarFilters({
 
   return (
     <aside className={`sidebar ${isMobileOpen ? 'mobile-open' : ''}`}>
+      {/* 📁 UPLOAD DATASET BUTTON */}
+      <div className="sidebar-upload-container">
+        <button
+          type="button"
+          className="sidebar-quick-upload-btn"
+          onClick={onUploadClick}
+          title="Upload CSV, Excel, or JSON Dataset"
+        >
+          <Upload size={13} className="sidebar-upload-icon" />
+          <span className="upload-btn-label">Upload Dataset</span>
+        </button>
+      </div>
+
       {/* Sidebar Header */}
       <div className="sidebar-header" style={{ paddingBottom: '0.65rem', borderBottom: '1px solid var(--border-color)', marginBottom: '0.75rem' }}>
         <div className="sidebar-title" style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', fontWeight: 800, fontSize: '0.88rem', color: 'var(--text-bright)', fontFamily: 'Arial, sans-serif' }}>
@@ -64,6 +92,13 @@ export default function SidebarFilters({
         </div>
 
         <div className="sidebar-header-actions" style={{ display: 'flex', gap: '0.35rem', alignItems: 'center' }}>
+          {/* HD Screenshot Option Near Filter Option */}
+          <HDScreenshotButton
+            compact={true}
+            datasetName={datasetName}
+            theme={theme}
+          />
+
           {activeFilterCount > 0 && (
             <button 
               className="btn btn-outline" 
@@ -71,7 +106,7 @@ export default function SidebarFilters({
               onClick={onResetFilters}
               title="Reset all filter options"
             >
-              <RotateCcw size={11} /> Clear All
+              <RotateCcw size={11} /> Clear
             </button>
           )}
           {onCloseMobile && (
