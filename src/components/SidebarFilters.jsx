@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Filter, RotateCcw, Search, CheckSquare, X, ChevronDown, ChevronRight, SlidersHorizontal, Sparkles, Upload, Database, Check } from 'lucide-react';
+import { Filter, RotateCcw, Search, CheckSquare, X, ChevronDown, ChevronRight, SlidersHorizontal, Sparkles, Upload, Database, Check, Calculator } from 'lucide-react';
 import HDScreenshotButton from './HDScreenshotButton';
 
 export default function SidebarFilters({ 
@@ -14,6 +14,7 @@ export default function SidebarFilters({
   datasetName = 'Dataset_Analytics',
   theme = 'dark',
   onUploadClick,
+  onOpenCalculator,
   totalRows = 0,
   hasData = true
 }) {
@@ -74,19 +75,19 @@ export default function SidebarFilters({
 
       {/* Sidebar Header */}
       <div className="sidebar-header" style={{ paddingBottom: '0.65rem', borderBottom: '1px solid var(--border-color)', marginBottom: '0.75rem' }}>
-        <div className="sidebar-title" style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', fontWeight: 800, fontSize: '0.88rem', color: 'var(--text-bright)', fontFamily: 'Arial, sans-serif' }}>
-          <SlidersHorizontal size={15} className="text-blue-400" />
+        <div className="sidebar-title" style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontWeight: 700, fontSize: '0.74rem', color: 'var(--text-bright)', fontFamily: 'Arial, sans-serif', whiteSpace: 'nowrap' }}>
+          <SlidersHorizontal size={13} className="text-blue-400" />
           <span>Filter Options</span>
           {activeFilterCount > 0 && (
             <span style={{ 
               background: 'rgba(245, 158, 11, 0.2)', 
               color: '#fbbf24', 
-              fontSize: '0.65rem', 
-              padding: '0.1rem 0.4rem', 
-              borderRadius: '8px',
-              fontWeight: 800 
+              fontSize: '0.58rem', 
+              padding: '0.08rem 0.35rem', 
+              borderRadius: '6px',
+              fontWeight: 700 
             }}>
-              {activeFilterCount} Active
+              {activeFilterCount}
             </span>
           )}
         </div>
@@ -98,6 +99,17 @@ export default function SidebarFilters({
             datasetName={datasetName}
             theme={theme}
           />
+
+          {/* Real-Time Calculator Launcher */}
+          <button
+            type="button"
+            className="sidebar-calc-quick-btn"
+            onClick={() => onOpenCalculator && onOpenCalculator()}
+            title="Open Real-Time Analytics Calculator (Alt+C)"
+            aria-label="Open Real-Time Analytics Calculator"
+          >
+            <Calculator size={14} strokeWidth={2.2} className="sidebar-calc-icon" />
+          </button>
 
           {activeFilterCount > 0 && (
             <button 

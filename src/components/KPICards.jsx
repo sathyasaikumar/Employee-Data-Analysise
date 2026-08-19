@@ -49,6 +49,7 @@ export default function KPICards({
   onLevelSelect,
   liveStats = null,
   onOpenLiveTracker = null,
+  onOpenCalculator = null,
   isAnomaliesModalOpen: externalIsAnomaliesModalOpen = undefined,
   onCloseAnomaliesModal = null,
   onOpenAnomaliesModal = null
@@ -292,11 +293,35 @@ export default function KPICards({
                 <button type="button" className="currency-zoom-btn purple" onClick={() => handleOpenZoomCard('median')} title="Full Screen / Expand View">
                   <Maximize2 size={11} />
                 </button>
-                <div className="kpi-icon-box"><Calculator size={13} className="text-purple-400" /></div>
+                <button
+                  type="button"
+                  className="kpi-icon-box kpi-interactive-calc-btn"
+                  onClick={() => onOpenCalculator ? onOpenCalculator(baseMedian, 'workforce') : handleOpenZoomCard('median')}
+                  title="Open Real-Time Workforce & Statistical Calculator with Median Value"
+                  aria-label="Open Calculator"
+                >
+                  <Calculator size={14} strokeWidth={2.2} className="text-purple-400" />
+                </button>
               </div>
             </div>
-            <div className="kpi-card-body"><span className="kpi-value text-purple">{formattedMedianRevenue}</span></div>
-            <div className="kpi-card-footer"><span className="kpi-subtext text-purple"><Calculator size={11} /> 50th Percentile Midpoint</span></div>
+            <div
+              className="kpi-card-body kpi-interactive-val-body"
+              onClick={() => onOpenCalculator && onOpenCalculator(baseMedian, 'workforce')}
+              title="Click to Open Real-Time Calculator with Median Value"
+              style={{ cursor: 'pointer' }}
+            >
+              <span className="kpi-value text-purple">{formattedMedianRevenue}</span>
+            </div>
+            <div className="kpi-card-footer">
+              <button
+                type="button"
+                className="kpi-subtext text-purple kpi-footer-calc-btn"
+                onClick={() => onOpenCalculator && onOpenCalculator(baseMedian, 'stats')}
+                title="Click to perform statistical analysis with 50th percentile"
+              >
+                <Calculator size={11} /> 50th Percentile Midpoint
+              </button>
+            </div>
           </div>
         );
 
@@ -1108,6 +1133,19 @@ export default function KPICards({
                   <div className="zoomed-stats-grid">
                     <div className="stat-box"><span className="stat-lbl">Mean (Average)</span><span className="stat-val">{formattedAvgRevenue}</span></div>
                     <div className="stat-box"><span className="stat-lbl">Currency</span><span className="stat-val">{currencySubtext}</span></div>
+                  </div>
+                  <div style={{ marginTop: '0.75rem' }}>
+                    <button
+                      type="button"
+                      className="btn btn-primary"
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: '0.45rem', background: '#9333ea', borderColor: '#a855f7', color: '#fff', fontSize: '0.8rem', padding: '0.45rem 0.9rem', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}
+                      onClick={() => {
+                        setZoomedCard(null);
+                        if (onOpenCalculator) onOpenCalculator(baseMedian, 'workforce');
+                      }}
+                    >
+                      <Calculator size={14} /> Open Real-Time Calculator with Median ({formattedMedianRevenue})
+                    </button>
                   </div>
                 </div>
               )}

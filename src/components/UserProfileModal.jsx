@@ -4,7 +4,7 @@ import {
   User, Mail, Phone, Calendar, Award, ShieldCheck, Clock, History, 
   CheckCircle2, LogOut, Activity, Lock, X, Edit3, Save, Download, 
   Camera, Upload, Image as ImageIcon, Sparkles, AlertCircle, Check,
-  Maximize2, Minimize2, Trash2, Database, Radio
+  Maximize2, Minimize2, Trash2, Database, Radio, HardDrive, FolderOpen
 } from 'lucide-react';
 import { 
   getUserProfile, saveUserProfile, calculateSessionStats, 
@@ -13,8 +13,9 @@ import {
 } from '../utils/activityTracker';
 import DatasetHistory from './DatasetHistory';
 import LiveUserTracker from './LiveUserTracker';
+import { StorageExplorerContent } from './StorageExplorerModal';
 
-export const PRESET_AVATARS = [
+const PRESET_AVATARS = [
   { id: 'avatar1', name: 'Executive Male Portrait', url: '/avatars/avatar1.png' },
   { id: 'avatar2', name: 'Executive Female Portrait', url: '/avatars/avatar2.png' },
   { id: 'avatar3', name: '3D Cyber Tech Avatar', url: '/avatars/avatar3.png' }
@@ -734,10 +735,51 @@ export default function UserProfileModal({
                   {liveStats?.liveUsers ?? 2}
                 </span>
               </button>
+
+              {/* 📁 BACKEND STORAGE EXPLORER TAB */}
+              <button
+                type="button"
+                className={`profile-tab-pill ${activeTab === 'storage_explorer' ? 'active' : ''}`}
+                onClick={() => setActiveTab('storage_explorer')}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.35rem',
+                  padding: '0.25rem 0.65rem',
+                  height: '28px',
+                  borderRadius: '6px',
+                  fontSize: '0.70rem',
+                  fontWeight: 700,
+                  fontFamily: 'Arial, sans-serif',
+                  border: activeTab === 'storage_explorer' ? '1.5px solid #38bdf8' : '1px solid var(--border-color)',
+                  background: activeTab === 'storage_explorer' ? 'linear-gradient(135deg, #0284c7, #38bdf8)' : 'var(--bg-input)',
+                  color: activeTab === 'storage_explorer' ? '#ffffff' : 'var(--text-main)',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  boxShadow: activeTab === 'storage_explorer' ? '0 4px 15px rgba(56, 189, 248, 0.3)' : 'none'
+                }}
+              >
+                <HardDrive size={13} style={{ color: activeTab === 'storage_explorer' ? '#ffffff' : '#38bdf8' }} />
+                <span>Storage Explorer</span>
+                <span style={{
+                  background: activeTab === 'storage_explorer' ? '#ffffff' : 'var(--border-color)',
+                  color: activeTab === 'storage_explorer' ? '#082f49' : 'var(--text-muted)',
+                  padding: '0.08rem 0.35rem',
+                  borderRadius: '4px',
+                  fontSize: '0.60rem',
+                  fontWeight: 800
+                }}>
+                  6
+                </span>
+              </button>
             </div>
 
             {/* CONDITIONAL TAB CONTENT */}
-            {activeTab === 'live_users' ? (
+            {activeTab === 'storage_explorer' ? (
+              <div style={{ width: '100%', background: 'var(--bg-card)', borderRadius: '16px', border: '1px solid var(--border-color)', overflow: 'hidden', padding: '1rem' }}>
+                <StorageExplorerContent embedded={true} />
+              </div>
+            ) : activeTab === 'live_users' ? (
               <div style={{ width: '100%' }}>
                 <LiveUserTracker 
                   liveStats={liveStats}

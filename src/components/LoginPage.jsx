@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { 
-  Mail, Phone, Lock, KeyRound, CheckCircle, AlertCircle, Sparkles, 
-  Shield, ShieldCheck, ArrowRight, RefreshCw, User, Briefcase, UserPlus, LogIn, 
+import {
+  Mail, Phone, Lock, KeyRound, CheckCircle, AlertCircle, Sparkles,
+  Shield, ShieldCheck, ArrowRight, RefreshCw, User, Briefcase, UserPlus, LogIn,
   TrendingUp, BarChart2, Users, Settings, Eye, EyeOff, Sun, Moon, ArrowUpRight, X
 } from 'lucide-react';
-import { 
-  loginWithEmail, loginWithPhone, registerWithEmail, 
-  registerWithPhone, resetPassword, loginWithGoogle, loginWithMicrosoft, 
-  loginWithGitHub, loginWithSSO, DEMO_ACCOUNTS 
+import {
+  loginWithEmail, loginWithPhone, registerWithEmail,
+  registerWithPhone, resetPassword, loginWithGoogle, loginWithMicrosoft,
+  loginWithGitHub, loginWithSSO, DEMO_ACCOUNTS
 } from '../utils/auth';
 import OAuthPromptModal from './OAuthPromptModal';
 import SathyaLogo from './SathyaLogo';
@@ -309,11 +309,11 @@ export default function LoginPage({ onLoginSuccess, onGuestAccess, theme = 'dark
       {/* Top Navbar Actions */}
       <header className="apex-top-navbar">
         <div className="apex-nav-brand-mobile">
-          <img 
-            src="/gold_crest_logo.png" 
-            alt="Corporate Access & Intelligence" 
-            className="brand-gold-logo" 
-            style={{ width: 38, height: 38, borderRadius: 10, objectFit: 'contain' }} 
+          <img
+            src="/gold_crest_logo.png"
+            alt="Corporate Access & Intelligence"
+            className="brand-gold-logo"
+            style={{ width: 38, height: 38, borderRadius: 10, objectFit: 'contain' }}
           />
           <span className="apex-mobile-title">
             <span style={{ color: '#ffffff', fontWeight: 800 }}>Corporate </span>
@@ -323,7 +323,7 @@ export default function LoginPage({ onLoginSuccess, onGuestAccess, theme = 'dark
         </div>
 
         <div className="apex-top-actions">
-          <button 
+          <button
             className="apex-btn-ghost theme-btn"
             onClick={onToggleTheme}
             title={`Switch to ${theme === 'dark' ? 'Light' : 'Dark'} Mode`}
@@ -350,10 +350,10 @@ export default function LoginPage({ onLoginSuccess, onGuestAccess, theme = 'dark
           {/* Brand Header */}
           <div className="apex-brand-header">
             <div className="gold-logo-box">
-              <img 
-                src="/gold_crest_logo.png" 
-                alt="Corporate Access & Intelligence" 
-                className="gold-logo-img" 
+              <img
+                src="/gold_crest_logo.png"
+                alt="Corporate Access & Intelligence"
+                className="gold-logo-img"
               />
             </div>
             <div>
@@ -431,22 +431,22 @@ export default function LoginPage({ onLoginSuccess, onGuestAccess, theme = 'dark
                     <img src="/gold_crest_logo.png" alt="S" style={{ width: 22, height: 22, borderRadius: '50%' }} />
                   </div>
                   <div className="mockup-side-icon-btn active-gold" title="Dashboard">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg>
                   </div>
                   <div className="mockup-side-icon-btn">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
                   </div>
                   <div className="mockup-side-icon-btn">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2"><line x1="18" y1="20" x2="18" y2="10" /><line x1="12" y1="20" x2="12" y2="4" /><line x1="6" y1="20" x2="6" y2="14" /></svg>
                   </div>
                   <div className="mockup-side-icon-btn">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2"><polygon points="12 2 2 7 12 12 22 7 12 2" /><polyline points="2 17 12 22 22 17" /><polyline points="2 12 12 17 22 12" /></svg>
                   </div>
                   <div className="mockup-side-icon-btn">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2"><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" /></svg>
                   </div>
                   <div className="mockup-side-icon-btn">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>
                   </div>
                 </div>
 
@@ -624,10 +624,10 @@ export default function LoginPage({ onLoginSuccess, onGuestAccess, theme = 'dark
           <div className="apex-auth-card gold-auth-card">
             {/* Glowing Top Center Gold Emblem on Card */}
             <div className="apex-auth-card-emblem gold-crest-emblem">
-              <img 
-                src="/gold_emblem_card.png" 
-                alt="Corporate Access & Intelligence" 
-                className="apex-card-emblem-gold-img" 
+              <img
+                src="/gold_emblem_card.png"
+                alt="Corporate Access & Intelligence"
+                className="apex-card-emblem-gold-img"
               />
             </div>
 
@@ -948,10 +948,10 @@ export default function LoginPage({ onLoginSuccess, onGuestAccess, theme = 'dark
                 disabled={isLoading}
               >
                 <svg width="18" height="18" viewBox="0 0 24 24">
-                  <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                  <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                  <path fill="#FBBC05" d="M5.84 14.1c-.22-.66-.35-1.36-.35-2.1s.13-1.44.35-2.1V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.62z"/>
-                  <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+                  <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                  <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                  <path fill="#FBBC05" d="M5.84 14.1c-.22-.66-.35-1.36-.35-2.1s.13-1.44.35-2.1V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.62z" />
+                  <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
                 </svg>
                 <span>Continue with Google</span>
               </button>
@@ -963,10 +963,10 @@ export default function LoginPage({ onLoginSuccess, onGuestAccess, theme = 'dark
                 disabled={isLoading}
               >
                 <svg width="18" height="18" viewBox="0 0 23 23">
-                  <path fill="#f35325" d="M1 1h10v10H1z"/>
-                  <path fill="#81bc06" d="M12 1h10v10H12z"/>
-                  <path fill="#05a6f0" d="M1 12h10v10H1z"/>
-                  <path fill="#ffba08" d="M12 12h10v10H12z"/>
+                  <path fill="#f35325" d="M1 1h10v10H1z" />
+                  <path fill="#81bc06" d="M12 1h10v10H12z" />
+                  <path fill="#05a6f0" d="M1 12h10v10H1z" />
+                  <path fill="#ffba08" d="M12 12h10v10H12z" />
                 </svg>
                 <span>Continue with Microsoft</span>
               </button>
@@ -1000,7 +1000,7 @@ export default function LoginPage({ onLoginSuccess, onGuestAccess, theme = 'dark
       </footer>
 
       {/* OAuth Prompt Modal */}
-      <OAuthPromptModal 
+      <OAuthPromptModal
         isOpen={oauthPrompt.isOpen}
         provider={oauthPrompt.provider}
         loginFn={oauthPrompt.loginFn}
@@ -1017,10 +1017,10 @@ export default function LoginPage({ onLoginSuccess, onGuestAccess, theme = 'dark
                 <KeyRound size={14} className="text-amber-400" />
                 <span>Password Recovery</span>
               </div>
-              <button 
-                type="button" 
-                className="auth-close-btn" 
-                onClick={() => setShowForgotPassword(false)} 
+              <button
+                type="button"
+                className="auth-close-btn"
+                onClick={() => setShowForgotPassword(false)}
                 title="Close"
                 style={{ width: '24px', height: '24px' }}
               >
@@ -1139,6 +1139,17 @@ export default function LoginPage({ onLoginSuccess, onGuestAccess, theme = 'dark
             </form>
           </div>
         </div>
+      )}
+
+      {/* 🌐 Interactive Google / Microsoft / Browser OAuth Handshake Modal */}
+      {oauthPrompt.isOpen && (
+        <OAuthPromptModal
+          isOpen={oauthPrompt.isOpen}
+          provider={oauthPrompt.provider}
+          loginFn={oauthPrompt.loginFn}
+          onClose={() => setOauthPrompt({ isOpen: false, provider: '', loginFn: null })}
+          onSuccess={handleOAuthSuccess}
+        />
       )}
     </div>
   );

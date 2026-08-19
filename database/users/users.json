@@ -1,12 +1,12 @@
 [
   {
     "id": "usr_admin_101",
-    "name": "Corporate Account",
+    "name": "Sathya Sai Kumar",
     "email": "admin@corporate.com",
     "role": "Executive Admin",
-    "avatar": "CA",
+    "avatar": "SS",
     "loginType": "email",
-    "totalLogins": 458,
+    "totalLogins": 478,
     "registeredAt": "2026-07-13T06:00:07.404Z"
   },
   {
@@ -112,7 +112,7 @@
     "role": "Executive Lead Developer",
     "avatar": "SS",
     "loginType": "google",
-    "totalLogins": 28,
+    "totalLogins": 55,
     "registeredAt": "2026-08-17T10:05:23.293Z"
   }
 ]

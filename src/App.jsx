@@ -17,7 +17,10 @@ import MLPipelineModal from './components/MLPipelineModal';
 import AutoMLEngineModal from './components/AutoMLEngineModal';
 import DeepLearningExecutiveModal from './components/DeepLearningExecutiveModal';
 import DeepLearningStudioModal from './components/DeepLearningStudioModal';
+import RealtimeCalculatorModal from './components/RealtimeCalculatorModal';
 import VoiceAssistant from './components/VoiceAssistant';
+import TransferNotificationPopup from './components/TransferNotificationPopup';
+import StorageExplorerModal from './components/StorageExplorerModal';
 import { SAMPLE_DATASETS } from './utils/sampleData';
 import { getStoredUser, logoutUser } from './utils/auth';
 import { startSession, endActiveSession } from './utils/activityTracker';
@@ -92,7 +95,7 @@ export default function App() {
   const [pdfProgress, setPdfProgress] = useState(null);
 
   const [error, setError] = useState(null);
-  const [uploadSuccessPopup, setUploadSuccessPopup] = useState(null);
+  const [transferPopup, setTransferPopup] = useState(null);
   const [activeTab, setActiveTab] = useState('dashboard');
   const [activeLevel, setActiveLevel] = useState('all'); // 'all' | 'low' | 'medium' | 'high'
   const [isLoading, setIsLoading] = useState(false);
@@ -123,6 +126,32 @@ export default function App() {
   const [isDLExecutiveOpen, setIsDLExecutiveOpen] = useState(false);
   const [isDLStudioOpen, setIsDLStudioOpen] = useState(false);
   const [isAnomaliesModalOpen, setIsAnomaliesModalOpen] = useState(false);
+  const [isStorageModalOpen, setIsStorageModalOpen] = useState(false);
+  const [isCalculatorOpen, setIsCalculatorOpen] = useState(false);
+  const [calculatorInitialValue, setCalculatorInitialValue] = useState(null);
+  const [calculatorInitialMode, setCalculatorInitialMode] = useState('standard');
+
+  const handleOpenCalculator = (val = null, mode = 'standard') => {
+    setCalculatorInitialValue(val);
+    setCalculatorInitialMode(mode);
+    setIsCalculatorOpen(true);
+  };
+
+  const handleCloseCalculator = () => {
+    setIsCalculatorOpen(false);
+  };
+
+  // Global Alt+C shortcut to toggle Real-Time Calculator
+  useEffect(() => {
+    const handleGlobalKeyDown = (e) => {
+      if (e.altKey && (e.key === 'c' || e.key === 'C')) {
+        e.preventDefault();
+        setIsCalculatorOpen(prev => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleGlobalKeyDown);
+    return () => window.removeEventListener('keydown', handleGlobalKeyDown);
+  }, []);
 
   // Theme State ('dark' | 'light')
   const [theme, setTheme] = useState(() => {
@@ -317,17 +346,19 @@ export default function App() {
 
         // Trigger Upload Success Popup ONLY if user actively uploaded a new file (not on refresh/switching)
         if (isNewUpload) {
-          setUploadSuccessPopup({
+          setTransferPopup({
+            mode: 'upload',
             name: name || 'Dataset',
             totalRows: totalRows || 0,
             columnsCount: headers ? headers.length : 0,
             healthScore: 100,
             anomaliesCount: anomalies?.totalAnomalies || 0,
             completenessScore: 100,
-            cleaningReport: cleaningReport || null
+            cleaningReport: cleaningReport || null,
+            desc: 'Dataset parsed, normalized, nulls imputed, and fully integrated into the intelligence engine.'
           });
         } else {
-          setUploadSuccessPopup(null);
+          setTransferPopup(null);
         }
       } else if (type === 'FILTER_RESULT') {
         setFilteredCount(e.data.filteredCount);
@@ -343,12 +374,25 @@ export default function App() {
         link.href = url;
         const cleanName = (datasetName || 'Dataset').replace(/[^a-zA-Z0-9_-]/g, '_');
         const timestamp = new Date().toISOString().split('T')[0];
-        link.setAttribute('download', `${cleanName}_Export_${timestamp}.csv`);
+        const filename = `${cleanName}_Export_${timestamp}.csv`;
+        link.setAttribute('download', filename);
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
         setIsLoading(false);
+
+        // Show Advanced Download Popup
+        setTransferPopup({
+          mode: 'download',
+          type: 'CSV',
+          filename,
+          recordCount: filteredCount || totalRows,
+          columnsCount: headers ? headers.length : 0,
+          title: 'Filtered CSV Dataset Exported',
+          desc: 'Filtered records successfully generated, formatted, and downloaded to your local storage.',
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        });
       } else if (type === 'ERROR') {
         setError(message || 'Failed to parse dataset.');
         setIsLoading(false);
@@ -607,7 +651,22 @@ export default function App() {
       setTimeout(() => {
         setIsExportingPDF(false);
         setPdfProgress(null);
-      }, 1200);
+
+        const cleanName = (datasetName || 'Dataset').replace(/[^a-zA-Z0-9_-]/g, '_');
+        const timestamp = new Date().toISOString().split('T')[0];
+        const filename = `${cleanName}_Executive_Report_${timestamp}.pdf`;
+
+        setTransferPopup({
+          mode: 'download',
+          type: 'PDF',
+          filename,
+          recordCount: totalRows,
+          columnsCount: headers ? headers.length : 0,
+          title: 'Executive PDF Report Generated & Downloaded',
+          desc: 'Multi-page high-resolution executive report generated with KPI matrices, charts, and complete statistical breakdown.',
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        });
+      }, 800);
     } catch (err) {
       console.error('PDF Generation failed:', err);
       setIsExportingPDF(false);
@@ -713,6 +772,8 @@ export default function App() {
         onCloseDLStudio={() => setIsDLStudioOpen(false)}
         onOpenAnomalies={() => setIsAnomaliesModalOpen(true)}
         onCloseAnomalies={() => setIsAnomaliesModalOpen(false)}
+        onOpenStorageExplorer={() => setIsStorageModalOpen(true)}
+        onOpenCalculator={() => handleOpenCalculator(null, 'standard')}
         activeTab={activeTab}
         onSelectTab={(tab) => {
           setIsUploadMode(false);
@@ -780,6 +841,7 @@ export default function App() {
                 setIsUploadMode(true);
                 setIsLiveUsersMode(false);
               }}
+              onOpenCalculator={() => handleOpenCalculator(null, 'standard')}
               totalRows={totalRows}
               hasData={hasData}
             />
@@ -870,6 +932,7 @@ export default function App() {
                 onLevelSelect={handleLevelSelect}
                 liveStats={liveStats}
                 onOpenLiveTracker={() => setIsLiveUsersMode(true)}
+                onOpenCalculator={handleOpenCalculator}
                 isAnomaliesModalOpen={isAnomaliesModalOpen}
                 onCloseAnomaliesModal={() => setIsAnomaliesModalOpen(false)}
                 onOpenAnomaliesModal={() => setIsAnomaliesModalOpen(true)}
@@ -1057,6 +1120,27 @@ export default function App() {
         onToggleTheme={handleToggleTheme}
       />
 
+      {/* Real-Time Workforce & Statistical Analytics Calculator Modal */}
+      <RealtimeCalculatorModal
+        isOpen={isCalculatorOpen}
+        onClose={handleCloseCalculator}
+        initialValue={calculatorInitialValue}
+        initialMode={calculatorInitialMode}
+        stats={stats}
+        schema={schema}
+        totalRows={totalRows}
+        filteredRows={filteredCount}
+        datasetName={datasetName || 'Workforce Dataset'}
+        theme={theme}
+      />
+
+      {/* 📁 Dedicated Backend Storage Explorer & Disk Architecture Modal */}
+      <StorageExplorerModal
+        isOpen={isStorageModalOpen}
+        onClose={() => setIsStorageModalOpen(false)}
+        theme={theme}
+      />
+
       {/* 📄 PDF GENERATION PROGRESS TOAST */}
       {isExportingPDF && pdfProgress && (
         <div className="pdf-generation-toast">
@@ -1080,93 +1164,19 @@ export default function App() {
         </div>
       )}
 
-      {/* 🎉 DATASET UPLOAD SUCCESS POPUP */}
-      {uploadSuccessPopup && (
-        <div className="dataset-upload-popup-overlay" onClick={() => setUploadSuccessPopup(null)}>
-          <div className="dataset-upload-popup-card" onClick={(e) => e.stopPropagation()}>
-            <div className="popup-glow-header">
-              <div className="popup-check-icon">
-                <CheckCircle2 size={24} className="text-emerald-400" />
-              </div>
-              <button
-                type="button"
-                className="popup-close-btn"
-                onClick={() => setUploadSuccessPopup(null)}
-                title="Close Notification"
-              >
-                <X size={16} />
-              </button>
-            </div>
-
-            <div className="popup-body-content">
-              <span className="popup-badge-success">✨ DATASET AUTO-CLEANED & CERTIFIED</span>
-              <h3 className="popup-dataset-title">{uploadSuccessPopup.name}</h3>
-              <p className="popup-dataset-desc">
-                Dataset successfully parsed, auto-cleaned, null values intelligently imputed, and verified at 100% data health.
-              </p>
-
-              {uploadSuccessPopup.cleaningReport && (
-                <div className="popup-cleaning-audit-box">
-                  <div className="cleaning-audit-header">
-                    <Sparkles size={13} className="text-emerald-400" />
-                    <span>Automated Quality & Sanitization Actions</span>
-                  </div>
-                  <div className="cleaning-audit-chips">
-                    <span className="audit-chip">
-                      ✓ {uploadSuccessPopup.cleaningReport.nullsImputed > 0 ? `${uploadSuccessPopup.cleaningReport.nullsImputed} Nulls Imputed` : '0 Null Values (Clean)'}
-                    </span>
-                    <span className="audit-chip">
-                      ✓ {uploadSuccessPopup.cleaningReport.typesNormalized > 0 ? `${uploadSuccessPopup.cleaningReport.typesNormalized} Formats Normalized` : 'Types Normalized'}
-                    </span>
-                    <span className="audit-chip">
-                      ✓ {uploadSuccessPopup.cleaningReport.whitespacesTrimmed > 0 ? `${uploadSuccessPopup.cleaningReport.whitespacesTrimmed} Fields Sanitized` : 'Whitespace Sanitized'}
-                    </span>
-                    <span className="audit-chip">
-                      ✓ {uploadSuccessPopup.cleaningReport.duplicatesRemoved > 0 ? `${uploadSuccessPopup.cleaningReport.duplicatesRemoved} Duplicates Resolved` : '0 Duplicate Records'}
-                    </span>
-                  </div>
-                </div>
-              )}
-
-              <div className="popup-stats-grid">
-                <div className="popup-stat-tile">
-                  <span className="stat-label">
-                    <Database size={11} className="inline mr-1 text-blue-400" /> Total Records
-                  </span>
-                  <span className="stat-value text-blue-400">{uploadSuccessPopup.totalRows.toLocaleString()}</span>
-                </div>
-                <div className="popup-stat-tile">
-                  <span className="stat-label">
-                    <Layers size={11} className="inline mr-1 text-cyan-400" /> Features
-                  </span>
-                  <span className="stat-value text-cyan-400">{uploadSuccessPopup.columnsCount} Columns</span>
-                </div>
-                <div className="popup-stat-tile">
-                  <span className="stat-label">
-                    <Activity size={11} className="inline mr-1 text-emerald-400" /> Health Index
-                  </span>
-                  <span className="stat-value text-emerald-400">{uploadSuccessPopup.healthScore}%</span>
-                </div>
-                <div className="popup-stat-tile">
-                  <span className="stat-label">
-                    <Sparkles size={11} className="inline mr-1 text-purple-400" /> Anomalies
-                  </span>
-                  <span className="stat-value text-purple-400">{uploadSuccessPopup.anomaliesCount} Outliers</span>
-                </div>
-              </div>
-
-              <div className="popup-action-buttons">
-                <button
-                  type="button"
-                  className="btn btn-primary popup-action-btn"
-                  onClick={() => setUploadSuccessPopup(null)}
-                >
-                  <CheckCircle2 size={14} /> Open Executive Dashboard
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+      {/* 🎉 UNIFIED TRANSFER INTELLIGENCE POPUP (UPLOAD & DOWNLOAD) */}
+      {transferPopup && (
+        <TransferNotificationPopup
+          data={transferPopup}
+          onClose={() => setTransferPopup(null)}
+          onOpenDashboard={() => {
+            setIsUploadMode(false);
+            setIsHistoryMode(false);
+            setIsLiveUsersMode(false);
+            setActiveTab('dashboard');
+          }}
+          theme={theme}
+        />
       )}
     </div>
   );

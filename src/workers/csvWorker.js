@@ -14,23 +14,39 @@ let stats = {};
 let healthScore = 100;
 
 self.onmessage = function (e) {
-  const { action, file, rawCsv, rows, filters, page, pageSize, sortColumn, sortDirection } = e.data;
+  try {
+    const { action, file, rawCsv, rows, filters, page, pageSize, sortColumn, sortDirection } = e.data || {};
 
-  if (action === 'PARSE') {
-    if (rows && Array.isArray(rows) && rows.length > 0) {
-      processParsedRows(rows);
-    } else if (file || rawCsv) {
-      parseLargeCSV(file || rawCsv);
-    } else {
-      self.postMessage({ type: 'ERROR', message: 'No valid dataset file, CSV content, or row array provided.' });
+    if (action === 'PARSE') {
+      if (rows && Array.isArray(rows) && rows.length > 0) {
+        processParsedRows(rows);
+      } else if (file || rawCsv) {
+        parseLargeCSV(file || rawCsv);
+      } else {
+        self.postMessage({ type: 'ERROR', message: 'No valid dataset file, CSV content, or row array provided.' });
+      }
+    } else if (action === 'FILTER') {
+      applyFiltersAndAggregate(filters, page || 1, pageSize || 10, sortColumn, sortDirection);
+    } else if (action === 'GET_PAGE') {
+      getPageData(page || 1, pageSize || 10, sortColumn, sortDirection);
+    } else if (action === 'EXPORT_CSV') {
+      exportFilteredCSV();
     }
-  } else if (action === 'FILTER') {
-    applyFiltersAndAggregate(filters, page || 1, pageSize || 10, sortColumn, sortDirection);
-  } else if (action === 'GET_PAGE') {
-    getPageData(page || 1, pageSize || 10, sortColumn, sortDirection);
-  } else if (action === 'EXPORT_CSV') {
-    exportFilteredCSV();
+  } catch (err) {
+    console.error('🛡️ [Web Worker Safety Guard] Intercepted execution error:', err);
+    self.postMessage({
+      type: 'ERROR',
+      message: err?.message || 'Worker encountered an unexpected error processing data.'
+    });
   }
+};
+
+self.onerror = function (err) {
+  console.error('🛡️ [Web Worker Error]', err);
+  self.postMessage({
+    type: 'ERROR',
+    message: err?.message || 'Unhandled worker error.'
+  });
 };
 
 function processParsedRows(inputRows) {

@@ -344,7 +344,7 @@ export default function CustomChartBuilder({ data = [], headers = [], schema = {
             theme={theme}
           />
         </div>
-        <div className="chart-container" ref={customChartRef} style={{ height: '400px' }}>
+        <div className="chart-container custom-builder-chart-container" ref={customChartRef} style={{ height: '240px' }}>
           {chartType === 'bar' && <Bar data={chartData} options={chartOptions} />}
           {chartType === 'line' && <Line data={chartData} options={chartOptions} />}
           {chartType === 'doughnut' && <Doughnut data={chartData} options={chartOptions} />}

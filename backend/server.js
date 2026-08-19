@@ -7,27 +7,103 @@ import { fileURLToPath } from 'url';
 import Papa from 'papaparse';
 import * as XLSX from 'xlsx';
 
+// 🛡️ CRASH-PROOF PROCESS GUARDS: Never allow server process to terminate on unhandled async errors
+process.on('uncaughtException', (err) => {
+  console.error('🛡️ [Process Guard] Caught Uncaught Exception (Server Resilient & Online):', err?.message || err);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('🛡️ [Process Guard] Caught Unhandled Rejection (Server Resilient & Online):', reason?.message || reason);
+});
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const rootDir = path.resolve(__dirname, '..');
 const isVercel = Boolean(process.env.VERCEL);
 const DATA_ROOT = isVercel ? '/tmp/corporate-data' : rootDir;
 
+// =========================================================================
+// 📁 DEDICATED STORAGE ARCHITECTURE & CATEGORY FOLDERS
+// =========================================================================
 const UPLOADS_DIR = path.join(DATA_ROOT, 'uploads', 'datasets');
-const DATABASE_DIR = path.join(DATA_ROOT, 'database');
-const METADATA_FILE = path.join(DATABASE_DIR, 'datasets.json');
-const USERS_FILE = path.join(DATABASE_DIR, 'users.json');
-const SESSIONS_FILE = path.join(DATABASE_DIR, 'sessions.json');
+const REPORTS_DIR = path.join(DATA_ROOT, 'uploads', 'reports');
+const EXPORTS_DIR = path.join(DATA_ROOT, 'uploads', 'exports');
 
-// Ensure directories exist
-if (!fs.existsSync(UPLOADS_DIR)) {
-  fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+const DATABASE_DIR = path.join(DATA_ROOT, 'database');
+const DATASETS_DB_DIR = path.join(DATABASE_DIR, 'datasets');
+const SESSIONS_DB_DIR = path.join(DATABASE_DIR, 'sessions');
+const USERS_DB_DIR = path.join(DATABASE_DIR, 'users');
+const LIVE_USERS_DB_DIR = path.join(DATABASE_DIR, 'live_users');
+const MODELS_DB_DIR = path.join(DATABASE_DIR, 'models');
+
+// File paths inside dedicated directories
+const METADATA_FILE = path.join(DATASETS_DB_DIR, 'datasets.json');
+const USERS_FILE = path.join(USERS_DB_DIR, 'users.json');
+const SESSIONS_FILE = path.join(SESSIONS_DB_DIR, 'sessions.json');
+const AUTOML_MODELS_FILE = path.join(MODELS_DB_DIR, 'automl_models.json');
+const LIVE_USERS_FILE = path.join(LIVE_USERS_DB_DIR, 'live_stats.json');
+
+// Ensure all dedicated storage directories exist
+const ALL_STORAGE_DIRS = [
+  UPLOADS_DIR,
+  REPORTS_DIR,
+  EXPORTS_DIR,
+  DATABASE_DIR,
+  DATASETS_DB_DIR,
+  SESSIONS_DB_DIR,
+  USERS_DB_DIR,
+  LIVE_USERS_DB_DIR,
+  MODELS_DB_DIR
+];
+
+ALL_STORAGE_DIRS.forEach(dir => {
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
+});
+
+// Auto-migrate legacy files from root database/ to dedicated category folders if needed
+const legacyMetadata = path.join(DATABASE_DIR, 'datasets.json');
+if (fs.existsSync(legacyMetadata) && !fs.existsSync(METADATA_FILE)) {
+  try {
+    fs.copyFileSync(legacyMetadata, METADATA_FILE);
+  } catch (e) {
+    console.warn('Migration note for datasets.json:', e.message);
+  }
 }
-if (!fs.existsSync(DATABASE_DIR)) {
-  fs.mkdirSync(DATABASE_DIR, { recursive: true });
+
+const legacyUsers = path.join(DATABASE_DIR, 'users.json');
+if (fs.existsSync(legacyUsers) && !fs.existsSync(USERS_FILE)) {
+  try {
+    fs.copyFileSync(legacyUsers, USERS_FILE);
+  } catch (e) {
+    console.warn('Migration note for users.json:', e.message);
+  }
 }
+
+const legacySessions = path.join(DATABASE_DIR, 'sessions.json');
+if (fs.existsSync(legacySessions) && !fs.existsSync(SESSIONS_FILE)) {
+  try {
+    fs.copyFileSync(legacySessions, SESSIONS_FILE);
+  } catch (e) {
+    console.warn('Migration note for sessions.json:', e.message);
+  }
+}
+
+const legacyModels = path.join(DATABASE_DIR, 'automl_models.json');
+if (fs.existsSync(legacyModels) && !fs.existsSync(AUTOML_MODELS_FILE)) {
+  try {
+    fs.copyFileSync(legacyModels, AUTOML_MODELS_FILE);
+  } catch (e) {
+    console.warn('Migration note for automl_models.json:', e.message);
+  }
+}
+
 if (!fs.existsSync(METADATA_FILE)) {
   fs.writeFileSync(METADATA_FILE, JSON.stringify([], null, 2));
+}
+if (!fs.existsSync(AUTOML_MODELS_FILE)) {
+  fs.writeFileSync(AUTOML_MODELS_FILE, JSON.stringify([], null, 2));
 }
 
 // Seed default users if users.json does not exist
@@ -144,18 +220,178 @@ app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
-// Static route to serve uploaded dataset files if requested directly
+// Static routes to serve uploaded datasets, reports, and exports
 app.use('/uploads/datasets', express.static(UPLOADS_DIR));
+app.use('/uploads/reports', express.static(REPORTS_DIR));
+app.use('/uploads/exports', express.static(EXPORTS_DIR));
 
-// High-Concurrency In-Memory Cache for Million-User Traffic
+// Helper to scan directory files with metadata
+function getFolderFileDetails(dirPath, urlPrefix = '') {
+  if (!fs.existsSync(dirPath)) return [];
+  try {
+    const files = fs.readdirSync(dirPath);
+    return files.map(file => {
+      const fullPath = path.join(dirPath, file);
+      const stat = fs.statSync(fullPath);
+      return {
+        name: file,
+        size: stat.size,
+        sizeFormatted: formatBytes(stat.size),
+        modifiedAt: stat.mtime.toISOString(),
+        url: urlPrefix ? `${urlPrefix}/${file}` : null,
+        isDir: stat.isDirectory()
+      };
+    });
+  } catch (err) {
+    return [];
+  }
+}
+
+// GET /api/system/folders - Overview of categorized storage folders
+app.get('/api/system/folders', (req, res) => {
+  try {
+    const datasetUploads = getFolderFileDetails(UPLOADS_DIR, '/uploads/datasets');
+    const reportUploads = getFolderFileDetails(REPORTS_DIR, '/uploads/reports');
+    const exportUploads = getFolderFileDetails(EXPORTS_DIR, '/uploads/exports');
+
+    const datasetsDbFiles = getFolderFileDetails(DATASETS_DB_DIR);
+    const sessionsDbFiles = getFolderFileDetails(SESSIONS_DB_DIR);
+    const usersDbFiles = getFolderFileDetails(USERS_DB_DIR);
+    const liveUsersDbFiles = getFolderFileDetails(LIVE_USERS_DB_DIR);
+    const modelsDbFiles = getFolderFileDetails(MODELS_DB_DIR);
+
+    const sessionRecords = getSessionsList();
+    const userRecords = getUsersList();
+    const modelRecords = getAutoMLModels();
+    const datasetsMetadata = getMetadataList();
+
+    let totalBytes = 0;
+    const allFiles = [
+      ...datasetUploads,
+      ...reportUploads,
+      ...exportUploads,
+      ...datasetsDbFiles,
+      ...sessionsDbFiles,
+      ...usersDbFiles,
+      ...liveUsersDbFiles,
+      ...modelsDbFiles
+    ];
+    allFiles.forEach(f => { totalBytes += f.size || 0; });
+
+    res.json({
+      success: true,
+      totalBytes,
+      totalBytesFormatted: formatBytes(totalBytes),
+      totalFilesCount: allFiles.length,
+      categories: [
+        {
+          id: 'datasets',
+          name: 'Dataset Files & Registry',
+          icon: 'database',
+          path: 'uploads/datasets/ & database/datasets/',
+          description: 'Uploaded CSV/Excel dataset files and structured metadata registries',
+          files: datasetUploads,
+          dbFiles: datasetsDbFiles,
+          recordsCount: datasetsMetadata.length,
+          storageBytes: datasetUploads.reduce((acc, f) => acc + f.size, 0) + datasetsDbFiles.reduce((acc, f) => acc + f.size, 0)
+        },
+        {
+          id: 'sessions',
+          name: 'Automated Login & Session History',
+          icon: 'clock',
+          path: 'database/sessions/',
+          description: 'Historical and active user login logs, duration metrics & security audit trail',
+          files: sessionsDbFiles,
+          recordsCount: sessionRecords.length,
+          storageBytes: sessionsDbFiles.reduce((acc, f) => acc + f.size, 0)
+        },
+        {
+          id: 'users',
+          name: 'User Profiles & Access Credentials',
+          icon: 'users',
+          path: 'database/users/',
+          description: 'Enterprise authenticated user profiles, credentials & roles',
+          files: usersDbFiles,
+          recordsCount: userRecords.length,
+          storageBytes: usersDbFiles.reduce((acc, f) => acc + f.size, 0)
+        },
+        {
+          id: 'live_users',
+          name: 'Live Active Telemetry & Analytics',
+          icon: 'activity',
+          path: 'database/live_users/',
+          description: 'Real-time SSE active visitor telemetry, peak loads & concurrency records',
+          files: liveUsersDbFiles,
+          recordsCount: 1,
+          storageBytes: liveUsersDbFiles.reduce((acc, f) => acc + f.size, 0)
+        },
+        {
+          id: 'reports',
+          name: 'Executive PDF & Export Reports',
+          icon: 'file-text',
+          path: 'uploads/reports/ & uploads/exports/',
+          description: 'Exported Executive PDF analytics reports and generated CSV archives',
+          files: [...reportUploads, ...exportUploads],
+          recordsCount: reportUploads.length + exportUploads.length,
+          storageBytes: reportUploads.reduce((acc, f) => acc + f.size, 0) + exportUploads.reduce((acc, f) => acc + f.size, 0)
+        },
+        {
+          id: 'models',
+          name: 'AutoML & Deep Learning Models',
+          icon: 'cpu',
+          path: 'database/models/',
+          description: 'Trained Machine Learning and Deep Learning model architecture files',
+          files: modelsDbFiles,
+          recordsCount: modelRecords.length,
+          storageBytes: modelsDbFiles.reduce((acc, f) => acc + f.size, 0)
+        }
+      ]
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// =========================================================================
+// ⚡ HIGH-CONCURRENCY STORAGE ENGINE & ATOMIC WRITER
+// =========================================================================
+
+// Global In-Memory Caches for Million-User High Throughput
 let cachedMetadata = null;
 let metadataLastLoaded = 0;
+let cachedUsers = null;
+let usersLastLoaded = 0;
+let cachedSessions = null;
+let sessionsLastLoaded = 0;
 
-// Helper to read metadata DB with 5-second in-memory LRU cache
+// Safe Atomic File Writer to prevent corruption during concurrent high-traffic writes
+async function safeWriteJsonAtomic(filePath, data) {
+  const dir = path.dirname(filePath);
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
+  const tmpPath = `${filePath}.tmp_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+  try {
+    const jsonStr = JSON.stringify(data, null, 2);
+    await fs.promises.writeFile(tmpPath, jsonStr, 'utf-8');
+    await fs.promises.rename(tmpPath, filePath);
+  } catch (err) {
+    try {
+      if (fs.existsSync(tmpPath)) await fs.promises.unlink(tmpPath);
+    } catch (_) {}
+    try {
+      fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf-8');
+    } catch (writeErr) {
+      console.warn(`🛡️ [Storage Engine] Direct write fallback warning on ${filePath}:`, writeErr.message);
+    }
+  }
+}
+
+// Helper to read metadata DB with in-memory cache
 function getMetadataList() {
   try {
     const now = Date.now();
-    if (cachedMetadata && (now - metadataLastLoaded < 5000)) {
+    if (cachedMetadata && (now - metadataLastLoaded < 4000)) {
       return cachedMetadata;
     }
     if (fs.existsSync(METADATA_FILE)) {
@@ -170,15 +406,11 @@ function getMetadataList() {
   }
 }
 
-// Helper to write metadata DB asynchronously without blocking event loop
+// Helper to write metadata DB atomically without blocking event loop
 async function saveMetadataList(data) {
   cachedMetadata = data;
   metadataLastLoaded = Date.now();
-  try {
-    await fs.promises.writeFile(METADATA_FILE, JSON.stringify(data, null, 2), 'utf-8');
-  } catch (err) {
-    console.warn('Async metadata save warning:', err.message);
-  }
+  await safeWriteJsonAtomic(METADATA_FILE, data);
 }
 
 // Format bytes into human readable string
@@ -712,28 +944,48 @@ const INACTIVITY_TIMEOUT_MS = 8 * 60 * 60 * 1000; // Minimum 8 hours active sess
 
 function getUsersList() {
   try {
-    if (!fs.existsSync(USERS_FILE)) return [];
-    return JSON.parse(fs.readFileSync(USERS_FILE, 'utf-8'));
-  } catch (err) {
+    const now = Date.now();
+    if (cachedUsers && (now - usersLastLoaded < 3000)) {
+      return cachedUsers;
+    }
+    if (fs.existsSync(USERS_FILE)) {
+      cachedUsers = JSON.parse(fs.readFileSync(USERS_FILE, 'utf-8'));
+      usersLastLoaded = now;
+      return cachedUsers;
+    }
     return [];
+  } catch (err) {
+    return cachedUsers || [];
   }
 }
 
 function saveUsersList(data) {
-  fs.writeFileSync(USERS_FILE, JSON.stringify(data, null, 2), 'utf-8');
+  cachedUsers = data;
+  usersLastLoaded = Date.now();
+  safeWriteJsonAtomic(USERS_FILE, data);
 }
 
 function getSessionsList() {
   try {
-    if (!fs.existsSync(SESSIONS_FILE)) return [];
-    return JSON.parse(fs.readFileSync(SESSIONS_FILE, 'utf-8'));
-  } catch (err) {
+    const now = Date.now();
+    if (cachedSessions && (now - sessionsLastLoaded < 3000)) {
+      return cachedSessions;
+    }
+    if (fs.existsSync(SESSIONS_FILE)) {
+      cachedSessions = JSON.parse(fs.readFileSync(SESSIONS_FILE, 'utf-8'));
+      sessionsLastLoaded = now;
+      return cachedSessions;
+    }
     return [];
+  } catch (err) {
+    return cachedSessions || [];
   }
 }
 
 function saveSessionsList(data) {
-  fs.writeFileSync(SESSIONS_FILE, JSON.stringify(data, null, 2), 'utf-8');
+  cachedSessions = data;
+  sessionsLastLoaded = Date.now();
+  safeWriteJsonAtomic(SESSIONS_FILE, data);
 }
 
 // Global array of SSE connected response streams
@@ -742,14 +994,29 @@ let sseClients = [];
 function broadcastLiveStats() {
   const stats = calculateLiveStats();
   const payload = `data: ${JSON.stringify(stats)}\n\n`;
-  sseClients.forEach(client => {
+  sseClients = sseClients.filter(client => {
     try {
+      if (client.res.writableEnded || client.res.destroyed || client.res.closed) return false;
       client.res.write(payload);
+      return true;
     } catch (err) {
-      // client disconnected
+      return false;
     }
   });
 }
+
+// 20-Second SSE Heartbeat to keep reverse-proxies, firewalls, and tunnels alive
+setInterval(() => {
+  sseClients = sseClients.filter(client => {
+    try {
+      if (client.res.writableEnded || client.res.destroyed || client.res.closed) return false;
+      client.res.write(': keepalive\n\n');
+      return true;
+    } catch (err) {
+      return false;
+    }
+  });
+}, 20000);
 
 function calculateLiveStats() {
   const users = getUsersList();
@@ -1162,10 +1429,6 @@ app.delete('/api/live-users/sessions', (req, res) => {
 // ----------------------------------------------------
 // AUTOML MODEL INTELLIGENCE ENGINE ENDPOINTS
 // ----------------------------------------------------
-const AUTOML_MODELS_FILE = path.join(DATABASE_DIR, 'automl_models.json');
-if (!fs.existsSync(AUTOML_MODELS_FILE)) {
-  fs.writeFileSync(AUTOML_MODELS_FILE, JSON.stringify([], null, 2));
-}
 
 // POST /api/automl/analyze-dataset - Auto Health & Problem Analysis
 app.post('/api/automl/analyze-dataset', (req, res) => {
@@ -1227,13 +1490,65 @@ app.get('/api/automl/models', (req, res) => {
   }
 });
 
+// GET /api/health - High-Availability Health & Concurrency Telemetry
+app.get('/api/health', (req, res) => {
+  const memory = process.memoryUsage();
+  res.json({
+    status: 'healthy',
+    online: true,
+    server: 'Corporate Dataset Analytics Express Engine',
+    uptimeSeconds: Math.floor(process.uptime()),
+    activeSseConnections: sseClients.length,
+    timestamp: new Date().toISOString(),
+    memoryFootprint: {
+      rssFormatted: formatBytes(memory.rss),
+      heapUsedFormatted: formatBytes(memory.heapUsed),
+      heapTotalFormatted: formatBytes(memory.heapTotal)
+    }
+  });
+});
+
+// 404 Route Catch-All (Never let client requests hang)
+app.use((req, res) => {
+  res.status(404).json({
+    success: false,
+    error: `Endpoint '${req.originalUrl}' not found on server.`,
+    status: 404
+  });
+});
+
+// 🛡️ Global Express Error-Handling Middleware (Prevents server crash on any request error)
+app.use((err, req, res, next) => {
+  console.error('🛡️ [Server Error Guard] Intercepted Express request error:', err?.message || err);
+  if (res.headersSent) {
+    return next(err);
+  }
+  res.status(err.status || 500).json({
+    success: false,
+    error: err.message || 'Internal Server Resilience Safe Error Response',
+    serverStatus: 'online'
+  });
+});
+
 if (!isVercel) {
-  app.listen(PORT, () => {
+  const server = app.listen(PORT, () => {
     console.log(`====================================================`);
     console.log(`🚀 Dataset Storage Backend API running on port ${PORT}`);
     console.log(`📁 Uploads Directory: ${UPLOADS_DIR}`);
     console.log(`💾 Database File:    ${METADATA_FILE}`);
+    console.log(`🛡️ High-Concurrency Unlimited-Traffic Engine Active`);
     console.log(`====================================================`);
+  });
+
+  // Keep-alive timeout tuning for high traffic
+  server.keepAliveTimeout = 65000;
+  server.headersTimeout = 66000;
+
+  process.on('SIGTERM', () => {
+    console.log('🛡️ Gracefully shutting down server...');
+    server.close(() => {
+      process.exit(0);
+    });
   });
 }
 

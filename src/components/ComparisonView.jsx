@@ -455,24 +455,24 @@ export default function ComparisonView({
                 className={`mode-toggle-btn ${compareMode === 'cross_dataset' ? 'active' : ''}`}
                 onClick={() => setCompareMode('cross_dataset')}
               >
-                <GitCompare size={13} />
-                <span>Two-Dataset Comparison ({datasetsList.length})</span>
+                <GitCompare size={12} />
+                <span>Multi-Dataset Analysis ({datasetsList.length || 'Unlimited'})</span>
               </button>
               <button
                 type="button"
                 className={`mode-toggle-btn ${compareMode === 'cohort' ? 'active' : ''}`}
                 onClick={() => setCompareMode('cohort')}
               >
-                <Layers size={13} />
+                <Layers size={12} />
                 <span>Single-Dataset Cohorts</span>
               </button>
             </div>
           </div>
 
-          <h2>{compareMode === 'cross_dataset' ? 'Two-Dataset Cross Comparative Analysis' : 'Dynamic CSV Group Comparison Studio'}</h2>
+          <h2>{compareMode === 'cross_dataset' ? 'Multi-Dataset Cross Comparative Intelligence' : 'Dynamic CSV Group Comparison Studio'}</h2>
           <p className="controls-subtitle">
             {compareMode === 'cross_dataset'
-              ? 'Compare two completely different uploaded datasets side-by-side with statistical metrics, feature overlap, and health checks.'
+              ? 'Compare across unlimited uploaded datasets side-by-side with deep statistical metrics, feature overlap, schema alignment, and health checks.'
               : 'Compare performance, metrics, and aggregates across dynamic groups derived directly from your active CSV file.'}
           </p>
         </div>

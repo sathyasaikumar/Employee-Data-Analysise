@@ -3,7 +3,7 @@ import {
   BarChart3, Upload, Download, Layers, LogIn, LogOut, ShieldCheck, Sun, Moon,
   ArrowLeft, Menu, X, Database, Filter, Radio, Maximize2, Minimize2,
   Folder, ChevronDown, Sparkles, Cpu, Zap, Brain, BookOpen, FileText, Compass,
-  Trash2, Plus, Search, FileSpreadsheet, Check, RefreshCw, RotateCcw, Mic
+  Trash2, Plus, Search, FileSpreadsheet, Check, RefreshCw, RotateCcw, Mic, Calculator, HardDrive
 } from 'lucide-react';
 import VoiceAssistant from './VoiceAssistant';
 
@@ -20,6 +20,7 @@ export default function Header({
   onUploadClick,
   onHistoryClick,
   onLiveUsersClick,
+  onOpenStorageExplorer,
   savedDatasetsCount = 0,
   liveUsersCount = 0,
   onLoadSample,
@@ -45,6 +46,7 @@ export default function Header({
   onCloseMLPipeline,
   onOpenAnomalies,
   onCloseAnomalies,
+  onOpenCalculator,
   activeTab,
   onSelectTab,
   filters,
@@ -466,6 +468,7 @@ export default function Header({
           </button>
         </div>
 
+
         {/* CONSOLIDATED TOOLS FOLDER DROPDOWN MENU NEAR LOGOUT */}
         <div className="header-pill-item folder-menu-container" ref={folderRef} style={{ position: 'relative' }}>
           <button
@@ -625,6 +628,7 @@ export default function Header({
                   onCloseMLPipeline={onCloseMLPipeline}
                   onOpenAnomalies={onOpenAnomalies}
                   onCloseAnomalies={onCloseAnomalies}
+                  onOpenCalculator={onOpenCalculator}
                   onOpenProfile={onOpenProfile}
                   onUploadClick={onUploadClick}
                   onHistoryClick={onHistoryClick}
@@ -744,7 +748,7 @@ export default function Header({
                 <div className="user-info">
                   <span className="user-name">{currentUser.name}</span>
                   <span className="user-role-badge">
-                    <ShieldCheck size={12} className="inline mr-1 text-emerald" />
+                    <ShieldCheck size={10} className="inline mr-0.5 text-emerald-400" />
                     {currentUser.role || 'Authorized User'}
                   </span>
                 </div>
@@ -759,7 +763,7 @@ export default function Header({
                 }}
                 title="Logout of current session"
               >
-                <LogOut size={16} />
+                <LogOut size={11} />
                 <span>Logout</span>
               </button>
             </div>

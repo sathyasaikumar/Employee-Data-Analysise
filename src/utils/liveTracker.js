@@ -101,35 +101,46 @@ function handleUnload() {
   }
 }
 
+let reconnectTimeout = null;
+let retryCount = 0;
+
 /**
- * Establish Server-Sent Events (SSE) connection
+ * Establish Server-Sent Events (SSE) connection with exponential backoff & jitter
  */
 function connectSseStream() {
   if (eventSource) return;
+  if (reconnectTimeout) clearTimeout(reconnectTimeout);
 
   try {
     eventSource = new EventSource(SSE_STREAM_URL);
 
+    eventSource.onopen = () => {
+      retryCount = 0; // reset backoff on successful connection
+    };
+
     eventSource.onmessage = (event) => {
       try {
+        if (!event.data || event.data.startsWith(':')) return;
         const stats = JSON.parse(event.data);
         notifySubscribers(stats);
       } catch (err) {
-        console.error('Failed to parse SSE payload:', err);
+        // Ignore heartbeat/malformed comments safely
       }
     };
 
-    eventSource.onerror = (err) => {
-      console.warn('SSE stream error, retrying via polling fallback...', err);
+    eventSource.onerror = () => {
       if (eventSource) {
         eventSource.close();
         eventSource = null;
       }
-      // Retry SSE connection after 5 seconds
-      setTimeout(connectSseStream, 5000);
+      // Exponential backoff with jitter: 3s -> 4.5s -> 6.7s ... up to max 30s
+      retryCount = Math.min(retryCount + 1, 6);
+      const delay = Math.min(3000 * Math.pow(1.5, retryCount) + Math.random() * 1000, 30000);
+      reconnectTimeout = setTimeout(connectSseStream, delay);
     };
   } catch (err) {
-    console.warn('EventSource initialization failed:', err.message);
+    const delay = 5000 + Math.random() * 2000;
+    reconnectTimeout = setTimeout(connectSseStream, delay);
   }
 }
 

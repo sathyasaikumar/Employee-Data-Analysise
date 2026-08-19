@@ -25,6 +25,8 @@ export default function VoiceAssistant({
   onCloseMLPipeline,
   onOpenAnomalies,
   onCloseAnomalies,
+  onOpenCalculator,
+  onCloseCalculator,
   onOpenProfile,
   onCloseProfile,
   // Datasets
@@ -208,6 +210,18 @@ export default function VoiceAssistant({
       } else {
         if (onOpenAnomalies) onOpenAnomalies();
         triggerNotification('⚠️ Opening Automatic Anomaly & Outlier Detector', 'Opening Anomaly Detector');
+      }
+      return;
+    }
+
+    // 6.5. REAL-TIME CALCULATOR & FORMULA ENGINE
+    if (p.includes('calculator') || p.includes('calculate') || p.includes('salary math') || p.includes('formula engine')) {
+      if (p.includes('close') || p.includes('exit')) {
+        if (onCloseCalculator) onCloseCalculator();
+        triggerNotification('Calculator Closed', 'Closing Calculator');
+      } else {
+        if (onOpenCalculator) onOpenCalculator();
+        triggerNotification('🧮 Opening Real-Time Workforce & Statistical Calculator', 'Opening Calculator');
       }
       return;
     }

@@ -66,16 +66,16 @@ export default function DataTable({
   return (
     <div className="table-card">
       <div className="table-toolbar">
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-            Dataset Table (<b>{(filteredCount || 0).toLocaleString()}</b> records)
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600 }}>
+            Dataset Table (<b style={{ color: 'var(--text-main)' }}>{(filteredCount || 0).toLocaleString()}</b> records)
           </span>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Rows per page:</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+          <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>Rows per page:</span>
           <select 
-            className="sample-select"
+            className="sample-select table-page-size-select"
             value={pageSize}
             onChange={(e) => handlePageSizeChange(Number(e.target.value))}
           >
@@ -85,8 +85,8 @@ export default function DataTable({
             <option value={100}>100</option>
           </select>
 
-          <button className="btn btn-outline" onClick={onExportCSV}>
-            <Download size={14} /> Export Filtered CSV
+          <button className="btn btn-outline table-export-btn" onClick={onExportCSV}>
+            <Download size={12} /> Export Filtered CSV
           </button>
         </div>
       </div>
@@ -97,9 +97,9 @@ export default function DataTable({
             <tr>
               {headers.map(header => (
                 <th key={header} onClick={() => handleSort(header)}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
                     <span>{header}</span>
-                    <ArrowUpDown size={12} className={sortColumn === header ? "text-accent-blue" : "text-muted"} />
+                    <ArrowUpDown size={11} className={sortColumn === header ? "text-accent-blue" : "text-muted"} />
                   </div>
                 </th>
               ))}
