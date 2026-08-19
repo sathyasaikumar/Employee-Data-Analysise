@@ -1,12 +1,12 @@
 [
   {
     "id": "usr_admin_101",
-    "name": "Sathya Sai Kumar",
+    "name": "Corporate Account",
     "email": "admin@corporate.com",
     "role": "Executive Admin",
-    "avatar": "SS",
+    "avatar": "CA",
     "loginType": "email",
-    "totalLogins": 478,
+    "totalLogins": 497,
     "registeredAt": "2026-07-13T06:00:07.404Z"
   },
   {
@@ -68,7 +68,7 @@
     "role": "Data Engineer",
     "avatar": "DL",
     "loginType": "google",
-    "totalLogins": 50,
+    "totalLogins": 69,
     "registeredAt": "2026-08-12T12:23:50.290Z"
   },
   {
@@ -101,7 +101,7 @@
     "role": "Senior Data Lead",
     "avatar": "AM",
     "loginType": "google",
-    "totalLogins": 48,
+    "totalLogins": 151,
     "registeredAt": "2026-08-16T13:56:33.628Z"
   },
   {
@@ -112,7 +112,7 @@
     "role": "Executive Lead Developer",
     "avatar": "SS",
     "loginType": "google",
-    "totalLogins": 55,
+    "totalLogins": 57,
     "registeredAt": "2026-08-17T10:05:23.293Z"
   }
 ]

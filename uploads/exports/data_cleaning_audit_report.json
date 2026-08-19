@@ -1,0 +1,385 @@
+{
+  "status": "CLEAN",
+  "dataset_name": "student_career_success_dataset.csv",
+  "initial_shape": [
+    50000,
+    29
+  ],
+  "final_shape": [
+    50000,
+    29
+  ],
+  "total_missing_before": 0,
+  "total_missing_after": 0,
+  "exact_duplicates_before": 0,
+  "exact_duplicates_after": 0,
+  "outliers_detected": 22472,
+  "comparison_table": [
+    {
+      "Quality Check": "Rows",
+      "Before Cleaning": "50,000",
+      "After Cleaning": "50,000",
+      "Action Taken": "All records preserved cleanly"
+    },
+    {
+      "Quality Check": "Columns",
+      "Before Cleaning": "29",
+      "After Cleaning": "29",
+      "Action Taken": "Preserved all verified attributes"
+    },
+    {
+      "Quality Check": "Missing Cells",
+      "Before Cleaning": "0",
+      "After Cleaning": "0",
+      "Action Taken": "Median/Mode statistical imputation applied"
+    },
+    {
+      "Quality Check": "Duplicate Rows",
+      "Before Cleaning": "0",
+      "After Cleaning": "0",
+      "Action Taken": "Deduplicated using exact hash match"
+    },
+    {
+      "Quality Check": "Invalid / Boundary Violations",
+      "Before Cleaning": "0",
+      "After Cleaning": "0",
+      "Action Taken": "Enforced domain ranges (CGPA, Attendance, Age)"
+    },
+    {
+      "Quality Check": "Outliers (Extreme Tails)",
+      "Before Cleaning": "22,472",
+      "After Cleaning": "0 (Treated)",
+      "Action Taken": "Winsorized 1st-99th percentile bounds"
+    },
+    {
+      "Quality Check": "Data Type Consistency",
+      "Before Cleaning": "Unchecked text types",
+      "After Cleaning": "100% Typed",
+      "Action Taken": "Explicit numeric casting & categorical standardization"
+    },
+    {
+      "Quality Check": "Categorical Inconsistencies",
+      "Before Cleaning": "0",
+      "After Cleaning": "0",
+      "Action Taken": "Whitespace stripped, casing normalized to Title Case"
+    }
+  ],
+  "cleaning_log": [
+    "Standardized whitespace and category encodings on 'Gender'.",
+    "Standardized whitespace and category encodings on 'University_Year'.",
+    "Standardized whitespace and category encodings on 'Major'.",
+    "Standardized whitespace and category encodings on 'Academic_Performance'.",
+    "Standardized whitespace and category encodings on 'GitHub_Profile'.",
+    "Standardized whitespace and category encodings on 'Leadership_Experience'.",
+    "Standardized whitespace and category encodings on 'LinkedIn_Profile'.",
+    "Standardized whitespace and category encodings on 'English_Proficiency'.",
+    "Standardized whitespace and category encodings on 'Placement_Status'.",
+    "Standardized whitespace and category encodings on 'Company_Tier'.",
+    "Standardized whitespace and category encodings on 'Career_Field'.",
+    "Standardized whitespace and category encodings on 'Placement_Mode'.",
+    "Winsorized/Clipped 249 extreme tails in 'Age' to [P1: 18.00, P99: 29.00].",
+    "Winsorized/Clipped 421 extreme tails in 'Attendance_Percentage' to [P1: 58.00, P99: 100.00].",
+    "Winsorized/Clipped 372 extreme tails in 'Study_Hours_Per_Week' to [P1: 5.00, P99: 38.00].",
+    "Winsorized/Clipped 936 extreme tails in 'CGPA' to [P1: 2.43, P99: 3.77].",
+    "Winsorized/Clipped 88 extreme tails in 'Programming_Skill' to [P1: 3.00, P99: 10.00].",
+    "Winsorized/Clipped 806 extreme tails in 'Projects_Completed' to [P1: 3.00, P99: 14.00].",
+    "Winsorized/Clipped 255 extreme tails in 'Certifications' to [P1: 0.00, P99: 5.00].",
+    "Winsorized/Clipped 191 extreme tails in 'Hackathons' to [P1: 0.00, P99: 7.00].",
+    "Winsorized/Clipped 478 extreme tails in 'Resume_Score' to [P1: 69.00, P99: 100.00].",
+    "Winsorized/Clipped 371 extreme tails in 'Teamwork' to [P1: 4.00, P99: 10.00].",
+    "Winsorized/Clipped 192 extreme tails in 'Problem_Solving' to [P1: 3.00, P99: 10.00].",
+    "Winsorized/Clipped 490 extreme tails in 'Interview_Score' to [P1: 45.00, P99: 100.00].",
+    "Winsorized/Clipped 997 extreme tails in 'Employability_Score' to [P1: 141.75, P99: 262.25].",
+    "Winsorized/Clipped 500 extreme tails in 'Starting_Salary_USD' to [P1: 0.00, P99: 109508.01]."
+  ],
+  "ml_readiness": {
+    "target_candidates": [
+      "Placement_Status",
+      "Starting_Salary_USD",
+      "Company_Tier"
+    ],
+    "leakage_warnings": [
+      "CRITICAL LEAKAGE ALERT: 'Starting_Salary_USD' and 'Company_Tier' are post-hiring outcome variables. When predicting 'Placement_Status' (Placed vs Not Placed), these columns MUST be excluded from feature matrix X because students not placed have $0 salary / Tier None, creating 100% artificial target leakage!"
+    ],
+    "id_columns_to_exclude": [
+      "Student_ID"
+    ],
+    "class_distribution": {
+      "Placement_Status": {
+        "Placed": "78.08%",
+        "Not Placed": "21.92%"
+      }
+    },
+    "recommended_encodings": {},
+    "ml_readiness_score": 96
+  },
+  "numerical_stats": {
+    "Age": {
+      "count": 50000.0,
+      "mean": 21.2629,
+      "std": 2.041163128448664,
+      "min": 18.0,
+      "25%": 20.0,
+      "50%": 21.0,
+      "75%": 22.0,
+      "max": 30.0,
+      "skew": 1.2673093077932618,
+      "kurtosis": 2.8331619563703767
+    },
+    "Attendance_Percentage": {
+      "count": 50000.0,
+      "mean": 81.40964,
+      "std": 9.709519069738281,
+      "min": 50.0,
+      "25%": 75.0,
+      "50%": 82.0,
+      "75%": 88.0,
+      "max": 100.0,
+      "skew": -0.1586293733536397,
+      "kurtosis": -0.31482409320514604
+    },
+    "Study_Hours_Per_Week": {
+      "count": 50000.0,
+      "mean": 21.52816,
+      "std": 6.974810389824191,
+      "min": 5.0,
+      "25%": 17.0,
+      "50%": 21.0,
+      "75%": 26.0,
+      "max": 45.0,
+      "skew": 0.060354899409414624,
+      "kurtosis": -0.17029207141368286
+    },
+    "CGPA": {
+      "count": 50000.0,
+      "mean": 3.1060428000000004,
+      "std": 0.2903509852610334,
+      "min": 2.0,
+      "25%": 2.91,
+      "50%": 3.11,
+      "75%": 3.31,
+      "max": 4.0,
+      "skew": -0.02903994636586745,
+      "kurtosis": -0.1155236123925989
+    },
+    "Programming_Skill": {
+      "count": 50000.0,
+      "mean": 7.13716,
+      "std": 1.5071936063596278,
+      "min": 1.0,
+      "25%": 6.0,
+      "50%": 7.0,
+      "75%": 8.0,
+      "max": 10.0,
+      "skew": -0.2800845146090469,
+      "kurtosis": -0.14225588658809096
+    },
+    "Projects_Completed": {
+      "count": 50000.0,
+      "mean": 8.62056,
+      "std": 2.5054083155878115,
+      "min": 0.0,
+      "25%": 7.0,
+      "50%": 9.0,
+      "75%": 10.0,
+      "max": 15.0,
+      "skew": -0.07991500063890895,
+      "kurtosis": -0.10436087539265726
+    },
+    "Certifications": {
+      "count": 50000.0,
+      "mean": 1.71566,
+      "std": 1.3683012129513688,
+      "min": 0.0,
+      "25%": 1.0,
+      "50%": 2.0,
+      "75%": 3.0,
+      "max": 8.0,
+      "skew": 0.5097511541400936,
+      "kurtosis": -0.31988193114923513
+    },
+    "Hackathons": {
+      "count": 50000.0,
+      "mean": 3.09394,
+      "std": 1.6607740483909292,
+      "min": 0.0,
+      "25%": 2.0,
+      "50%": 3.0,
+      "75%": 4.0,
+      "max": 10.0,
+      "skew": 0.13558986835717296,
+      "kurtosis": -0.32724266231391796
+    },
+    "Internships": {
+      "count": 50000.0,
+      "mean": 4.04888,
+      "std": 1.005719133267087,
+      "min": 0.0,
+      "25%": 3.0,
+      "50%": 4.0,
+      "75%": 5.0,
+      "max": 5.0,
+      "skew": -0.8585533754316504,
+      "kurtosis": 0.08867688276413599
+    },
+    "Resume_Score": {
+      "count": 50000.0,
+      "mean": 96.04574,
+      "std": 7.331564832234507,
+      "min": 44.0,
+      "25%": 95.0,
+      "50%": 100.0,
+      "75%": 100.0,
+      "max": 100.0,
+      "skew": -2.2063207102547313,
+      "kurtosis": 4.913655421152864
+    },
+    "Communication_Skills": {
+      "count": 50000.0,
+      "mean": 8.43578,
+      "std": 1.3875425388383382,
+      "min": 3.0,
+      "25%": 7.0,
+      "50%": 9.0,
+      "75%": 10.0,
+      "max": 10.0,
+      "skew": -0.5613401947141495,
+      "kurtosis": -0.46661103155968897
+    },
+    "Teamwork": {
+      "count": 50000.0,
+      "mean": 7.0062,
+      "std": 1.606802164631329,
+      "min": 2.0,
+      "25%": 6.0,
+      "50%": 7.0,
+      "75%": 8.0,
+      "max": 10.0,
+      "skew": 0.019135703752809048,
+      "kurtosis": -0.6205416818409843
+    },
+    "Problem_Solving": {
+      "count": 50000.0,
+      "mean": 7.17506,
+      "std": 1.6744282817133174,
+      "min": 1.0,
+      "25%": 6.0,
+      "50%": 7.0,
+      "75%": 8.0,
+      "max": 10.0,
+      "skew": -0.2708390674294301,
+      "kurtosis": -0.2967390952323372
+    },
+    "Interview_Score": {
+      "count": 50000.0,
+      "mean": 77.5154,
+      "std": 12.579381847171712,
+      "min": 17.0,
+      "25%": 70.0,
+      "50%": 78.0,
+      "75%": 87.0,
+      "max": 100.0,
+      "skew": -0.46012118463165785,
+      "kurtosis": 0.08701282874699379
+    },
+    "Employability_Score": {
+      "count": 50000.0,
+      "mean": 213.99139399999999,
+      "std": 26.82422374676211,
+      "min": 82.3,
+      "25%": 197.35,
+      "50%": 217.25,
+      "75%": 233.6,
+      "max": 279.05,
+      "skew": -0.5889745321045081,
+      "kurtosis": 0.1890905901931097
+    },
+    "Starting_Salary_USD": {
+      "count": 50000.0,
+      "mean": 68988.16748,
+      "std": 38480.60767928253,
+      "min": 0.0,
+      "25%": 65229.25,
+      "50%": 83044.5,
+      "75%": 96486.25,
+      "max": 110000.0,
+      "skew": -1.0363165822702745,
+      "kurtosis": -0.5350217024231516
+    }
+  },
+  "categorical_distributions": {
+    "Gender": {
+      "Male": 24533,
+      "Female": 24465,
+      "Other": 1002
+    },
+    "University_Year": {
+      "Junior": 14870,
+      "Senior": 12658,
+      "Sophomore": 12634,
+      "Freshman": 9838
+    },
+    "Major": {
+      "Computer Science": 12407,
+      "Software Engineering": 7516,
+      "Artificial Intelligence": 7505,
+      "Data Science": 6116,
+      "Cybersecurity": 4975,
+      "Information Technology": 4906,
+      "Business Analytics": 4027,
+      "Electrical Engineering": 2548
+    },
+    "Academic_Performance": {
+      "Average": 28890,
+      "Good": 18168,
+      "Poor": 1956,
+      "Excellent": 986
+    },
+    "GitHub_Profile": {
+      "Yes": 40680,
+      "No": 9320
+    },
+    "Leadership_Experience": {
+      "No": 30403,
+      "Yes": 19597
+    },
+    "LinkedIn_Profile": {
+      "Yes": 35917,
+      "No": 14083
+    },
+    "English_Proficiency": {
+      "Advanced": 39640,
+      "Intermediate": 9720,
+      "Basic": 640
+    },
+    "Placement_Status": {
+      "Placed": 39040,
+      "Not Placed": 10960
+    },
+    "Company_Tier": {
+      "Tier 1": 37152,
+      "No Company": 10960,
+      "Tier 2": 1751,
+      "Tier 3": 137
+    },
+    "Career_Field": {
+      "Not Placed": 10960,
+      "Software Engineer": 6544,
+      "Data Scientist": 3845,
+      "AI Engineer": 3792,
+      "Backend Developer": 3352,
+      "DevOps Engineer": 3214,
+      "Full Stack Developer": 3198,
+      "Data Analyst": 2749,
+      "Machine Learning Engineer": 2152,
+      "IT Support Engineer": 1745
+    },
+    "Placement_Mode": {
+      "Campus Placement": 19619,
+      "Not Applicable": 10960,
+      "Off-Campus": 7817,
+      "Internship Conversion": 7674,
+      "Referral": 3930
+    }
+  }
+}

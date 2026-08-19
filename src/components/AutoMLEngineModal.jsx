@@ -23,6 +23,7 @@ import {
 } from 'chart.js';
 import { Bar, Doughnut, Radar } from 'react-chartjs-2';
 import HDScreenshotButton from './HDScreenshotButton';
+import DeleteConfirmationModal from './DeleteConfirmationModal';
 
 import {
   analyzeDatasetProfile,
@@ -53,11 +54,17 @@ ChartJS.register(
   Filler
 );
 
-export default function AutoMLEngineModal({ isOpen, onClose, data = [], headers = [], schema = {}, datasetName = 'Active Dataset' }) {
+export default function AutoMLEngineModal({ isOpen, onClose, data = [], headers = [], schema = {}, datasetName = 'Active Dataset', onDeleteSuccess = null }) {
   const [activeTab, setActiveTab] = useState('pipeline'); // 'pipeline' | 'leaderboard' | 'explainability' | 'predict' | 'registry'
   const [isFullScreen, setIsFullScreen] = useState(true);
   const [algoFilter, setAlgoFilter] = useState('all');
   const [algoSearch, setAlgoSearch] = useState('');
+
+  // Delete Confirmation State for Trained Models
+  const [deleteModelConfirm, setDeleteModelConfirm] = useState({
+    isOpen: false,
+    model: null
+  });
 
   // Dataset Profiling State
   const [profile, setProfile] = useState(null);
@@ -2796,12 +2803,7 @@ export default function AutoMLEngineModal({ isOpen, onClose, data = [], headers 
                               <button
                                 type="button"
                                 className="btn-action-danger"
-                                onClick={() => {
-                                  if (confirm(`Delete model ${m.name}?`)) {
-                                    const updated = deleteSavedModel(m.id);
-                                    setSavedModelsList(updated);
-                                  }
-                                }}
+                                onClick={() => setDeleteModelConfirm({ isOpen: true, model: m })}
                                 title="Delete Saved Model"
                               >
                                 <Trash2 size={13} />
@@ -2931,6 +2933,38 @@ export default function AutoMLEngineModal({ isOpen, onClose, data = [], headers 
           </div>
         </div>
       )}
+
+      {/* 🗑️ UNIQUE GLASSMORPHIC DELETE CONFIRMATION MODAL */}
+      <DeleteConfirmationModal
+        isOpen={deleteModelConfirm.isOpen}
+        onClose={() => setDeleteModelConfirm({ isOpen: false, model: null })}
+        onConfirm={() => {
+          if (!deleteModelConfirm.model) return;
+          const target = deleteModelConfirm.model;
+          const updated = deleteSavedModel(target.id);
+          setSavedModelsList(updated);
+          if (onDeleteSuccess) {
+            onDeleteSuccess({
+              mode: 'delete',
+              name: target.name || 'ML Model',
+              deletedCount: 1,
+              storagePath: 'database/models/automl_models.json',
+              badge: '🗑️ AUTOML MODEL PURGED',
+              desc: `AutoML model "${target.name}" (${target.algorithm || 'Model'}) permanently erased from system database registry.`,
+              timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            });
+          }
+          setDeleteModelConfirm({ isOpen: false, model: null });
+        }}
+        title="Delete Trained Model?"
+        subtitle="Permanent Model Registry Removal"
+        itemName={deleteModelConfirm.model?.name || 'Trained Model'}
+        itemType="model"
+        targetCount={1}
+        storagePath="database/models/automl_models.json"
+        warningMessage={`Are you sure you want to permanently delete '${deleteModelConfirm.model?.name}'? This model will be unlinked from the system registry.`}
+        confirmButtonText="Delete Model"
+      />
 
     </div>
   );

@@ -6,6 +6,7 @@ import {
   CheckSquare, Square, AlertCircle, Info, Layers, Check
 } from 'lucide-react';
 import { getDatasetDownloadUrl } from '../utils/api';
+import DeleteConfirmationModal from './DeleteConfirmationModal';
 
 export default function DatasetHistory({ 
   datasets = [], 
@@ -726,156 +727,35 @@ export default function DatasetHistory({
         </div>
       )}
 
-      {/* ======================================================== */}
-      {/* IN-APP CONFIRMATION MODAL (NEVER MINIMIZES SCREEN) */}
-      {/* ======================================================== */}
-      {deleteModal.isOpen && (
-        <div 
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.75)',
-            backdropFilter: 'blur(8px)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 999999,
-            padding: '1rem'
-          }}
-          onClick={() => !isDeleting && setDeleteModal({ isOpen: false, type: 'single', datasetId: null, datasetName: null, targetCount: 0 })}
-        >
-          <div 
-            style={{
-              background: 'linear-gradient(145deg, #131b2e, #0c1220)',
-              border: '1px solid rgba(239, 68, 68, 0.4)',
-              borderRadius: '16px',
-              maxWidth: '480px',
-              width: '100%',
-              padding: '1.75rem',
-              boxShadow: '0 20px 50px rgba(0, 0, 0, 0.6), 0 0 30px rgba(239, 68, 68, 0.15)',
-              position: 'relative'
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Header Icon & Title */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', marginBottom: '1rem' }}>
-              <div style={{
-                width: '46px',
-                height: '46px',
-                borderRadius: '12px',
-                background: 'rgba(239, 68, 68, 0.15)',
-                border: '1px solid rgba(239, 68, 68, 0.3)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: '#ef4444',
-                flexShrink: 0
-              }}>
-                <Trash2 size={24} />
-              </div>
-              <div>
-                <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#ffffff', margin: 0 }}>
-                  {deleteModal.type === 'all' 
-                    ? 'Delete All Datasets?' 
-                    : deleteModal.type === 'bulk' 
-                    ? `Delete ${deleteModal.targetCount} Datasets?` 
-                    : 'Delete Stored Dataset?'}
-                </h3>
-                <span style={{ fontSize: '0.8rem', color: '#f87171', fontWeight: 600 }}>
-                  Permanent Disk Deletion
-                </span>
-              </div>
-            </div>
-
-            {/* Content Body */}
-            <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', lineHeight: '1.5', marginBottom: '1.25rem' }}>
-              {deleteModal.type === 'all' ? (
-                <>
-                  Are you sure you want to delete <strong style={{ color: '#ffffff' }}>ALL {deleteModal.targetCount} datasets</strong>? 
-                  This will permanently erase all physical files stored in <code style={{ color: 'var(--accent-cyan)', background: 'rgba(0,0,0,0.3)', padding: '0.1rem 0.3rem', borderRadius: '4px' }}>uploads/datasets/</code> and clear history metadata.
-                </>
-              ) : deleteModal.type === 'bulk' ? (
-                <>
-                  Are you sure you want to permanently delete the <strong style={{ color: '#ffffff' }}>{deleteModal.targetCount} selected datasets</strong> from server disk storage?
-                </>
-              ) : (
-                <>
-                  Are you sure you want to permanently delete <strong style={{ color: '#ffffff' }}>'{deleteModal.datasetName}'</strong> from server storage (<code style={{ color: 'var(--accent-cyan)', background: 'rgba(0,0,0,0.3)', padding: '0.1rem 0.3rem', borderRadius: '4px' }}>uploads/datasets/</code>)?
-                </>
-              )}
-            </p>
-
-            {/* Warning Callout Box */}
-            <div style={{
-              background: 'rgba(239, 68, 68, 0.1)',
-              border: '1px solid rgba(239, 68, 68, 0.25)',
-              borderRadius: '8px',
-              padding: '0.75rem 1rem',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.65rem',
-              marginBottom: '1.5rem'
-            }}>
-              <AlertTriangle size={18} className="text-rose-400 flex-shrink-0" />
-              <span style={{ fontSize: '0.8rem', color: '#fca5a5', lineHeight: '1.4' }}>
-                This action is irreversible. Physical files will be removed from disk immediately.
-              </span>
-            </div>
-
-            {/* Action Buttons */}
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
-              <button
-                type="button"
-                className="btn btn-secondary"
-                disabled={isDeleting}
-                onClick={() => setDeleteModal({ isOpen: false, type: 'single', datasetId: null, datasetName: null, targetCount: 0 })}
-                style={{ padding: '0.6rem 1.25rem', fontSize: '0.85rem' }}
-              >
-                Cancel
-              </button>
-
-              <button
-                type="button"
-                disabled={isDeleting}
-                onClick={handleConfirmDelete}
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  padding: '0.6rem 1.35rem',
-                  borderRadius: '8px',
-                  fontSize: '0.85rem',
-                  fontWeight: 700,
-                  cursor: isDeleting ? 'not-allowed' : 'pointer',
-                  background: 'linear-gradient(135deg, #ef4444, #dc2626)',
-                  color: '#ffffff',
-                  border: 'none',
-                  boxShadow: '0 4px 15px rgba(239, 68, 68, 0.4)',
-                  opacity: isDeleting ? 0.7 : 1
-                }}
-              >
-                {isDeleting ? (
-                  <>
-                    <RefreshCw size={15} className="animate-spin" /> Deleting...
-                  </>
-                ) : (
-                  <>
-                    <Trash2 size={15} /> 
-                    {deleteModal.type === 'all' 
-                      ? `Confirm Delete All (${deleteModal.targetCount})` 
-                      : deleteModal.type === 'bulk'
-                      ? `Delete ${deleteModal.targetCount} Selected`
-                      : 'Confirm Delete'}
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* 🗑️ UNIQUE GLASSMORPHIC DELETE CONFIRMATION MODAL */}
+      <DeleteConfirmationModal
+        isOpen={deleteModal.isOpen}
+        onClose={() => !isDeleting && setDeleteModal({ isOpen: false, type: 'single', datasetId: null, datasetName: null, targetCount: 0 })}
+        onConfirm={handleConfirmDelete}
+        isDeleting={isDeleting}
+        title={
+          deleteModal.type === 'all' 
+            ? 'Delete All Datasets?' 
+            : deleteModal.type === 'bulk' 
+            ? `Delete ${deleteModal.targetCount} Datasets?` 
+            : 'Delete Stored Dataset?'
+        }
+        subtitle="Permanent Server Storage Purge"
+        itemName={deleteModal.datasetName || 'Dataset'}
+        itemType={deleteModal.type}
+        targetCount={deleteModal.targetCount}
+        storagePath="uploads/datasets/"
+        recordsCount={
+          deleteModal.type === 'single'
+            ? datasets.find(d => d.id === deleteModal.datasetId)?.rowCount
+            : null
+        }
+        fileSize={
+          deleteModal.type === 'single'
+            ? datasets.find(d => d.id === deleteModal.datasetId)?.fileSize
+            : null
+        }
+      />
 
     </div>
   );

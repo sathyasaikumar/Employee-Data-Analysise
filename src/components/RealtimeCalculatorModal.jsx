@@ -22,6 +22,7 @@ import {
   ArrowRight,
   ShieldCheck
 } from 'lucide-react';
+import DeleteConfirmationModal from './DeleteConfirmationModal';
 
 export default function RealtimeCalculatorModal({
   isOpen,
@@ -32,9 +33,11 @@ export default function RealtimeCalculatorModal({
   schema = {},
   totalRows = 0,
   filteredRows = 0,
-  datasetName = 'Active Dataset',
-  theme = 'dark'
+  datasetName = 'Workforce Dataset',
+  theme = 'dark',
+  onDeleteSuccess = null
 }) {
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   // Modal window states
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [activeTab, setActiveTab] = useState(initialMode); // 'standard' | 'workforce' | 'stats' | 'history'
@@ -1450,12 +1453,7 @@ export default function RealtimeCalculatorModal({
                     <button
                       type="button"
                       className="history-action-btn danger"
-                      onClick={() => {
-                        if (window.confirm('Clear all calculation history?')) {
-                          setCalcHistory([]);
-                          try { localStorage.removeItem('realtime_calc_history'); } catch {}
-                        }
-                      }}
+                      onClick={() => setIsDeleteConfirmOpen(true)}
                     >
                       <Trash2 size={12} /> Clear Tape
                     </button>
@@ -1530,6 +1528,37 @@ export default function RealtimeCalculatorModal({
           </div>
         </div>
       </div>
+
+      {/* 🗑️ UNIQUE GLASSMORPHIC DELETE CONFIRMATION MODAL */}
+      <DeleteConfirmationModal
+        isOpen={isDeleteConfirmOpen}
+        onClose={() => setIsDeleteConfirmOpen(false)}
+        onConfirm={() => {
+          const count = calcHistory.length;
+          setCalcHistory([]);
+          try { localStorage.removeItem('realtime_calc_history'); } catch {}
+          if (onDeleteSuccess) {
+            onDeleteSuccess({
+              mode: 'delete',
+              name: 'Calculation Tape Memory',
+              deletedCount: count,
+              storagePath: 'localStorage: realtime_calc_history',
+              badge: '🗑️ CALCULATION TAPE CLEARED',
+              desc: `All ${count} recorded calculations and formula history were successfully erased.`,
+              timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            });
+          }
+          setIsDeleteConfirmOpen(false);
+        }}
+        title="Clear Calculation Tape History?"
+        subtitle="Permanent Memory Clear"
+        itemName={`All ${calcHistory.length} Calculation Records`}
+        itemType="calculator"
+        targetCount={calcHistory.length}
+        storagePath="Session Calculation Tape"
+        warningMessage="Are you sure you want to clear all recorded calculations? This will reset the tape history."
+        confirmButtonText="Clear All Calculations"
+      />
     </div>,
     document.body
   );

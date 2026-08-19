@@ -18,6 +18,7 @@ import AutoMLEngineModal from './components/AutoMLEngineModal';
 import DeepLearningExecutiveModal from './components/DeepLearningExecutiveModal';
 import DeepLearningStudioModal from './components/DeepLearningStudioModal';
 import RealtimeCalculatorModal from './components/RealtimeCalculatorModal';
+import DataCleaningStudioModal from './components/DataCleaningStudioModal';
 import VoiceAssistant from './components/VoiceAssistant';
 import TransferNotificationPopup from './components/TransferNotificationPopup';
 import StorageExplorerModal from './components/StorageExplorerModal';
@@ -121,6 +122,7 @@ export default function App() {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
 
   // AI, AutoML & Deep Learning Modal States
+  const [isCleaningStudioOpen, setIsCleaningStudioOpen] = useState(false);
   const [isAutoMLOpen, setIsAutoMLOpen] = useState(false);
   const [isMLPipelineOpen, setIsMLPipelineOpen] = useState(false);
   const [isDLExecutiveOpen, setIsDLExecutiveOpen] = useState(false);
@@ -762,6 +764,7 @@ export default function App() {
         theme={theme}
         onToggleTheme={handleToggleTheme}
         onSetTheme={(newTheme) => setTheme(newTheme)}
+        onOpenDataCleaner={() => setIsCleaningStudioOpen(true)}
         onOpenMLPipeline={() => setIsMLPipelineOpen(true)}
         onCloseMLPipeline={() => setIsMLPipelineOpen(false)}
         onOpenAutoML={() => setIsAutoMLOpen(true)}
@@ -970,6 +973,22 @@ export default function App() {
                   <GitCompare size={13} /> Comparison Analysis
                 </button>
 
+                {/* 🧠 ADVANCED AI DATA CLEANING & PREPROCESSING BUTTON */}
+                <button
+                  type="button"
+                  className="nav-cleaner-single-btn"
+                  onClick={() => setIsCleaningStudioOpen(true)}
+                  title="Open AI Dataset Cleaning, Profiling & Preprocessing Studio"
+                >
+                  <span className="nav-cleaner-btn-pulse">
+                    <Sparkles size={12} className="nav-cleaner-icon" />
+                  </span>
+                  <span className="nav-cleaner-btn-text">AI Data Cleaner</span>
+                  <span className="nav-cleaner-count-tag">
+                    PRO
+                  </span>
+                </button>
+
                 {/* ⚠️ AUTOMATIC ANOMALY DETECTION - SINGLE-CLICK COMPACT BUTTON */}
                 {anomaliesData && (
                   <button
@@ -979,7 +998,7 @@ export default function App() {
                     title="Open Automatic Anomaly Detection with 5 Unique AI Models"
                   >
                     <span className="nav-anomalies-btn-pulse">
-                      <AlertTriangle size={12} className="text-rose-400" />
+                      <AlertTriangle size={12} className="nav-anomalies-icon" />
                     </span>
                     <span className="nav-anomalies-btn-text">Anomaly Detection</span>
                     <span className="nav-anomalies-count-tag">
@@ -1084,6 +1103,38 @@ export default function App() {
 
       {/* GDPR Cookie Consent & Data Privacy Banner */}
       <CookieConsentBanner />
+
+      {/* 🧠 Advanced AI-Powered Dataset Cleaning & Preprocessing Studio Modal */}
+      <DataCleaningStudioModal
+        isOpen={isCleaningStudioOpen}
+        onClose={() => setIsCleaningStudioOpen(false)}
+        data={pageData && pageData.length > 0 ? pageData : SAMPLE_DATASETS.workforce?.data}
+        headers={headers && headers.length > 0 ? headers : SAMPLE_DATASETS.workforce?.headers}
+        schema={schema}
+        datasetName={datasetName || 'Active Dataset'}
+        theme={theme}
+        onApplyCleanedData={(cleanedRows, cleanedHeaders) => {
+          if (!cleanedRows || cleanedRows.length === 0) return;
+          setPageData(cleanedRows.slice(0, 100));
+          setTotalRows(cleanedRows.length);
+          setFilteredCount(cleanedRows.length);
+          setHeaders(cleanedHeaders);
+          setHealthScore(100);
+          setMissingCells(0);
+          setDuplicateCount(0);
+          setCompletenessScore(100);
+        }}
+        onLaunchAutoML={(cleanedRows, cleanedHeaders) => {
+          if (cleanedRows && cleanedRows.length > 0) {
+            setPageData(cleanedRows.slice(0, 100));
+            setTotalRows(cleanedRows.length);
+            setFilteredCount(cleanedRows.length);
+            setHeaders(cleanedHeaders);
+          }
+          setIsCleaningStudioOpen(false);
+          setIsAutoMLOpen(true);
+        }}
+      />
 
       {/* AutoML Model Intelligence Engine Modal */}
       <AutoMLEngineModal 

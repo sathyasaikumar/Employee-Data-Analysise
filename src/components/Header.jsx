@@ -6,6 +6,7 @@ import {
   Trash2, Plus, Search, FileSpreadsheet, Check, RefreshCw, RotateCcw, Mic, Calculator, HardDrive
 } from 'lucide-react';
 import VoiceAssistant from './VoiceAssistant';
+import DeleteConfirmationModal from './DeleteConfirmationModal';
 
 export default function Header({
   hasData,
@@ -36,6 +37,7 @@ export default function Header({
   theme = 'dark',
   onToggleTheme,
   onSetTheme,
+  onOpenDataCleaner,
   onOpenAutoML,
   onCloseAutoML,
   onOpenDLExecutive,
@@ -68,6 +70,33 @@ export default function Header({
   const folderRef = useRef(null);
   const datasetMenuRef = useRef(null);
   const quickFileInputRef = useRef(null);
+
+  // In-app Delete Confirmation Modal State
+  const [deleteConfirmState, setDeleteConfirmState] = useState({
+    isOpen: false,
+    dataset: null,
+    isActiveDataset: false
+  });
+  const [isDeletingDataset, setIsDeletingDataset] = useState(false);
+
+  const handleConfirmDeleteDataset = async () => {
+    if (!deleteConfirmState.dataset) return;
+    setIsDeletingDataset(true);
+    try {
+      if (deleteConfirmState.dataset.id && onDeleteDataset) {
+        await onDeleteDataset(deleteConfirmState.dataset.id);
+      }
+      if (deleteConfirmState.isActiveDataset && onResetData) {
+        onResetData();
+      }
+      setIsDatasetMenuOpen(false);
+      setDeleteConfirmState({ isOpen: false, dataset: null, isActiveDataset: false });
+    } catch (err) {
+      console.error('Delete error in header:', err);
+    } finally {
+      setIsDeletingDataset(false);
+    }
+  };
 
   // Close dataset dropdown on click outside
   useEffect(() => {
@@ -279,16 +308,14 @@ export default function Header({
                     <button
                       type="button"
                       className="hub-btn delete-btn"
-                      onClick={async (e) => {
+                      onClick={(e) => {
                         e.stopPropagation();
-                        if (window.confirm(`Delete active dataset "${datasetName}"?`)) {
-                          const match = (datasetsList || []).find(d => d.originalName === datasetName || d.savedName === datasetName);
-                          if (match && onDeleteDataset) {
-                            await onDeleteDataset(match.id);
-                          }
-                          if (onResetData) onResetData();
-                          setIsDatasetMenuOpen(false);
-                        }
+                        const match = (datasetsList || []).find(d => d.originalName === datasetName || d.savedName === datasetName);
+                        setDeleteConfirmState({
+                          isOpen: true,
+                          dataset: match || { id: null, originalName: datasetName || 'Active Dataset', rowCount: totalRows },
+                          isActiveDataset: true
+                        });
                       }}
                       title="Delete active dataset"
                     >
@@ -399,12 +426,13 @@ export default function Header({
                                 <button
                                   type="button"
                                   className="hub-row-icon-btn delete"
-                                  onClick={async (e) => {
+                                  onClick={(e) => {
                                     e.stopPropagation();
-                                    if (window.confirm(`Permanently delete "${ds.originalName}" from server storage?`)) {
-                                      if (onDeleteDataset) await onDeleteDataset(ds.id);
-                                      if (isActive && onResetData) onResetData();
-                                    }
+                                    setDeleteConfirmState({
+                                      isOpen: true,
+                                      dataset: ds,
+                                      isActiveDataset: isActive
+                                    });
                                   }}
                                   title="Delete dataset"
                                 >
@@ -421,6 +449,7 @@ export default function Header({
             )}
           </div>
         )}
+
 
         {/* UNIQUE ADVANCED FOLDER-LIKE AUTOML ENGINE BUTTON */}
         <div className="header-pill-item automl-folder-btn-container">
@@ -487,128 +516,165 @@ export default function Header({
             <div className="folder-dropdown-menu">
               <div className="folder-dropdown-header">
                 <div className="folder-header-title">
-                  <Folder size={13} style={{ color: '#6366f1' }} />
+                  <Folder size={14} style={{ color: '#6366f1' }} />
                   <span>System Folder</span>
                 </div>
-                <span className="folder-header-sub">System Tools & Dataset Management</span>
+                <span className="folder-header-sub">System Tools &amp; Dataset Management</span>
               </div>
 
               {/* Data & Storage Section */}
-              <div className="folder-section border-top">
+              <div className="folder-section">
                 <div className="folder-section-label">DATASET MANAGEMENT</div>
+                <div className="folder-items-grid">
+                  {/* Dataset History */}
+                  <button
+                    type="button"
+                    className={`folder-item-btn ${isHistoryMode ? 'active' : ''}`}
+                    onClick={() => {
+                      if (onHistoryClick) onHistoryClick();
+                      setIsFolderOpen(false);
+                      closeMobileMenu();
+                    }}
+                  >
+                    <div className="folder-item-icon-box cyan">
+                      <Database size={15} />
+                    </div>
+                    <div className="folder-item-text">
+                      <span className="item-title">Dataset History</span>
+                      <span className="item-desc">Stored server files</span>
+                    </div>
+                    {savedDatasetsCount > 0 && (
+                      <span className="folder-item-badge cyan">{savedDatasetsCount}</span>
+                    )}
+                  </button>
 
-                {/* Dataset History */}
-                <button
-                  type="button"
-                  className={`folder-item-btn ${isHistoryMode ? 'active' : ''}`}
-                  onClick={() => {
-                    if (onHistoryClick) onHistoryClick();
-                    setIsFolderOpen(false);
-                    closeMobileMenu();
-                  }}
-                >
-                  <Database size={13} style={{ color: '#06b6d4' }} />
-                  <div className="folder-item-text">
-                    <span className="item-title">Dataset History</span>
-                    <span className="item-desc">Stored server files</span>
-                  </div>
-                  {savedDatasetsCount > 0 && (
-                    <span className="folder-item-badge">{savedDatasetsCount}</span>
+                  {hasData && (
+                    <>
+                      <button
+                        type="button"
+                        className="folder-item-btn"
+                        onClick={() => {
+                          onExportCSV();
+                          setIsFolderOpen(false);
+                          closeMobileMenu();
+                        }}
+                      >
+                        <div className="folder-item-icon-box emerald">
+                          <Download size={15} />
+                        </div>
+                        <div className="folder-item-text">
+                          <span className="item-title">Export Filtered CSV</span>
+                          <span className="item-desc">Download active processed data</span>
+                        </div>
+                        <span className="folder-item-badge emerald">CSV</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        className="folder-item-btn"
+                        onClick={() => {
+                          if (onExportPDF) onExportPDF();
+                          setIsFolderOpen(false);
+                          closeMobileMenu();
+                        }}
+                        disabled={isExportingPDF}
+                      >
+                        <div className="folder-item-icon-box rose">
+                          <FileText size={15} />
+                        </div>
+                        <div className="folder-item-text">
+                          <span className="item-title">Executive PDF Report</span>
+                          <span className="item-desc">Download multi-page presentation</span>
+                        </div>
+                        <span className="folder-item-badge rose">PDF</span>
+                      </button>
+                    </>
                   )}
-                </button>
-
-                {hasData && (
-                  <>
-                    <button
-                      type="button"
-                      className="folder-item-btn"
-                      onClick={() => {
-                        onExportCSV();
-                        setIsFolderOpen(false);
-                        closeMobileMenu();
-                      }}
-                    >
-                      <Download size={13} style={{ color: '#10b981' }} />
-                      <div className="folder-item-text">
-                        <span className="item-title">Export Filtered CSV</span>
-                        <span className="item-desc">Download active processed data</span>
-                      </div>
-                    </button>
-
-                    <button
-                      type="button"
-                      className="folder-item-btn"
-                      onClick={() => {
-                        if (onExportPDF) onExportPDF();
-                        setIsFolderOpen(false);
-                        closeMobileMenu();
-                      }}
-                      disabled={isExportingPDF}
-                    >
-                      <FileText size={13} style={{ color: '#ec4899' }} />
-                      <div className="folder-item-text">
-                        <span className="item-title">Executive PDF Report</span>
-                        <span className="item-desc">Download multi-page PDF presentation</span>
-                      </div>
-                    </button>
-                  </>
-                )}
+                </div>
               </div>
 
               {/* System & Analytics Section */}
               <div className="folder-section border-top">
-                <div className="folder-section-label">AI & DEEP LEARNING INTELLIGENCE</div>
+                <div className="folder-section-label">AI &amp; DEEP LEARNING INTELLIGENCE</div>
+                <div className="folder-items-grid">
+                  <button
+                    type="button"
+                    className="folder-item-btn"
+                    onClick={() => {
+                      if (onOpenDLStudio) onOpenDLStudio();
+                      setIsFolderOpen(false);
+                      closeMobileMenu();
+                    }}
+                  >
+                    <div className="folder-item-icon-box purple">
+                      <Sparkles size={15} />
+                    </div>
+                    <div className="folder-item-text">
+                      <span className="item-title">DL Project Analysis Studio</span>
+                      <span className="item-desc">Real-time deep learning pipeline</span>
+                    </div>
+                    <span className="folder-item-badge purple">PRO</span>
+                  </button>
 
-                <button
-                  type="button"
-                  className="folder-item-btn"
-                  onClick={() => {
-                    if (onOpenDLStudio) onOpenDLStudio();
-                    setIsFolderOpen(false);
-                    closeMobileMenu();
-                  }}
-                >
-                  <Sparkles size={13} style={{ color: '#a855f7' }} />
-                  <div className="folder-item-text">
-                    <span className="item-title">DL Project Analysis Studio</span>
-                    <span className="item-desc">Real-time deep learning pipeline & simulator</span>
-                  </div>
-                  <span className="folder-item-badge purple">PRO</span>
-                </button>
+                  <button
+                    type="button"
+                    className="folder-item-btn"
+                    onClick={() => {
+                      if (onOpenDLExecutive) onOpenDLExecutive();
+                      setIsFolderOpen(false);
+                      closeMobileMenu();
+                    }}
+                  >
+                    <div className="folder-item-icon-box violet">
+                      <Brain size={15} />
+                    </div>
+                    <div className="folder-item-text">
+                      <span className="item-title">DL Architecture &amp; Summary</span>
+                      <span className="item-desc">Executive guide &amp; matrix</span>
+                    </div>
+                    <span className="folder-item-badge violet">DOCS</span>
+                  </button>
 
-                <button
-                  type="button"
-                  className="folder-item-btn"
-                  onClick={() => {
-                    if (onOpenDLExecutive) onOpenDLExecutive();
-                    setIsFolderOpen(false);
-                    closeMobileMenu();
-                  }}
-                >
-                  <Brain size={13} style={{ color: '#c084fc' }} />
-                  <div className="folder-item-text">
-                    <span className="item-title">DL Architecture & Summary</span>
-                    <span className="item-desc">Executive guide, matrix & checklists</span>
-                  </div>
-                  <span className="folder-item-badge purple">DOCS</span>
-                </button>
+                  <a
+                    href="/Corporate_Access_Intelligence_System_Total_Implementation_Plan.pdf"
+                    download="Corporate_Access_Intelligence_System_Total_Implementation_Plan.pdf"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="folder-item-btn"
+                    onClick={() => {
+                      setIsFolderOpen(false);
+                      closeMobileMenu();
+                    }}
+                  >
+                    <div className="folder-item-icon-box sky">
+                      <BookOpen size={15} />
+                    </div>
+                    <div className="folder-item-text">
+                      <span className="item-title">Total Implementation Plan</span>
+                      <span className="item-desc">Download complete 5-page blueprint</span>
+                    </div>
+                    <span className="folder-item-badge sky">PDF</span>
+                  </a>
 
-                <button
-                  type="button"
-                  className="folder-item-btn"
-                  onClick={() => {
-                    if (onOpenAutoML) onOpenAutoML();
-                    setIsFolderOpen(false);
-                    closeMobileMenu();
-                  }}
-                >
-                  <Cpu size={13} style={{ color: '#38bdf8' }} />
-                  <div className="folder-item-text">
-                    <span className="item-title">AutoML Studio</span>
-                    <span className="item-desc">Interactive model training & SHAP</span>
-                  </div>
-                  <span className="folder-item-badge cyan">AI</span>
-                </button>
+                  <button
+                    type="button"
+                    className="folder-item-btn"
+                    onClick={() => {
+                      if (onOpenAutoML) onOpenAutoML();
+                      setIsFolderOpen(false);
+                      closeMobileMenu();
+                    }}
+                  >
+                    <div className="folder-item-icon-box cyan">
+                      <Cpu size={15} />
+                    </div>
+                    <div className="folder-item-text">
+                      <span className="item-title">AutoML Studio</span>
+                      <span className="item-desc">Interactive model training &amp; SHAP</span>
+                    </div>
+                    <span className="folder-item-badge cyan">AI</span>
+                  </button>
+                </div>
               </div>
 
               {/* AI Voice Control & Assistant Section */}
@@ -780,6 +846,23 @@ export default function Header({
           )}
         </div>
       </div>
+
+      {/* 🗑️ UNIQUE GLASSMORPHIC DELETE CONFIRMATION MODAL */}
+      <DeleteConfirmationModal
+        isOpen={deleteConfirmState.isOpen}
+        onClose={() => !isDeletingDataset && setDeleteConfirmState({ isOpen: false, dataset: null, isActiveDataset: false })}
+        onConfirm={handleConfirmDeleteDataset}
+        isDeleting={isDeletingDataset}
+        title={deleteConfirmState.isActiveDataset ? `Delete Active Dataset?` : `Delete Stored Dataset?`}
+        subtitle="Permanent Server Storage Purge"
+        itemName={deleteConfirmState.dataset?.originalName || datasetName || 'Dataset'}
+        itemType="dataset"
+        targetCount={1}
+        storagePath="uploads/datasets/"
+        recordsCount={deleteConfirmState.dataset?.rowCount}
+        fileSize={deleteConfirmState.dataset?.fileSize}
+        theme={theme}
+      />
     </header>
   );
 }

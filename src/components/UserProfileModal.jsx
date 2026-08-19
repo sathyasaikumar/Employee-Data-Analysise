@@ -14,6 +14,7 @@ import {
 import DatasetHistory from './DatasetHistory';
 import LiveUserTracker from './LiveUserTracker';
 import { StorageExplorerContent } from './StorageExplorerModal';
+import DeleteConfirmationModal from './DeleteConfirmationModal';
 
 const PRESET_AVATARS = [
   { id: 'avatar1', name: 'Executive Male Portrait', url: '/avatars/avatar1.png' },
@@ -36,7 +37,8 @@ export default function UserProfileModal({
   onSeedSample = () => {},
   onOpenUpload,
   liveStats = null,
-  isLoadingDatasets = false
+  isLoadingDatasets = false,
+  onDeleteSuccess = null
 }) {
   const [profile, setProfile] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -275,18 +277,51 @@ export default function UserProfileModal({
     document.body.removeChild(link);
   };
 
-  const handleDeleteSession = (sessionId) => {
-    deleteLoginSession(userId, sessionId);
-    const updatedStats = calculateSessionStats(userId);
-    setStats(updatedStats);
-    setHistory(updatedStats.history);
-  };
+  // Delete Confirmation State for Sessions & History
+  const [deleteConfirmState, setDeleteConfirmState] = useState({
+    isOpen: false,
+    type: 'session', // 'session' | 'history'
+    sessionId: null,
+    title: '',
+    itemName: ''
+  });
 
-  const handleClearAllHistory = () => {
-    clearLoginHistory(userId);
-    const updatedStats = calculateSessionStats(userId);
-    setStats(updatedStats);
-    setHistory(updatedStats.history);
+  const handleConfirmDelete = () => {
+    if (deleteConfirmState.type === 'history') {
+      const count = history.length;
+      clearLoginHistory(userId);
+      const updatedStats = calculateSessionStats(userId);
+      setStats(updatedStats);
+      setHistory(updatedStats.history);
+      if (onDeleteSuccess) {
+        onDeleteSuccess({
+          mode: 'delete',
+          name: 'Session Activity History',
+          deletedCount: count,
+          storagePath: 'database/sessions/',
+          badge: '🗑️ SESSION HISTORY PURGED',
+          desc: 'All login session activity logs for this user were successfully cleared.',
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        });
+      }
+    } else if (deleteConfirmState.type === 'session') {
+      deleteLoginSession(userId, deleteConfirmState.sessionId);
+      const updatedStats = calculateSessionStats(userId);
+      setStats(updatedStats);
+      setHistory(updatedStats.history);
+      if (onDeleteSuccess) {
+        onDeleteSuccess({
+          mode: 'delete',
+          name: deleteConfirmState.itemName,
+          deletedCount: 1,
+          storagePath: 'database/sessions/',
+          badge: '🗑️ LOGIN SESSION DELETED',
+          desc: 'The specified login session audit record was permanently unlinked and deleted.',
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        });
+      }
+    }
+    setDeleteConfirmState({ isOpen: false, type: 'session', sessionId: null, title: '', itemName: '' });
   };
 
   // Filtered history records
@@ -853,7 +888,13 @@ export default function UserProfileModal({
                     <button 
                       type="button" 
                       className="btn btn-secondary btn-clear-history"
-                      onClick={handleClearAllHistory}
+                      onClick={() => setDeleteConfirmState({
+                        isOpen: true,
+                        type: 'history',
+                        sessionId: null,
+                        title: 'Clear Login Session History?',
+                        itemName: `All ${history.length} Session Logs`
+                      })}
                       title="Delete completed session history logs"
                       style={{ color: 'var(--accent-rose)', borderColor: 'rgba(239, 68, 68, 0.3)', display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}
                     >
@@ -913,7 +954,13 @@ export default function UserProfileModal({
                             <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
                               <button
                                 type="button"
-                                onClick={() => handleDeleteSession(sess.id)}
+                                onClick={() => setDeleteConfirmState({
+                                  isOpen: true,
+                                  type: 'session',
+                                  sessionId: sess.id,
+                                  title: 'Delete Login Session Record?',
+                                  itemName: `Session #${sess.id ? String(sess.id).slice(0, 8) : 'Record'}`
+                                })}
                                 title="Delete this session record"
                                 style={{
                                   background: 'rgba(239, 68, 68, 0.12)',
@@ -1051,6 +1098,25 @@ export default function UserProfileModal({
           </div>
         </div>
       )}
+
+      {/* 🗑️ UNIQUE GLASSMORPHIC DELETE CONFIRMATION MODAL */}
+      <DeleteConfirmationModal
+        isOpen={deleteConfirmState.isOpen}
+        onClose={() => setDeleteConfirmState({ isOpen: false, type: 'session', sessionId: null, title: '', itemName: '' })}
+        onConfirm={handleConfirmDelete}
+        title={deleteConfirmState.title || 'Delete Session Record?'}
+        subtitle="Permanent User Session Purge"
+        itemName={deleteConfirmState.itemName || 'Session Record'}
+        itemType={deleteConfirmState.type === 'history' ? 'history' : 'session'}
+        targetCount={deleteConfirmState.type === 'history' ? history.length : 1}
+        storagePath="database/sessions/"
+        warningMessage={
+          deleteConfirmState.type === 'history'
+            ? `Are you sure you want to permanently clear all ${history.length} login session activity logs?`
+            : `Are you sure you want to delete this login session record?`
+        }
+        confirmButtonText={deleteConfirmState.type === 'history' ? 'Clear All History' : 'Delete Session'}
+      />
 
     </div>,
     document.body
