@@ -1,11 +1,55 @@
 [
   {
+    "id": "ds_1787206901021_gb5ll",
+    "originalName": "Decision Tree Play Cricket Data.csv",
+    "savedName": "dataset_1787206900863_hwdxd0_Decision_Tree_Play_Cricket_Data.csv",
+    "filePath": "uploads/datasets/dataset_1787206900863_hwdxd0_Decision_Tree_Play_Cricket_Data.csv",
+    "uploadDate": "2026-08-20T06:21:41.021Z",
+    "uploadDateFormatted": "Aug 20, 2026, 11:51 AM",
+    "fileSize": "1.1 KB",
+    "fileSizeBytes": 1123,
+    "fileType": "csv",
+    "rowCount": 30,
+    "columnCount": 4,
+    "columns": [
+      {
+        "name": "Gender",
+        "type": "categorical",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "Height",
+        "type": "categorical",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "Class",
+        "type": "categorical",
+        "missingCount": 0,
+        "nullRatio": 0
+      },
+      {
+        "name": "Play_Cricket_Flag",
+        "type": "numeric",
+        "missingCount": 0,
+        "nullRatio": 0
+      }
+    ],
+    "healthScore": 79,
+    "missingCells": 0,
+    "duplicateCount": 21,
+    "completenessScore": 100,
+    "status": "Active"
+  },
+  {
     "id": "ds_seed_1001",
     "originalName": "workforce_intelligence_2026.csv",
     "savedName": "dataset_seed_1001_workforce_intelligence_2026.csv",
     "filePath": "uploads/datasets/dataset_seed_1001_workforce_intelligence_2026.csv",
-    "uploadDate": "2026-08-20T04:36:24.305Z",
-    "uploadDateFormatted": "Aug 20, 2026, 10:06 AM",
+    "uploadDate": "2026-08-20T06:01:49.864Z",
+    "uploadDateFormatted": "Aug 20, 2026, 11:31 AM",
     "fileSize": "979 Bytes",
     "fileSizeBytes": 979,
     "fileType": "csv",

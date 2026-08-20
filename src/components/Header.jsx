@@ -58,6 +58,7 @@ export default function Header({
   onSelectDataset,
   onDeleteDataset,
   onFileUpload,
+  onOpenMedallionExport,
   totalRows = 0,
   headersCount = 0,
   healthScore = 100
@@ -299,11 +300,18 @@ export default function Header({
                       className="hub-btn download-btn"
                       onClick={(e) => {
                         e.stopPropagation();
-                        if (onExportCSV) onExportCSV();
+                        setIsDatasetMenuOpen(false);
+                        if (onOpenMedallionExport) onOpenMedallionExport();
+                        else if (onExportCSV) onExportCSV();
                       }}
-                      title="Download active dataset"
+                      title="Download active dataset in Bronze (Raw), Silver (Cleaned), or Gold (ML-Ready) tier"
+                      style={{
+                        background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.18), rgba(217, 119, 6, 0.28))',
+                        borderColor: 'rgba(245, 158, 11, 0.45)',
+                        color: '#fbbf24'
+                      }}
                     >
-                      <Download size={12} /> Download File
+                      <Download size={12} /> Download File (Bronze/Silver/Gold)
                     </button>
                     <button
                       type="button"

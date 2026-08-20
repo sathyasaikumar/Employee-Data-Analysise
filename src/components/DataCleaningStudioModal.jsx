@@ -25,6 +25,15 @@ import {
   exportDatasetXLSX,
   exportDatasetJSON
 } from '../utils/dataCleanerEngine';
+import {
+  generateBronzeDataset,
+  generateSilverDataset,
+  generateGoldDataset,
+  downloadMedallionCSV,
+  downloadMedallionXLSX,
+  downloadMedallionJSON,
+  downloadFullMedallionSuiteWorkbook
+} from '../utils/medallionExporter';
 
 export default function DataCleaningStudioModal({
   isOpen,
@@ -1424,74 +1433,115 @@ export default function DataCleaningStudioModal({
 
           {/* TAB 9: EXPORT SUITE */}
           {activeTab === 'export' && (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.4rem' }}>
-              <div className="cleaner-card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: '1.2rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.4rem' }}>
+              {/* Medallion Full Suite Banner */}
+              <div
+                style={{
+                  padding: '1.25rem',
+                  borderRadius: '14px',
+                  background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(236, 72, 153, 0.12), rgba(59, 130, 246, 0.15))',
+                  border: '1px solid rgba(245, 158, 11, 0.35)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  flexWrap: 'wrap',
+                  gap: '1rem'
+                }}
+              >
                 <div>
-                  <div style={{ width: '42px', height: '42px', borderRadius: '12px', background: 'rgba(16, 185, 129, 0.15)', color: '#059669', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '0.85rem' }}>
-                    <FileSpreadsheet size={20} />
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', fontWeight: 800, fontSize: '0.95rem', color: '#fbbf24' }}>
+                    <Sparkles size={16} /> Medallion Architecture Full Suite (.xlsx)
                   </div>
-                  <h4 className="cleaner-card-title">Cleaned CSV Dataset</h4>
-                  <p className="cleaner-card-desc">Export fully cleaned and imputed dataset in standard CSV format with UTF-8 BOM encoding.</p>
+                  <p style={{ fontSize: '0.78rem', color: 'var(--text-muted, #94a3b8)', margin: '4px 0 0 0' }}>
+                    Export 🥉 Bronze (Raw Ingestion), 🥈 Silver (Cleaned), 🥇 Gold (ML Curated Feature Store), and Audit Logs in 1 Excel workbook.
+                  </p>
                 </div>
                 <button
                   type="button"
-                  onClick={() => exportDatasetCSV(workingData, `${datasetName.replace('.csv', '')}_CLEANED.csv`)}
+                  onClick={() => downloadFullMedallionSuiteWorkbook({ datasetName, rawData: data, headers, schema })}
                   className="cleaner-btn-primary"
-                  style={{ width: '100%', background: 'linear-gradient(135deg, #10b981, #059669)' }}
+                  style={{ background: 'linear-gradient(135deg, #f59e0b, #d97706)', padding: '0.65rem 1.4rem', fontWeight: 700 }}
                 >
-                  Download CSV
+                  <Download size={14} /> Download Master Suite (.xlsx)
                 </button>
               </div>
 
-              <div className="cleaner-card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: '1.2rem' }}>
-                <div>
-                  <div style={{ width: '42px', height: '42px', borderRadius: '12px', background: 'rgba(2, 132, 199, 0.15)', color: '#0284c7', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '0.85rem' }}>
-                    <FileSpreadsheet size={20} />
+              {/* Medallion Tiers 3-Column Grid */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.2rem' }}>
+                {/* 🥉 Bronze Raw Tier */}
+                <div className="cleaner-card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: '1rem', border: '1px solid rgba(217, 119, 6, 0.35)' }}>
+                  <div>
+                    <span style={{ background: 'rgba(217, 119, 6, 0.15)', color: '#d97706', border: '1px solid rgba(217, 119, 6, 0.3)', padding: '2px 8px', borderRadius: '6px', fontSize: '0.7rem', fontWeight: 800 }}>
+                      🥉 BRONZE TIER
+                    </span>
+                    <h4 className="cleaner-card-title" style={{ marginTop: '0.5rem' }}>Raw Ingested Dataset</h4>
+                    <p className="cleaner-card-desc">Original untouched source records as uploaded, preserving initial nulls, duplicates, and schema.</p>
                   </div>
-                  <h4 className="cleaner-card-title">Cleaned Excel (XLSX)</h4>
-                  <p className="cleaner-card-desc">Export multi-column workbook formatted for Microsoft Excel and Google Sheets.</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => exportDatasetXLSX(workingData, `${datasetName.replace('.csv', '')}_CLEANED.xlsx`)}
-                  className="cleaner-btn-primary"
-                  style={{ width: '100%', background: 'linear-gradient(135deg, #0284c7, #0369a1)' }}
-                >
-                  Download Excel
-                </button>
-              </div>
-
-              <div className="cleaner-card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: '1.2rem' }}>
-                <div>
-                  <div style={{ width: '42px', height: '42px', borderRadius: '12px', background: 'rgba(147, 51, 234, 0.15)', color: '#9333ea', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '0.85rem' }}>
-                    <FileText size={20} />
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.35rem' }}>
+                    <button type="button" onClick={() => downloadMedallionCSV(data, `${datasetName}_BRONZE_RAW.csv`)} className="cleaner-btn-secondary" style={{ padding: '0.4rem 0.2rem', fontSize: '0.72rem', justifyContent: 'center' }}>CSV</button>
+                    <button type="button" onClick={() => downloadMedallionXLSX(data, 'Bronze Raw Data', `${datasetName}_BRONZE_RAW.xlsx`)} className="cleaner-btn-secondary" style={{ padding: '0.4rem 0.2rem', fontSize: '0.72rem', justifyContent: 'center' }}>XLSX</button>
+                    <button type="button" onClick={() => downloadMedallionJSON(data, `${datasetName}_BRONZE_RAW.json`)} className="cleaner-btn-secondary" style={{ padding: '0.4rem 0.2rem', fontSize: '0.72rem', justifyContent: 'center' }}>JSON</button>
                   </div>
-                  <h4 className="cleaner-card-title">Cleaned JSON Dataset</h4>
-                  <p className="cleaner-card-desc">Export structured array records for downstream REST APIs and ML endpoints.</p>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => exportDatasetJSON(workingData, `${datasetName.replace('.csv', '')}_CLEANED.json`)}
-                  className="cleaner-btn-primary"
-                  style={{ width: '100%', background: 'linear-gradient(135deg, #a855f7, #7c3aed)' }}
-                >
-                  Download JSON
-                </button>
+
+                {/* 🥈 Silver Cleaned Tier */}
+                <div className="cleaner-card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: '1rem', border: '1px solid rgba(148, 163, 184, 0.45)' }}>
+                  <div>
+                    <span style={{ background: 'rgba(148, 163, 184, 0.15)', color: '#94a3b8', border: '1px solid rgba(148, 163, 184, 0.35)', padding: '2px 8px', borderRadius: '6px', fontSize: '0.7rem', fontWeight: 800 }}>
+                      🥈 SILVER TIER
+                    </span>
+                    <h4 className="cleaner-card-title" style={{ marginTop: '0.5rem' }}>Cleaned &amp; Standardized</h4>
+                    <p className="cleaner-card-desc">Nulls imputed, outliers treated, duplicates purged, and categorical casings conformed.</p>
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.35rem' }}>
+                    <button type="button" onClick={() => downloadMedallionCSV(workingData, `${datasetName}_SILVER_CLEANED.csv`)} className="cleaner-btn-secondary" style={{ padding: '0.4rem 0.2rem', fontSize: '0.72rem', justifyContent: 'center' }}>CSV</button>
+                    <button type="button" onClick={() => downloadMedallionXLSX(workingData, 'Silver Cleaned Data', `${datasetName}_SILVER_CLEANED.xlsx`, currentProfile?.recommendations)} className="cleaner-btn-secondary" style={{ padding: '0.4rem 0.2rem', fontSize: '0.72rem', justifyContent: 'center' }}>XLSX</button>
+                    <button type="button" onClick={() => downloadMedallionJSON(workingData, `${datasetName}_SILVER_CLEANED.json`)} className="cleaner-btn-secondary" style={{ padding: '0.4rem 0.2rem', fontSize: '0.72rem', justifyContent: 'center' }}>JSON</button>
+                  </div>
+                </div>
+
+                {/* 🥇 Gold ML Feature Store */}
+                <div className="cleaner-card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: '1rem', border: '1px solid rgba(234, 179, 8, 0.45)' }}>
+                  <div>
+                    <span style={{ background: 'rgba(234, 179, 8, 0.15)', color: '#eab308', border: '1px solid rgba(234, 179, 8, 0.35)', padding: '2px 8px', borderRadius: '6px', fontSize: '0.7rem', fontWeight: 800 }}>
+                      🥇 GOLD TIER
+                    </span>
+                    <h4 className="cleaner-card-title" style={{ marginTop: '0.5rem' }}>Curated ML Feature Store</h4>
+                    <p className="cleaner-card-desc">Feature-engineered with date decomposition, log scaling, encodings, and ML model readiness.</p>
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.35rem' }}>
+                    <button type="button" onClick={() => {
+                      const gold = generateGoldDataset(workingData, workingHeaders, schema);
+                      downloadMedallionCSV(gold.data, `${datasetName}_GOLD_ML_CURATED.csv`);
+                    }} className="cleaner-btn-secondary" style={{ padding: '0.4rem 0.2rem', fontSize: '0.72rem', justifyContent: 'center' }}>CSV</button>
+                    <button type="button" onClick={() => {
+                      const gold = generateGoldDataset(workingData, workingHeaders, schema);
+                      downloadMedallionXLSX(gold.data, 'Gold ML Curated', `${datasetName}_GOLD_ML_CURATED.xlsx`);
+                    }} className="cleaner-btn-secondary" style={{ padding: '0.4rem 0.2rem', fontSize: '0.72rem', justifyContent: 'center' }}>XLSX</button>
+                    <button type="button" onClick={() => {
+                      const gold = generateGoldDataset(workingData, workingHeaders, schema);
+                      downloadMedallionJSON(gold.data, `${datasetName}_GOLD_ML_CURATED.json`);
+                    }} className="cleaner-btn-secondary" style={{ padding: '0.4rem 0.2rem', fontSize: '0.72rem', justifyContent: 'center' }}>JSON</button>
+                  </div>
+                </div>
               </div>
 
-              <div className="cleaner-card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: '1.2rem' }}>
-                <div>
-                  <div style={{ width: '42px', height: '42px', borderRadius: '12px', background: 'rgba(2, 132, 199, 0.15)', color: '#0284c7', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '0.85rem' }}>
+              {/* Quality Audit Certificate Card */}
+              <div className="cleaner-card" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                  <div style={{ width: '42px', height: '42px', borderRadius: '12px', background: 'rgba(2, 132, 199, 0.15)', color: '#0284c7', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <Printer size={20} />
                   </div>
-                  <h4 className="cleaner-card-title">Print Quality Certificate</h4>
-                  <p className="cleaner-card-desc">Generate an executive multi-section Quality Audit &amp; Transformation Certificate formatted for PDF / A4 print.</p>
+                  <div>
+                    <h4 className="cleaner-card-title">Executive Data Quality Certificate</h4>
+                    <p className="cleaner-card-desc" style={{ margin: 0 }}>Generate an executive multi-section Quality Audit &amp; Transformation Certificate formatted for PDF / A4 print.</p>
+                  </div>
                 </div>
                 <button
                   type="button"
                   onClick={handlePrintQualityReport}
                   className="cleaner-btn-primary"
-                  style={{ width: '100%', background: 'linear-gradient(135deg, #0284c7, #4f46e5)' }}
+                  style={{ background: 'linear-gradient(135deg, #0284c7, #4f46e5)', padding: '0.65rem 1.4rem' }}
                 >
                   Print Report / PDF
                 </button>

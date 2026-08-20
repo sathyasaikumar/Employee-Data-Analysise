@@ -25,6 +25,7 @@ const DeepLearningStudioModal = lazy(() => import('./components/DeepLearningStud
 const RealtimeCalculatorModal = lazy(() => import('./components/RealtimeCalculatorModal'));
 const DataCleaningStudioModal = lazy(() => import('./components/DataCleaningStudioModal'));
 const StorageExplorerModal = lazy(() => import('./components/StorageExplorerModal'));
+const MedallionExportModal = lazy(() => import('./components/MedallionExportModal'));
 
 const ModalSuspenseLoader = () => (
   <div style={{
@@ -89,6 +90,7 @@ import {
   Database,
   Activity,
   FileSpreadsheet,
+  Award,
   X
 } from 'lucide-react';
 import { generateExecutivePDFReport } from './utils/pdfReportGenerator';
@@ -163,6 +165,7 @@ export default function App() {
   const [isAnomaliesModalOpen, setIsAnomaliesModalOpen] = useState(false);
   const [isStorageModalOpen, setIsStorageModalOpen] = useState(false);
   const [isCalculatorOpen, setIsCalculatorOpen] = useState(false);
+  const [isMedallionModalOpen, setIsMedallionModalOpen] = useState(false);
   const [calculatorInitialValue, setCalculatorInitialValue] = useState(null);
   const [calculatorInitialMode, setCalculatorInitialMode] = useState('standard');
 
@@ -840,6 +843,7 @@ export default function App() {
         onCloseAnomalies={() => setIsAnomaliesModalOpen(false)}
         onOpenStorageExplorer={() => setIsStorageModalOpen(true)}
         onOpenCalculator={() => handleOpenCalculator(null, 'standard')}
+        onOpenMedallionExport={() => setIsMedallionModalOpen(true)}
         activeTab={activeTab}
         onSelectTab={(tab) => {
           setIsUploadMode(false);
@@ -1111,6 +1115,25 @@ export default function App() {
                     <span className="nav-pdf-badge" style={{ background: '#059669', color: '#ecfdf5' }}>XLSX</span>
                   </button>
                 )}
+
+                {/* 🏅 MEDALLION DATA LAKE EXPORTER BUTTON (BRONZE, SILVER, GOLD) */}
+                {hasData && (
+                  <button
+                    type="button"
+                    className="nav-pdf-report-btn"
+                    style={{
+                      background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.18), rgba(217, 119, 6, 0.28))',
+                      borderColor: 'rgba(245, 158, 11, 0.45)',
+                      color: '#fbbf24'
+                    }}
+                    onClick={() => setIsMedallionModalOpen(true)}
+                    title="Download Dataset in Bronze (Raw), Silver (Cleaned), or Gold (ML-Curated) Medallion Standard"
+                  >
+                    <Award size={11} className="text-amber-400" />
+                    <span className="nav-pdf-btn-text" style={{ color: '#fcd34d' }}>Medallion Tiers</span>
+                    <span className="nav-pdf-badge" style={{ background: '#d97706', color: '#fffbeb' }}>🥉🥈🥇</span>
+                  </button>
+                )}
               </div>
 
               {activeTab === 'dashboard' && (
@@ -1281,6 +1304,20 @@ export default function App() {
             isOpen={isStorageModalOpen}
             onClose={() => setIsStorageModalOpen(false)}
             theme={theme}
+          />
+        )}
+
+        {/* 🏅 Medallion Architecture Exporter Modal (Bronze, Silver, Gold) */}
+        {isMedallionModalOpen && (
+          <MedallionExportModal
+            isOpen={isMedallionModalOpen}
+            onClose={() => setIsMedallionModalOpen(false)}
+            data={pageData && pageData.length > 0 ? pageData : SAMPLE_DATASETS.workforce?.data}
+            headers={headers && headers.length > 0 ? headers : SAMPLE_DATASETS.workforce?.headers}
+            schema={schema}
+            datasetName={datasetName || 'Active Dataset'}
+            theme={theme}
+            onDownloadSuccess={(info) => setTransferPopup(info)}
           />
         )}
       </Suspense>
