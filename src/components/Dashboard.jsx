@@ -329,10 +329,10 @@ export default function Dashboard({ dashboardMetrics, totalRows, filteredCount, 
   };
 
   // 3. Metric vs Secondary Cat Box Plot / Quartile Range
-  const boxCategories = Object.keys(boxPlotData).slice(0, 6);
-  const boxMedianData = boxCategories.map(c => boxPlotData[c].median);
-  const boxQ1Data = boxCategories.map(c => boxPlotData[c].q1);
-  const boxQ3Data = boxCategories.map(c => boxPlotData[c].q3);
+  const boxCategories = Object.keys(boxPlotData || {}).slice(0, 6);
+  const boxMedianData = boxCategories.map(c => boxPlotData?.[c]?.median ?? 0);
+  const boxQ1Data = boxCategories.map(c => boxPlotData?.[c]?.q1 ?? 0);
+  const boxQ3Data = boxCategories.map(c => boxPlotData?.[c]?.q3 ?? 0);
 
   const boxPlotChartData = {
     labels: boxCategories,

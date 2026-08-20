@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, Suspense, lazy } from 'react';
 import Header from './components/Header';
 import FileUpload from './components/FileUpload';
 import DatasetHistory from './components/DatasetHistory';
@@ -11,18 +11,49 @@ import DataTable from './components/DataTable';
 import StatsOverview from './components/StatsOverview';
 import ComparisonView from './components/ComparisonView';
 import LoginPage from './components/LoginPage';
-import UserProfileModal from './components/UserProfileModal';
 import CookieConsentBanner from './components/CookieConsentBanner';
-import MLPipelineModal from './components/MLPipelineModal';
-import AutoMLEngineModal from './components/AutoMLEngineModal';
-import DeepLearningExecutiveModal from './components/DeepLearningExecutiveModal';
-import DeepLearningStudioModal from './components/DeepLearningStudioModal';
-import RealtimeCalculatorModal from './components/RealtimeCalculatorModal';
-import DataCleaningStudioModal from './components/DataCleaningStudioModal';
 import VoiceAssistant from './components/VoiceAssistant';
 import TransferNotificationPopup from './components/TransferNotificationPopup';
-import StorageExplorerModal from './components/StorageExplorerModal';
 import { SAMPLE_DATASETS } from './utils/sampleData';
+
+// 🚀 Dynamic Lazy-Loaded Heavy Studio Modals for Extreme Performance
+const UserProfileModal = lazy(() => import('./components/UserProfileModal'));
+const MLPipelineModal = lazy(() => import('./components/MLPipelineModal'));
+const AutoMLEngineModal = lazy(() => import('./components/AutoMLEngineModal'));
+const DeepLearningExecutiveModal = lazy(() => import('./components/DeepLearningExecutiveModal'));
+const DeepLearningStudioModal = lazy(() => import('./components/DeepLearningStudioModal'));
+const RealtimeCalculatorModal = lazy(() => import('./components/RealtimeCalculatorModal'));
+const DataCleaningStudioModal = lazy(() => import('./components/DataCleaningStudioModal'));
+const StorageExplorerModal = lazy(() => import('./components/StorageExplorerModal'));
+
+const ModalSuspenseLoader = () => (
+  <div style={{
+    position: 'fixed',
+    inset: 0,
+    zIndex: 9999,
+    background: 'rgba(15, 23, 42, 0.75)',
+    backdropFilter: 'blur(10px)',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '1rem',
+    color: '#38bdf8',
+    fontFamily: 'Inter, system-ui, sans-serif'
+  }}>
+    <div style={{
+      width: '42px',
+      height: '42px',
+      borderRadius: '50%',
+      border: '3px solid rgba(56, 189, 248, 0.2)',
+      borderTopColor: '#38bdf8',
+      animation: 'spin 0.8s linear infinite'
+    }} />
+    <span style={{ fontSize: '0.85rem', fontWeight: 600, letterSpacing: '0.05em' }}>
+      Loading Studio Module...
+    </span>
+  </div>
+);
 import { getStoredUser, logoutUser } from './utils/auth';
 import { startSession, endActiveSession } from './utils/activityTracker';
 import { startLiveTracking, stopLiveTracking, subscribeToLiveStats, refreshLiveStatsNow } from './utils/liveTracker';
@@ -57,9 +88,11 @@ import {
   CheckCircle2,
   Database,
   Activity,
+  FileSpreadsheet,
   X
 } from 'lucide-react';
 import { generateExecutivePDFReport } from './utils/pdfReportGenerator';
+import { generateExecutiveExcelWorkbook } from './utils/excelReportGenerator';
 
 // Instant 0ms snapshot cache loader for lightning-fast refresh
 const getStoredDatasetSnapshot = () => {
@@ -676,6 +709,36 @@ export default function App() {
     }
   };
 
+  const handleExportExcel = () => {
+    try {
+      const res = generateExecutiveExcelWorkbook({
+        datasetName: datasetName || 'Workforce Dataset',
+        data: pageData,
+        headers: headers,
+        schema: schema,
+        stats: stats,
+        totalRows: totalRows,
+        healthScore: healthScore,
+        completenessScore: completenessScore,
+        missingCells: missingCells,
+        duplicateCount: duplicateCount
+      });
+
+      setTransferPopup({
+        mode: 'download',
+        type: 'XLSX',
+        filename: res.filename,
+        recordCount: totalRows,
+        columnsCount: headers ? headers.length : 0,
+        title: 'Executive Multi-Sheet Excel Workbook Exported',
+        desc: '4-Tab formatted workbook generated with Executive Summary, Column Statistics, Clean Records, and ML Insights.',
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      });
+    } catch (err) {
+      console.error('Excel Export failed:', err);
+    }
+  };
+
   const handleLogout = async () => {
     if (currentUser) {
       endActiveSession(currentUser.id || currentUser.email || currentUser.phone);
@@ -796,28 +859,32 @@ export default function App() {
         healthScore={healthScore}
       />
 
-      <UserProfileModal
-        currentUser={currentUser}
-        isOpen={isProfileOpen}
-        onClose={() => setIsProfileOpen(false)}
-        onLogout={handleLogout}
-        onUpdateUser={(updatedUser) => setCurrentUser(updatedUser)}
-        datasets={datasetsList}
-        liveStats={liveStats}
-        onSelectDataset={(id) => {
-          setIsProfileOpen(false);
-          handleSelectDataset(id);
-        }}
-        onDeleteDataset={handleDeleteHistoryDataset}
-        onDeleteAllDatasets={handleDeleteAllHistoryDatasets}
-        onDeleteBulkDatasets={handleDeleteBulkHistoryDatasets}
-        onRefreshDatasets={refreshDatasetsHistory}
-        onSeedSample={() => handleLoadSampleDataset('workforce')}
-        onOpenUpload={() => {
-          setIsProfileOpen(false);
-          setIsUploadMode(true);
-        }}
-      />
+      <Suspense fallback={<ModalSuspenseLoader />}>
+        {isProfileOpen && (
+          <UserProfileModal
+            currentUser={currentUser}
+            isOpen={isProfileOpen}
+            onClose={() => setIsProfileOpen(false)}
+            onLogout={handleLogout}
+            onUpdateUser={(updatedUser) => setCurrentUser(updatedUser)}
+            datasets={datasetsList}
+            liveStats={liveStats}
+            onSelectDataset={(id) => {
+              setIsProfileOpen(false);
+              handleSelectDataset(id);
+            }}
+            onDeleteDataset={handleDeleteHistoryDataset}
+            onDeleteAllDatasets={handleDeleteAllHistoryDatasets}
+            onDeleteBulkDatasets={handleDeleteBulkHistoryDatasets}
+            onRefreshDatasets={refreshDatasetsHistory}
+            onSeedSample={() => handleLoadSample('workforce')}
+            onOpenUpload={() => {
+              setIsProfileOpen(false);
+              setIsUploadMode(true);
+            }}
+          />
+        )}
+      </Suspense>
 
       <div className="main-layout">
         {hasData && !isUploadMode && !isHistoryMode && !isLiveUsersMode && !isLoading && isSidebarOpen && (
@@ -1025,17 +1092,26 @@ export default function App() {
                     </span>
                   </button>
                 )}
-              </div>
 
-              {activeTab === 'ai_projects' && (
-                <AIProjectExplorer
-                  onOpenMLStudio={() => setIsMLStudioOpen(true)}
-                  onOpenAutoML={() => setIsAutoMLOpen(true)}
-                  onOpenExplainableAI={() => setIsExplainableAIOpen(true)}
-                  onOpenComparisonArena={() => setIsComparisonArenaOpen(true)}
-                  initialProject={selectedAIProject}
-                />
-              )}
+                {/* 📊 MULTI-TAB EXECUTIVE EXCEL WORKBOOK BUTTON */}
+                {hasData && (
+                  <button
+                    type="button"
+                    className="nav-pdf-report-btn"
+                    style={{
+                      background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(5, 150, 105, 0.25))',
+                      borderColor: 'rgba(16, 185, 129, 0.35)',
+                      color: '#34d399'
+                    }}
+                    onClick={handleExportExcel}
+                    title="Export Professional Multi-Tab Excel Workbook (.xlsx) with Summaries, Stats & Clean Data"
+                  >
+                    <FileSpreadsheet size={11} className="text-emerald-400" />
+                    <span className="nav-pdf-btn-text" style={{ color: '#6ee7b7' }}>Executive Excel</span>
+                    <span className="nav-pdf-badge" style={{ background: '#059669', color: '#ecfdf5' }}>XLSX</span>
+                  </button>
+                )}
+              </div>
 
               {activeTab === 'dashboard' && (
                 <Dashboard
@@ -1104,93 +1180,110 @@ export default function App() {
       {/* GDPR Cookie Consent & Data Privacy Banner */}
       <CookieConsentBanner />
 
-      {/* 🧠 Advanced AI-Powered Dataset Cleaning & Preprocessing Studio Modal */}
-      <DataCleaningStudioModal
-        isOpen={isCleaningStudioOpen}
-        onClose={() => setIsCleaningStudioOpen(false)}
-        data={pageData && pageData.length > 0 ? pageData : SAMPLE_DATASETS.workforce?.data}
-        headers={headers && headers.length > 0 ? headers : SAMPLE_DATASETS.workforce?.headers}
-        schema={schema}
-        datasetName={datasetName || 'Active Dataset'}
-        theme={theme}
-        onApplyCleanedData={(cleanedRows, cleanedHeaders) => {
-          if (!cleanedRows || cleanedRows.length === 0) return;
-          setPageData(cleanedRows.slice(0, 100));
-          setTotalRows(cleanedRows.length);
-          setFilteredCount(cleanedRows.length);
-          setHeaders(cleanedHeaders);
-          setHealthScore(100);
-          setMissingCells(0);
-          setDuplicateCount(0);
-          setCompletenessScore(100);
-        }}
-        onLaunchAutoML={(cleanedRows, cleanedHeaders) => {
-          if (cleanedRows && cleanedRows.length > 0) {
-            setPageData(cleanedRows.slice(0, 100));
-            setTotalRows(cleanedRows.length);
-            setFilteredCount(cleanedRows.length);
-            setHeaders(cleanedHeaders);
-          }
-          setIsCleaningStudioOpen(false);
-          setIsAutoMLOpen(true);
-        }}
-      />
+      {/* 🧠 Suspense-wrapped Studio Modals */}
+      <Suspense fallback={<ModalSuspenseLoader />}>
+        {/* 🧠 Advanced AI-Powered Dataset Cleaning & Preprocessing Studio Modal */}
+        {isCleaningStudioOpen && (
+          <DataCleaningStudioModal
+            isOpen={isCleaningStudioOpen}
+            onClose={() => setIsCleaningStudioOpen(false)}
+            data={pageData && pageData.length > 0 ? pageData : SAMPLE_DATASETS.workforce?.data}
+            headers={headers && headers.length > 0 ? headers : SAMPLE_DATASETS.workforce?.headers}
+            schema={schema}
+            datasetName={datasetName || 'Active Dataset'}
+            theme={theme}
+            onApplyCleanedData={(cleanedRows, cleanedHeaders) => {
+              if (!cleanedRows || cleanedRows.length === 0) return;
+              setPageData(cleanedRows.slice(0, 100));
+              setTotalRows(cleanedRows.length);
+              setFilteredCount(cleanedRows.length);
+              setHeaders(cleanedHeaders);
+              setHealthScore(100);
+              setMissingCells(0);
+              setDuplicateCount(0);
+              setCompletenessScore(100);
+            }}
+            onLaunchAutoML={(cleanedRows, cleanedHeaders) => {
+              if (cleanedRows && cleanedRows.length > 0) {
+                setPageData(cleanedRows.slice(0, 100));
+                setTotalRows(cleanedRows.length);
+                setFilteredCount(cleanedRows.length);
+                setHeaders(cleanedHeaders);
+              }
+              setIsCleaningStudioOpen(false);
+              setIsAutoMLOpen(true);
+            }}
+          />
+        )}
 
-      {/* AutoML Model Intelligence Engine Modal */}
-      <AutoMLEngineModal 
-        isOpen={isAutoMLOpen}
-        onClose={() => setIsAutoMLOpen(false)}
-        data={pageData && pageData.length > 0 ? pageData : SAMPLE_DATASETS.workforce?.data}
-        headers={headers && headers.length > 0 ? headers : SAMPLE_DATASETS.workforce?.headers}
-        schema={schema}
-        datasetName={datasetName || 'Workforce Dataset'}
-      />
+        {/* AutoML Model Intelligence Engine Modal */}
+        {isAutoMLOpen && (
+          <AutoMLEngineModal 
+            isOpen={isAutoMLOpen}
+            onClose={() => setIsAutoMLOpen(false)}
+            data={pageData && pageData.length > 0 ? pageData : SAMPLE_DATASETS.workforce?.data}
+            headers={headers && headers.length > 0 ? headers : SAMPLE_DATASETS.workforce?.headers}
+            schema={schema}
+            datasetName={datasetName || 'Workforce Dataset'}
+          />
+        )}
 
-      {/* 14-Stage End-to-End ML Workflow Pipeline Modal */}
-      <MLPipelineModal
-        isOpen={isMLPipelineOpen}
-        onClose={() => setIsMLPipelineOpen(false)}
-        activeDatasetName={datasetName || 'Workforce Dataset'}
-      />
+        {/* 14-Stage End-to-End ML Workflow Pipeline Modal */}
+        {isMLPipelineOpen && (
+          <MLPipelineModal
+            isOpen={isMLPipelineOpen}
+            onClose={() => setIsMLPipelineOpen(false)}
+            activeDatasetName={datasetName || 'Workforce Dataset'}
+          />
+        )}
 
-      {/* Executive Summary & Deep Learning Architecture Intelligence Hub Modal */}
-      <DeepLearningExecutiveModal
-        isOpen={isDLExecutiveOpen}
-        onClose={() => setIsDLExecutiveOpen(false)}
-      />
+        {/* Executive Summary & Deep Learning Architecture Intelligence Hub Modal */}
+        {isDLExecutiveOpen && (
+          <DeepLearningExecutiveModal
+            isOpen={isDLExecutiveOpen}
+            onClose={() => setIsDLExecutiveOpen(false)}
+          />
+        )}
 
-      {/* Deep Learning Project Analysis Studio (Real-Time Learning, Training & Simulator) */}
-      <DeepLearningStudioModal
-        isOpen={isDLStudioOpen}
-        onClose={() => setIsDLStudioOpen(false)}
-        data={pageData && pageData.length > 0 ? pageData : SAMPLE_DATASETS.workforce?.data}
-        headers={headers && headers.length > 0 ? headers : SAMPLE_DATASETS.workforce?.headers}
-        schema={schema}
-        datasetName={datasetName || 'Workforce Dataset'}
-        theme={theme}
-        onToggleTheme={handleToggleTheme}
-      />
+        {/* Deep Learning Project Analysis Studio (Real-Time Learning, Training & Simulator) */}
+        {isDLStudioOpen && (
+          <DeepLearningStudioModal
+            isOpen={isDLStudioOpen}
+            onClose={() => setIsDLStudioOpen(false)}
+            data={pageData && pageData.length > 0 ? pageData : SAMPLE_DATASETS.workforce?.data}
+            headers={headers && headers.length > 0 ? headers : SAMPLE_DATASETS.workforce?.headers}
+            schema={schema}
+            datasetName={datasetName || 'Workforce Dataset'}
+            theme={theme}
+            onToggleTheme={handleToggleTheme}
+          />
+        )}
 
-      {/* Real-Time Workforce & Statistical Analytics Calculator Modal */}
-      <RealtimeCalculatorModal
-        isOpen={isCalculatorOpen}
-        onClose={handleCloseCalculator}
-        initialValue={calculatorInitialValue}
-        initialMode={calculatorInitialMode}
-        stats={stats}
-        schema={schema}
-        totalRows={totalRows}
-        filteredRows={filteredCount}
-        datasetName={datasetName || 'Workforce Dataset'}
-        theme={theme}
-      />
+        {/* Real-Time Workforce & Statistical Analytics Calculator Modal */}
+        {isCalculatorOpen && (
+          <RealtimeCalculatorModal
+            isOpen={isCalculatorOpen}
+            onClose={handleCloseCalculator}
+            initialValue={calculatorInitialValue}
+            initialMode={calculatorInitialMode}
+            stats={stats}
+            schema={schema}
+            totalRows={totalRows}
+            filteredRows={filteredCount}
+            datasetName={datasetName || 'Workforce Dataset'}
+            theme={theme}
+          />
+        )}
 
-      {/* 📁 Dedicated Backend Storage Explorer & Disk Architecture Modal */}
-      <StorageExplorerModal
-        isOpen={isStorageModalOpen}
-        onClose={() => setIsStorageModalOpen(false)}
-        theme={theme}
-      />
+        {/* 📁 Dedicated Backend Storage Explorer & Disk Architecture Modal */}
+        {isStorageModalOpen && (
+          <StorageExplorerModal
+            isOpen={isStorageModalOpen}
+            onClose={() => setIsStorageModalOpen(false)}
+            theme={theme}
+          />
+        )}
+      </Suspense>
 
       {/* 📄 PDF GENERATION PROGRESS TOAST */}
       {isExportingPDF && pdfProgress && (

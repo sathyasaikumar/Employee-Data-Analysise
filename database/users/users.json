@@ -6,7 +6,7 @@
     "role": "Executive Admin",
     "avatar": "CA",
     "loginType": "email",
-    "totalLogins": 497,
+    "totalLogins": 522,
     "registeredAt": "2026-07-13T06:00:07.404Z"
   },
   {
@@ -68,7 +68,7 @@
     "role": "Data Engineer",
     "avatar": "DL",
     "loginType": "google",
-    "totalLogins": 69,
+    "totalLogins": 115,
     "registeredAt": "2026-08-12T12:23:50.290Z"
   },
   {
@@ -101,7 +101,7 @@
     "role": "Senior Data Lead",
     "avatar": "AM",
     "loginType": "google",
-    "totalLogins": 151,
+    "totalLogins": 179,
     "registeredAt": "2026-08-16T13:56:33.628Z"
   },
   {
@@ -114,5 +114,16 @@
     "loginType": "google",
     "totalLogins": 57,
     "registeredAt": "2026-08-17T10:05:23.293Z"
+  },
+  {
+    "id": "usr_1787198787574",
+    "name": "Admin",
+    "email": "admin@company.com",
+    "phone": null,
+    "role": "Authorized Analyst",
+    "avatar": "AD",
+    "loginType": "email",
+    "totalLogins": 19,
+    "registeredAt": "2026-08-20T04:06:28.308Z"
   }
 ]

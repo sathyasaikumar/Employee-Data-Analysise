@@ -177,7 +177,8 @@ export default function KPICards({
   }
 
   const formatRevenue = (val) => {
-    const converted = val * currencyRate;
+    const num = typeof val === 'number' && !isNaN(val) ? val : (Number(val) || 0);
+    const converted = num * currencyRate;
     return `${currencySymbol}${converted.toLocaleString(undefined, {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2

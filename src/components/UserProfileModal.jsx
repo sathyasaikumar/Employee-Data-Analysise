@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { 
-  User, Mail, Phone, Calendar, Award, ShieldCheck, Clock, History, 
-  CheckCircle2, LogOut, Activity, Lock, X, Edit3, Save, Download, 
+import {
+  User, Mail, Phone, Calendar, Award, ShieldCheck, Clock, History,
+  CheckCircle2, LogOut, Activity, Lock, X, Edit3, Save, Download,
   Camera, Upload, Image as ImageIcon, Sparkles, AlertCircle, Check,
   Maximize2, Minimize2, Trash2, Database, Radio, HardDrive, FolderOpen
 } from 'lucide-react';
-import { 
-  getUserProfile, saveUserProfile, calculateSessionStats, 
+import {
+  getUserProfile, saveUserProfile, calculateSessionStats,
   formatLocalTimestamp, formatDuration, ensureSampleLoginHistory,
   deleteLoginSession, clearLoginHistory
 } from '../utils/activityTracker';
@@ -22,11 +22,11 @@ const PRESET_AVATARS = [
   { id: 'avatar3', name: '3D Cyber Tech Avatar', url: '/avatars/avatar3.png' }
 ];
 
-export default function UserProfileModal({ 
-  currentUser, 
-  isOpen, 
-  onClose, 
-  onLogout, 
+export default function UserProfileModal({
+  currentUser,
+  isOpen,
+  onClose,
+  onLogout,
   onUpdateUser,
   datasets = [],
   onSelectDataset,
@@ -34,7 +34,7 @@ export default function UserProfileModal({
   onDeleteAllDatasets,
   onDeleteBulkDatasets,
   onRefreshDatasets,
-  onSeedSample = () => {},
+  onSeedSample = () => { },
   onOpenUpload,
   liveStats = null,
   isLoadingDatasets = false,
@@ -56,12 +56,21 @@ export default function UserProfileModal({
   const [selectedPhoto, setSelectedPhoto] = useState(null);
   const directFileInputRef = useRef(null);
 
+  // Delete Confirmation State for Sessions & History
+  const [deleteConfirmState, setDeleteConfirmState] = useState({
+    isOpen: false,
+    type: 'session', // 'session' | 'history'
+    sessionId: null,
+    title: '',
+    itemName: ''
+  });
+
   useEffect(() => {
     const handleFullscreenChange = () => {
       const isFs = Boolean(
-        document.fullscreenElement || 
-        document.webkitFullscreenElement || 
-        document.mozFullScreenElement || 
+        document.fullscreenElement ||
+        document.webkitFullscreenElement ||
+        document.mozFullScreenElement ||
         document.msFullscreenElement
       );
       setIsFullScreen(isFs);
@@ -88,7 +97,7 @@ export default function UserProfileModal({
       if (nextState) {
         const elem = document.documentElement;
         if (elem.requestFullscreen) {
-          elem.requestFullscreen().catch(() => {});
+          elem.requestFullscreen().catch(() => { });
         } else if (elem.webkitRequestFullscreen) {
           elem.webkitRequestFullscreen();
         } else if (elem.mozRequestFullScreen) {
@@ -98,13 +107,13 @@ export default function UserProfileModal({
         }
       } else {
         if (
-          document.fullscreenElement || 
-          document.webkitFullscreenElement || 
-          document.mozFullScreenElement || 
+          document.fullscreenElement ||
+          document.webkitFullscreenElement ||
+          document.mozFullScreenElement ||
           document.msFullscreenElement
         ) {
           if (document.exitFullscreen) {
-            document.exitFullscreen().catch(() => {});
+            document.exitFullscreen().catch(() => { });
           } else if (document.webkitExitFullscreen) {
             document.webkitExitFullscreen();
           } else if (document.mozCancelFullScreen) {
@@ -152,8 +161,6 @@ export default function UserProfileModal({
     return () => clearInterval(interval);
   }, [isOpen, userId]);
 
-  if (!isOpen || !currentUser || !profile) return null;
-
   const handleSaveProfile = (e) => {
     if (e) e.preventDefault();
     const updatedProfile = { ...editForm, photo: selectedPhoto };
@@ -176,7 +183,7 @@ export default function UserProfileModal({
   const handleSelectPresetPhoto = (avatarUrl) => {
     setSelectedPhoto(avatarUrl);
     setEditForm(prev => ({ ...prev, photo: avatarUrl }));
-    
+
     // Save instantly
     const updated = { ...profile, photo: avatarUrl };
     saveUserProfile(currentUser, updated);
@@ -258,7 +265,7 @@ export default function UserProfileModal({
 
   const handleExportHistoryCSV = () => {
     if (!history || history.length === 0) return;
-    
+
     let csv = 'Session ID,Date,Login Time (Local),Logout Time (Local),Duration,Status,Device,IP Address\n';
     history.forEach(s => {
       const loginStr = formatLocalTimestamp(s.loginTime).replace(/,/g, '');
@@ -271,20 +278,11 @@ export default function UserProfileModal({
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.setAttribute('download', `Login_Activity_Log_${profile.fullName.replace(/\s+/g, '_')}.csv`);
+    link.setAttribute('download', `Login_Activity_Log_${(profile?.fullName || 'User').replace(/\s+/g, '_')}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   };
-
-  // Delete Confirmation State for Sessions & History
-  const [deleteConfirmState, setDeleteConfirmState] = useState({
-    isOpen: false,
-    type: 'session', // 'session' | 'history'
-    sessionId: null,
-    title: '',
-    itemName: ''
-  });
 
   const handleConfirmDelete = () => {
     if (deleteConfirmState.type === 'history') {
@@ -325,24 +323,27 @@ export default function UserProfileModal({
   };
 
   // Filtered history records
-  const filteredHistory = history.filter(s => {
-    const matchesStatus = filterStatus === 'all' || 
+  const filteredHistory = (history || []).filter(s => {
+    if (!s) return false;
+    const matchesStatus = filterStatus === 'all' ||
       (filterStatus === 'active' && s.status === 'Active') ||
       (filterStatus === 'logged_out' && s.status === 'Logged Out');
-    
-    const searchLower = searchQuery.toLowerCase();
-    const matchesSearch = !searchQuery || 
-      s.status.toLowerCase().includes(searchLower) ||
+
+    const searchLower = (searchQuery || '').toLowerCase();
+    const matchesSearch = !searchQuery ||
+      (s.status && s.status.toLowerCase().includes(searchLower)) ||
       formatLocalTimestamp(s.loginTime).toLowerCase().includes(searchLower) ||
       (s.device && s.device.toLowerCase().includes(searchLower));
 
     return matchesStatus && matchesSearch;
   });
 
+  if (!isOpen || !currentUser || !profile) return null;
+
   return createPortal(
     <div className={`profile-modal-overlay ${isFullScreen ? 'has-fullscreen' : ''}`} onClick={onClose}>
       <div className={`profile-modal-container ${isFullScreen ? 'is-fullscreen' : ''}`} onClick={(e) => e.stopPropagation()}>
-        
+
         {/* Modal Top Header Bar */}
         <div className="profile-modal-header" onDoubleClick={() => toggleFullScreen()}>
           <div className="profile-modal-title">
@@ -352,12 +353,12 @@ export default function UserProfileModal({
               <p className="subtitle">Real-time session security, localized tracking, and profile management</p>
             </div>
           </div>
-          
+
           <div className="profile-modal-header-actions">
-            <button 
-              type="button" 
-              className="profile-modal-action-btn" 
-              onClick={() => toggleFullScreen()} 
+            <button
+              type="button"
+              className="profile-modal-action-btn"
+              onClick={() => toggleFullScreen()}
               title={isFullScreen ? "Exit Full Screen" : "Full Screen View"}
             >
               {isFullScreen ? <Minimize2 size={13} /> : <Maximize2 size={13} />}
@@ -370,24 +371,24 @@ export default function UserProfileModal({
 
         {/* Modal Main Content Split: Left (Profile) & Right (Activity Dashboard) */}
         <div className="profile-modal-body">
-          
+
           {/* ================= LEFT SIDE: PERSONAL PROFILE CARD ================= */}
           <div className="profile-left-sidebar">
             <div className="profile-card">
-              
+
               {/* Profile Photo / Avatar Header with interactive camera overlay */}
               <div className="profile-photo-container">
-                <div 
-                  className="avatar-circle" 
+                <div
+                  className="avatar-circle"
                   title="Click to upload or change profile photo"
                   onClick={() => directFileInputRef.current?.click()}
                   style={{ cursor: 'pointer', position: 'relative' }}
                 >
                   {profile.photo ? (
-                    <img 
-                      src={profile.photo} 
-                      alt={profile.fullName} 
-                      className="avatar-img" 
+                    <img
+                      src={profile.photo}
+                      alt={profile.fullName}
+                      className="avatar-img"
                       onError={(e) => {
                         e.currentTarget.style.display = 'none';
                         const fallbackEl = e.currentTarget.parentElement?.querySelector('.avatar-text-fallback');
@@ -395,16 +396,16 @@ export default function UserProfileModal({
                       }}
                     />
                   ) : null}
-                  <span 
+                  <span
                     className="avatar-text avatar-text-fallback"
                     style={{ display: profile.photo ? 'none' : 'flex' }}
                   >
                     {profile.avatarInitials}
                   </span>
-                  
+
                   {/* Camera Icon Overlay Trigger */}
-                  <button 
-                    type="button" 
+                  <button
+                    type="button"
                     className="avatar-camera-btn"
                     onClick={(e) => {
                       e.stopPropagation();
@@ -418,16 +419,16 @@ export default function UserProfileModal({
                   <span className="avatar-online-badge" title="Status: Online & Verified"></span>
                 </div>
 
-                <input 
-                  type="file" 
-                  ref={directFileInputRef} 
-                  accept="image/*" 
-                  style={{ display: 'none' }} 
-                  onChange={handleFileUpload} 
+                <input
+                  type="file"
+                  ref={directFileInputRef}
+                  accept="image/*"
+                  style={{ display: 'none' }}
+                  onChange={handleFileUpload}
                 />
 
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   className="btn-change-photo-link"
                   onClick={() => setShowPhotoPicker(true)}
                 >
@@ -503,8 +504,8 @@ export default function UserProfileModal({
                   )}
 
                   {/* Edit Profile Action Button */}
-                  <button 
-                    type="button" 
+                  <button
+                    type="button"
                     className="btn btn-secondary btn-edit-profile"
                     onClick={() => setIsEditing(true)}
                   >
@@ -516,56 +517,56 @@ export default function UserProfileModal({
                 <form onSubmit={handleSaveProfile} className="profile-edit-form">
                   <div className="form-group">
                     <label>Full Name</label>
-                    <input 
-                      type="text" 
-                      value={editForm.fullName} 
+                    <input
+                      type="text"
+                      value={editForm.fullName}
                       onChange={e => setEditForm({ ...editForm, fullName: e.target.value })}
-                      required 
+                      required
                     />
                   </div>
 
                   <div className="form-group">
                     <label>Email Address</label>
-                    <input 
-                      type="email" 
-                      value={editForm.email} 
+                    <input
+                      type="email"
+                      value={editForm.email}
                       onChange={e => setEditForm({ ...editForm, email: e.target.value })}
-                      required 
+                      required
                     />
                   </div>
 
                   <div className="form-group">
                     <label>Mobile Number</label>
-                    <input 
-                      type="text" 
-                      value={editForm.phone} 
+                    <input
+                      type="text"
+                      value={editForm.phone}
                       onChange={e => setEditForm({ ...editForm, phone: e.target.value })}
                     />
                   </div>
 
                   <div className="form-group">
                     <label>Department</label>
-                    <input 
-                      type="text" 
-                      value={editForm.department} 
+                    <input
+                      type="text"
+                      value={editForm.department}
                       onChange={e => setEditForm({ ...editForm, department: e.target.value })}
                     />
                   </div>
 
                   <div className="form-group">
                     <label>Role / Title</label>
-                    <input 
-                      type="text" 
-                      value={editForm.role} 
+                    <input
+                      type="text"
+                      value={editForm.role}
                       onChange={e => setEditForm({ ...editForm, role: e.target.value })}
                     />
                   </div>
 
                   <div className="form-group">
                     <label>Bio / Notes</label>
-                    <textarea 
+                    <textarea
                       rows="3"
-                      value={editForm.bio} 
+                      value={editForm.bio}
                       onChange={e => setEditForm({ ...editForm, bio: e.target.value })}
                     />
                   </div>
@@ -587,7 +588,7 @@ export default function UserProfileModal({
 
           {/* ================= RIGHT SIDE: LOGIN & LOGOUT TRACKING DASHBOARD ================= */}
           <div className="profile-right-dashboard">
-            
+
             {/* Live Active Session Status Banner */}
             <div className="active-session-banner">
               <div className="session-status-left">
@@ -607,7 +608,7 @@ export default function UserProfileModal({
 
             {/* 5 DASHBOARD KPI METRIC CARDS */}
             <div className="dashboard-cards-grid">
-              
+
               {/* 1. LAST LOGIN */}
               <div className="dash-kpi-card card-blue">
                 <div className="dash-kpi-header">
@@ -816,14 +817,14 @@ export default function UserProfileModal({
               </div>
             ) : activeTab === 'live_users' ? (
               <div style={{ width: '100%' }}>
-                <LiveUserTracker 
+                <LiveUserTracker
                   liveStats={liveStats}
                   currentUser={currentUser}
                 />
               </div>
             ) : activeTab === 'dataset_history' ? (
               <div style={{ background: 'var(--bg-card)', borderRadius: '16px', border: '1px solid var(--border-color)', overflow: 'hidden' }}>
-                <DatasetHistory 
+                <DatasetHistory
                   datasets={datasets}
                   onSelectDataset={(id) => {
                     onSelectDataset(id);
@@ -855,16 +856,16 @@ export default function UserProfileModal({
 
                   <div className="history-header-actions">
                     {/* Search input */}
-                    <input 
-                      type="text" 
-                      placeholder="Search history..." 
+                    <input
+                      type="text"
+                      placeholder="Search history..."
                       className="history-search-input"
                       value={searchQuery}
                       onChange={e => setSearchQuery(e.target.value)}
                     />
 
                     {/* Status Filter */}
-                    <select 
+                    <select
                       className="history-filter-select"
                       value={filterStatus}
                       onChange={e => setFilterStatus(e.target.value)}
@@ -875,18 +876,18 @@ export default function UserProfileModal({
                     </select>
 
                     {/* Export CSV Log */}
-                    <button 
-                      type="button" 
+                    <button
+                      type="button"
                       className="btn btn-secondary btn-export-history"
                       onClick={handleExportHistoryCSV}
                       title="Export Login History CSV"
                     >
                       <Download size={12} /> Export CSV
                     </button>
-                    
+
                     {/* Clear All History */}
-                    <button 
-                      type="button" 
+                    <button
+                      type="button"
                       className="btn btn-secondary btn-clear-history"
                       onClick={() => setDeleteConfirmState({
                         isOpen: true,
@@ -1024,7 +1025,7 @@ export default function UserProfileModal({
             </div>
 
             <div className="photo-picker-body">
-              
+
               {/* Option 1: Upload Custom Photo */}
               <div className="upload-photo-option-card">
                 <div className="upload-photo-left">
@@ -1036,10 +1037,10 @@ export default function UserProfileModal({
                 </div>
                 <label className="btn btn-primary btn-upload-photo-trigger">
                   <ImageIcon size={15} /> Browse Image
-                  <input 
-                    type="file" 
-                    accept="image/*" 
-                    onChange={handleFileUpload} 
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileUpload}
                     className="hidden-file-input"
                   />
                 </label>
@@ -1051,9 +1052,9 @@ export default function UserProfileModal({
 
               {/* Option 2: Preset Executive Avatars Gallery Grid */}
               <div className="preset-avatars-grid">
-                
+
                 {/* Default Initials Option */}
-                <div 
+                <div
                   className={`preset-avatar-card ${!profile.photo ? 'selected' : ''}`}
                   onClick={handleRemovePhoto}
                 >
@@ -1068,7 +1069,7 @@ export default function UserProfileModal({
                 {PRESET_AVATARS.map((av) => {
                   const isSelected = profile.photo === av.url;
                   return (
-                    <div 
+                    <div
                       key={av.id}
                       className={`preset-avatar-card ${isSelected ? 'selected' : ''}`}
                       onClick={() => handleSelectPresetPhoto(av.url)}

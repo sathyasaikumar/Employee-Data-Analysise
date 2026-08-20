@@ -489,10 +489,12 @@ export default function DataCleaningStudioModal({
   }, [workingData, searchFilter, tableSortCol, tableSortDir]);
 
   const totalPages = Math.ceil(filteredTableData.length / tablePageSize) || 1;
+  const totalTablePages = totalPages;
   const paginatedRows = useMemo(() => {
     const start = (tablePage - 1) * tablePageSize;
     return filteredTableData.slice(start, start + tablePageSize);
   }, [filteredTableData, tablePage, tablePageSize]);
+  const paginatedTableData = paginatedRows;
 
   return (
     <div className={`cleaner-modal-overlay ${isFullScreen ? 'is-fullscreen' : ''}`}>
@@ -1048,7 +1050,7 @@ export default function DataCleaningStudioModal({
                       className="cleaner-select"
                     >
                       {currentProfile.columns.filter(c => c.type === 'numeric').map(c => (
-                        <option key={c.name} value={c.name}>{c.name} (Outliers: {c.stats.outlierCount})</option>
+                        <option key={c.name} value={c.name}>{c.name} (Outliers: {c.stats?.outlierCount ?? 0})</option>
                       ))}
                     </select>
                   </div>
@@ -1329,7 +1331,7 @@ export default function DataCleaningStudioModal({
           )}
 
           {/* TAB 8: DATA EXPLORER & AUDIT */}
-          {activeTab === 'explorer' && (
+          {(activeTab === 'table' || activeTab === 'explorer') && (
             <div className="cleaner-card" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem' }}>
                 <div className="cleaner-search-box" style={{ maxWidth: '280px' }}>

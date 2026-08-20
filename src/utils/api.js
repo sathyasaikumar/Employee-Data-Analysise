@@ -89,12 +89,38 @@ export async function uploadMultipleDatasetFiles(files) {
  * Retrieve dataset by ID with full parsed rows and columns
  */
 export async function fetchDatasetById(id) {
-  const res = await fetch(`${API_BASE}/datasets/${id}`);
-  const json = await res.json();
-  if (!res.ok || !json.success) {
-    throw new Error(json.error || `Failed to fetch dataset ${id}`);
+  if (!id) {
+    throw new Error('Invalid dataset ID requested.');
   }
-  return json;
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 12000); // 12s timeout
+
+  try {
+    const res = await fetch(`${API_BASE}/datasets/${id}`, {
+      signal: controller.signal
+    });
+    clearTimeout(timeoutId);
+
+    if (!res.ok) {
+      throw new Error(`Server returned HTTP ${res.status}`);
+    }
+    const contentType = res.headers.get('content-type') || '';
+    if (!contentType.includes('application/json')) {
+      throw new Error('Server returned non-JSON response.');
+    }
+
+    const json = await res.json();
+    if (!json.success) {
+      throw new Error(json.error || `Failed to fetch dataset ${id}`);
+    }
+    return json;
+  } catch (err) {
+    clearTimeout(timeoutId);
+    if (err.name === 'AbortError') {
+      throw new Error('Dataset request timed out. Please check server connection.');
+    }
+    throw err;
+  }
 }
 
 /**
@@ -108,28 +134,51 @@ export function getDatasetDownloadUrl(id) {
  * Delete physical dataset file and metadata
  */
 export async function deleteDatasetById(id) {
-  const res = await fetch(`${API_BASE}/datasets/${id}`, {
-    method: 'DELETE'
-  });
-  const json = await res.json();
-  if (!res.ok || !json.success) {
-    throw new Error(json.error || `Failed to delete dataset ${id}`);
+  if (!id) return { success: false, error: 'No dataset ID provided' };
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+  try {
+    const res = await fetch(`${API_BASE}/datasets/${id}`, {
+      method: 'DELETE',
+      signal: controller.signal
+    });
+    clearTimeout(timeoutId);
+    const json = await res.json().catch(() => ({ success: res.ok }));
+    if (!res.ok || !json.success) {
+      throw new Error(json.error || `Failed to delete dataset ${id}`);
+    }
+    return json;
+  } catch (err) {
+    clearTimeout(timeoutId);
+    console.warn(`Dataset ${id} delete error:`, err.message);
+    throw err;
   }
-  return json;
 }
 
 /**
  * Delete ALL physical dataset files and clear metadata
  */
 export async function deleteAllDatasets() {
-  const res = await fetch(`${API_BASE}/datasets`, {
-    method: 'DELETE'
-  });
-  const json = await res.json();
-  if (!res.ok || !json.success) {
-    throw new Error(json.error || 'Failed to delete all datasets');
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 15000);
+
+  try {
+    const res = await fetch(`${API_BASE}/datasets`, {
+      method: 'DELETE',
+      signal: controller.signal
+    });
+    clearTimeout(timeoutId);
+    const json = await res.json().catch(() => ({ success: res.ok }));
+    if (!res.ok || !json.success) {
+      throw new Error(json.error || 'Failed to delete all datasets');
+    }
+    return json;
+  } catch (err) {
+    clearTimeout(timeoutId);
+    console.warn('Delete all datasets error:', err.message);
+    throw err;
   }
-  return json;
 }
 
 /**
@@ -138,14 +187,25 @@ export async function deleteAllDatasets() {
 export async function deleteDatasetsBulk(ids = []) {
   if (!ids || ids.length === 0) return { success: true, deletedCount: 0 };
   const queryParam = ids.join(',');
-  const res = await fetch(`${API_BASE}/datasets?ids=${encodeURIComponent(queryParam)}`, {
-    method: 'DELETE'
-  });
-  const json = await res.json();
-  if (!res.ok || !json.success) {
-    throw new Error(json.error || 'Failed to delete selected datasets');
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 15000);
+
+  try {
+    const res = await fetch(`${API_BASE}/datasets?ids=${encodeURIComponent(queryParam)}`, {
+      method: 'DELETE',
+      signal: controller.signal
+    });
+    clearTimeout(timeoutId);
+    const json = await res.json().catch(() => ({ success: res.ok }));
+    if (!res.ok || !json.success) {
+      throw new Error(json.error || 'Failed to delete selected datasets');
+    }
+    return json;
+  } catch (err) {
+    clearTimeout(timeoutId);
+    console.warn('Bulk delete datasets error:', err.message);
+    throw err;
   }
-  return json;
 }
 
 /**

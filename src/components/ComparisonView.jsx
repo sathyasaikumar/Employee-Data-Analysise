@@ -767,7 +767,7 @@ export default function ComparisonView({
            ========================================================================= */
         <>
           {/* Leaderboard Winner Highlights */}
-          {leaderboard.pLeader && (
+          {leaderboard && leaderboard.pLeader && (
             <div className="leaderboard-grid">
               <div className="leader-card card-salary">
                 <div className="leader-header">
@@ -778,32 +778,38 @@ export default function ComparisonView({
                 <p className="leader-val">{formatMetricValue(leaderboard.pLeader.primaryVal, primaryMetric)} avg</p>
               </div>
 
-              <div className="leader-card card-perf">
-                <div className="leader-header">
-                  <Zap size={18} className="text-cyan" />
-                  <span className="leader-title">Top {secondaryMetric || 'Secondary'} Leader</span>
+              {leaderboard.sLeader && (
+                <div className="leader-card card-perf">
+                  <div className="leader-header">
+                    <Zap size={18} className="text-cyan" />
+                    <span className="leader-title">Top {secondaryMetric || 'Secondary'} Leader</span>
+                  </div>
+                  <h4 className="leader-name">{leaderboard.sLeader.name}</h4>
+                  <p className="leader-val">{formatMetricValue(leaderboard.sLeader.secondaryVal, secondaryMetric)} avg</p>
                 </div>
-                <h4 className="leader-name">{leaderboard.sLeader.name}</h4>
-                <p className="leader-val">{formatMetricValue(leaderboard.sLeader.secondaryVal, secondaryMetric)} avg</p>
-              </div>
+              )}
 
-              <div className="leader-card card-sat">
-                <div className="leader-header">
-                  <Heart size={18} className="text-rose" />
-                  <span className="leader-title">Top {tertiaryMetric || 'Tertiary'} Leader</span>
+              {leaderboard.tLeader && (
+                <div className="leader-card card-sat">
+                  <div className="leader-header">
+                    <Heart size={18} className="text-rose" />
+                    <span className="leader-title">Top {tertiaryMetric || 'Tertiary'} Leader</span>
+                  </div>
+                  <h4 className="leader-name">{leaderboard.tLeader.name}</h4>
+                  <p className="leader-val">{formatMetricValue(leaderboard.tLeader.tertiaryVal, tertiaryMetric)} avg</p>
                 </div>
-                <h4 className="leader-name">{leaderboard.tLeader.name}</h4>
-                <p className="leader-val">{formatMetricValue(leaderboard.tLeader.tertiaryVal, tertiaryMetric)} avg</p>
-              </div>
+              )}
 
-              <div className="leader-card card-ret">
-                <div className="leader-header">
-                  <Shield size={18} className="text-emerald" />
-                  <span className="leader-title">Retention / Active Champion</span>
+              {leaderboard.aLeader && (
+                <div className="leader-card card-ret">
+                  <div className="leader-header">
+                    <Shield size={18} className="text-emerald" />
+                    <span className="leader-title">Retention / Active Champion</span>
+                  </div>
+                  <h4 className="leader-name">{leaderboard.aLeader.name}</h4>
+                  <p className="leader-val">{leaderboard.aLeader.activePct}% active</p>
                 </div>
-                <h4 className="leader-name">{leaderboard.aLeader.name}</h4>
-                <p className="leader-val">{leaderboard.aLeader.activePct}% active</p>
-              </div>
+              )}
             </div>
           )}
 
@@ -892,7 +898,7 @@ export default function ComparisonView({
                         {g.count} rows
                       </td>
                     ))}
-                    <td className="font-semibold text-accent-blue">{leaderboard.pLeader?.name || 'N/A'}</td>
+                    <td className="font-semibold text-accent-blue">{leaderboard?.pLeader?.name || 'N/A'}</td>
                   </tr>
 
                   {primaryMetric && (
@@ -903,7 +909,7 @@ export default function ComparisonView({
                           {formatMetricValue(g.primaryVal, primaryMetric)}
                         </td>
                       ))}
-                      <td className="font-semibold text-accent-emerald">{leaderboard.pLeader?.name || 'N/A'}</td>
+                      <td className="font-semibold text-accent-emerald">{leaderboard?.pLeader?.name || 'N/A'}</td>
                     </tr>
                   )}
 
@@ -915,7 +921,7 @@ export default function ComparisonView({
                           {formatMetricValue(g.secondaryVal, secondaryMetric)}
                         </td>
                       ))}
-                      <td className="font-semibold text-accent-cyan">{leaderboard.sLeader?.name || 'N/A'}</td>
+                      <td className="font-semibold text-accent-cyan">{leaderboard?.sLeader?.name || 'N/A'}</td>
                     </tr>
                   )}
 
@@ -927,7 +933,7 @@ export default function ComparisonView({
                           {formatMetricValue(g.tertiaryVal, tertiaryMetric)}
                         </td>
                       ))}
-                      <td className="font-semibold text-accent-amber">{leaderboard.tLeader?.name || 'N/A'}</td>
+                      <td className="font-semibold text-accent-amber">{leaderboard?.tLeader?.name || 'N/A'}</td>
                     </tr>
                   )}
 
@@ -938,7 +944,7 @@ export default function ComparisonView({
                         {g.activePct}%
                       </td>
                     ))}
-                    <td className="font-semibold text-accent-emerald">{leaderboard.aLeader?.name || 'N/A'}</td>
+                    <td className="font-semibold text-accent-emerald">{leaderboard?.aLeader?.name || 'N/A'}</td>
                   </tr>
                 </tbody>
               </table>

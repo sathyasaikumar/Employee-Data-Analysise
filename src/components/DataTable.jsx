@@ -113,7 +113,7 @@ export default function DataTable({
                     const val = row ? row[header] : undefined;
                     const valStr = val !== undefined && val !== null ? val.toString() : '-';
 
-                    if (header.toLowerCase() === 'status' || header.toLowerCase() === 'work_mode') {
+                    if (header && (header.toLowerCase() === 'status' || header.toLowerCase() === 'work_mode')) {
                       let badgeClass = 'badge-blue';
                       if (valStr === 'Active' || valStr === 'Remote') badgeClass = 'badge-emerald';
                       if (valStr === 'Resigned' || valStr === 'Onsite') badgeClass = 'badge-amber';
@@ -126,7 +126,7 @@ export default function DataTable({
                       );
                     }
 
-                    if (schema[header] === 'numeric' && (header.toLowerCase().includes('salary') || header.toLowerCase().includes('revenue'))) {
+                    if (schema?.[header] === 'numeric' && (header?.toLowerCase()?.includes('salary') || header?.toLowerCase()?.includes('revenue'))) {
                       const num = Number(valStr.replace(/[\$,]/g, ''));
                       const formatted = !isNaN(num) ? `$${num.toLocaleString()}` : valStr;
                       return <td key={header} style={{ fontWeight: 600, color: 'var(--accent-emerald)' }}>{formatted}</td>;

@@ -1,0 +1,11 @@
+node_modules
+.git
+.gitignore
+.vercel
+dist
+*.log
+.env.local
+vercel-deploy-logs.txt
+Corporate_Access_Intelligence_System_Interview_Guide.pdf
+Corporate_Access_Intelligence_System_Total_Implementation_Plan.pdf
+Corporate_Access_Intelligence_System_Website_Plan.pdf
